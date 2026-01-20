@@ -154,6 +154,10 @@ The `manifest.json` file is critical - it declares all external resources your a
 - `workflowMapping` - Workflows the app can trigger
 - `packageMapping` - Code Engine functions the app can call
 
+### Required files
+- `manifest.json` - App configuration (required)
+- `thumbnail.png` - App thumbnail image (required, must be alongside manifest.json)
+
 ---
 
 ## Build & Deploy Workflow
