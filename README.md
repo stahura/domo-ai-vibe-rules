@@ -32,23 +32,52 @@ This is for anyone who hasn't yet started crafting their own Cursor rules. It's 
 ### Step 1: Download the rules
 
 Download these files from this repo:
-- `.cursorrules` — The main rules file
+- `.cursorrules` — The main rules file (or copy content into a `.mdc` file)
 - Any API-specific files you need (like `domo-data-api.md`)
 
 ### Step 2: Add to your project
 
-Put `.cursorrules` in your project's **root folder** (the main folder of your project).
+**Option A: Simple approach**
+
+Put `.cursorrules` in your project's **root folder**:
 
 ```
 my-domo-app/
 ├── .cursorrules     ← Put it here
 ├── public/
 ├── src/
-├── package.json
 └── ...
 ```
 
-### Step 3: Start coding!
+**Option B: Using Cursor's rules folder (recommended)**
+
+Create a `.cursor/rules/` folder and add rules as `.mdc` files:
+
+```
+my-domo-app/
+├── .cursor/
+│   └── rules/
+│       ├── domo-app-platform.mdc    ← Main rules (set to "Always")
+│       ├── domo-data-api.mdc        ← Set to "Agent-decided"
+│       ├── domo-appdb.mdc           ← Set to "Agent-decided"
+│       └── ...
+├── public/
+├── src/
+└── ...
+```
+
+### Step 3: Configure when rules apply
+
+This is important for keeping AI responses accurate:
+
+| Rule | Setting | Why |
+|:-----|:--------|:----|
+| **Main rules** (domo-app-platform) | **Always** | Core Domo knowledge should always be available |
+| **API-specific rules** (data, appdb, etc.) | **Agent-decided** | Only inject when relevant to avoid context pollution |
+
+> **Why does this matter?** If you inject AppDB documentation into context when your app doesn't use AppDB, you're adding irrelevant information. This ambiguity is when AI starts to hallucinate — it might suggest using AppDB when you don't need it.
+
+### Step 4: Start coding!
 
 Open your project in Cursor and start chatting with the AI. It will now understand Domo.
 
