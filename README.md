@@ -161,7 +161,7 @@ Cursor's rules system has changed several times in the past year. As of now:
 
 ### App Framework API Docs
 
-These are the official docs for each API (as of January 2025):
+These are the official docs for each API (as of January 2026):
 
 | API | Documentation Link |
 |:----|:-------------------|
