@@ -1,49 +1,142 @@
 # Domo AI Vibe Rules
 
-Rules files for [Cursor](https://cursor.sh/) and [Claude Code](https://claude.ai/code) to help developers build Domo App Platform custom apps.
+> **Make AI coding assistants understand Domo** — so you can build custom apps faster.
 
-## Purpose
+---
 
-This repo provides AI coding assistant rules that make local development easier for less technical users (SEs, Business Analysts, etc.) who are building Domo custom apps. These rules give AI assistants the context they need about Domo's App Framework APIs, manifest.json configuration, and deployment workflow.
+## What is this?
 
-**Common use case:** You prototype an app in Google AI Studio or Lovable, then move it local to work on in Cursor or Claude Code. The Domo-specific APIs (Data API, AppDB, AI endpoints, Code Engine, Workflows, etc.) require extra knowledge to set up correctly - these rules provide that knowledge to your AI assistant.
+When you use AI coding tools like [Cursor](https://cursor.sh/), they don't know anything about Domo's APIs. This repo gives them that knowledge.
 
-## Quick Start
+**The problem:** You prototype an app in Google AI Studio or Lovable, then move it to your local machine to continue development. But now your AI assistant doesn't know how to:
+- Connect to Domo datasets
+- Use AppDB for storage
+- Call Code Engine functions
+- Trigger workflows
+- ...or any other Domo-specific stuff
 
-1. Copy `.cursorrules` (for Cursor) or `CLAUDE.md` (for Claude Code) to your project root
-2. Add any API-specific rules you need (e.g., `domo-data-api.md` content)
-3. Add your project-specific instructions at the bottom of the rules file
-4. Start coding with AI assistance that understands Domo!
+**The solution:** Copy these rules files into your project. Your AI assistant will now understand Domo.
 
-## Files
+---
 
-| File | Purpose |
-|------|---------|
-| `.cursorrules` | Main rules file for Cursor |
-| `CLAUDE.md` | Main rules file for Claude Code |
-| `domo-data-api.md` | Data API and SQL API reference |
-| `domo-appdb.md` | AppDB (Collections) CRUD operations |
-| `domo-ai-endpoints.md` | AI text generation and image-to-text |
-| `domo-code-engine.md` | Code Engine server-side functions |
-| `domo-workflow.md` | Workflow triggering and status |
-| `google-ai-studio-to-domo.md` | Migration guide from Google AI Studio |
+## Who is this for?
 
-## Official Documentation
+This is designed for **less technical users** — Solutions Engineers, Business Analysts, and others who are building Domo custom apps but may not have deep development experience.
 
-**Getting Started:**
-- [Local Development with Domo CLI](https://developer.domo.com/portal/c8adeafafc236-local-development-with-domo-cli) - Quick guide to local custom app development
+> **Note:** Instructions below are for **Cursor** only. If you're using Claude Code, you likely already know how to configure things — just use the `CLAUDE.md` file.
 
-**App Framework API Documentation (as of 1/20/26):**
-- [AI Service Layer API](https://developer.domo.com/portal/wjqiqhsvpadon-ai-service-layer-api-ai-pro-assets-images-pro-png)
-- [AppDB API](https://developer.domo.com/portal/1l1fm2g0sfm69-app-db-api)
-- [Code Engine API](https://developer.domo.com/portal/p48phjy7wwtw8-code-engine-api)
-- [Data API](https://developer.domo.com/portal/8s3y9eldnjq8d-data-api)
-- [File Set API (Beta)](https://developer.domo.com/portal/7e8654dedb1c8-file-set-api-beta)
-- [Groups API](https://developer.domo.com/portal/2hwa98wx7kdm4-groups-api)
-- [Task Center API](https://developer.domo.com/portal/k2vv2vir3c8ry-task-center-api)
-- [User API](https://developer.domo.com/portal/n7f7swo7h29wg-user-api)
-- [Workflows API](https://developer.domo.com/portal/1ay1akbc787jg-workflows-api)
+---
 
-## Contributing
+## 🚀 Quick Start (Cursor)
 
-Found an error or have improvements? PRs welcome!
+### Step 1: Download the rules
+
+Download these files from this repo:
+- `.cursorrules` — The main rules file
+- Any API-specific files you need (like `domo-data-api.md`)
+
+### Step 2: Add to your project
+
+Put `.cursorrules` in your project's **root folder** (the main folder of your project).
+
+```
+my-domo-app/
+├── .cursorrules     ← Put it here
+├── public/
+├── src/
+├── package.json
+└── ...
+```
+
+### Step 3: Start coding!
+
+Open your project in Cursor and start chatting with the AI. It will now understand Domo.
+
+---
+
+## 📁 What's in this repo?
+
+### Main Rules Files
+
+| File | What it's for |
+|:-----|:--------------|
+| **`.cursorrules`** | Copy this to your project for Cursor |
+| **`CLAUDE.md`** | Copy this to your project for Claude Code |
+
+### API Reference Files
+
+Copy the content from these into your main rules file if you need that specific API:
+
+| File | When you need it |
+|:-----|:-----------------|
+| `domo-data-api.md` | Querying Domo datasets |
+| `domo-appdb.md` | Storing data in collections |
+| `domo-ai-endpoints.md` | AI text generation, image-to-text |
+| `domo-code-engine.md` | Running server-side code |
+| `domo-workflow.md` | Triggering Domo workflows |
+
+### Other Files
+
+| File | What it's for |
+|:-----|:--------------|
+| `google-ai-studio-to-domo.md` | Migrating a Google AI Studio project to Domo |
+
+---
+
+## ⚠️ Important Note About Cursor
+
+Cursor's rules system has changed several times in the past year. As of now:
+
+- **`.cursorrules`** — Still works, but may be deprecated in the future
+- **`.cursor/rules/`** — Newer approach using `.mdc` files
+- **`AGENTS.md`** — Another alternative
+
+**Our recommendation:** Start with `.cursorrules` — it's the simplest. If it stops working, check [Cursor's official docs](https://cursor.com/docs/context/rules) for the latest approach.
+
+---
+
+## 📚 Official Domo Documentation
+
+### Getting Started
+
+👉 **[Local Development with Domo CLI](https://developer.domo.com/portal/c8adeafafc236-local-development-with-domo-cli)** — Start here! Quick guide to local custom app development.
+
+### App Framework API Docs
+
+These are the official docs for each API (as of January 2025):
+
+| API | Documentation Link |
+|:----|:-------------------|
+| AI Service Layer | [View Docs](https://developer.domo.com/portal/wjqiqhsvpadon-ai-service-layer-api-ai-pro-assets-images-pro-png) |
+| AppDB | [View Docs](https://developer.domo.com/portal/1l1fm2g0sfm69-app-db-api) |
+| Code Engine | [View Docs](https://developer.domo.com/portal/p48phjy7wwtw8-code-engine-api) |
+| Data API | [View Docs](https://developer.domo.com/portal/8s3y9eldnjq8d-data-api) |
+| File Set (Beta) | [View Docs](https://developer.domo.com/portal/7e8654dedb1c8-file-set-api-beta) |
+| Groups | [View Docs](https://developer.domo.com/portal/2hwa98wx7kdm4-groups-api) |
+| Task Center | [View Docs](https://developer.domo.com/portal/k2vv2vir3c8ry-task-center-api) |
+| User | [View Docs](https://developer.domo.com/portal/n7f7swo7h29wg-user-api) |
+| Workflows | [View Docs](https://developer.domo.com/portal/1ay1akbc787jg-workflows-api) |
+
+---
+
+## 💡 Tips for Success
+
+1. **Start simple** — Just copy `.cursorrules` to start. Add API-specific rules only when you need them.
+
+2. **Add project-specific notes** — There's a section at the bottom of the rules file for your own notes. Use it!
+
+3. **Keep the AI focused** — If the AI suggests using a "Domo SDK" or "Domo npm package" that doesn't exist, remind it to use `ryuu.js` and the APIs in your rules.
+
+4. **Don't forget `thumbnail.png`** — Every Domo app needs a `thumbnail.png` file alongside the `manifest.json`.
+
+---
+
+## 🤝 Contributing
+
+Found an error? Have improvements? PRs welcome!
+
+---
+
+<p align="center">
+  <i>Built to help Domo developers move faster.</i>
+</p>
