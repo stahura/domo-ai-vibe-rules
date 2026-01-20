@@ -83,6 +83,35 @@ Open your project in Cursor and start chatting with the AI. It will now understa
 
 ---
 
+## 🔄 Coming from a Prototyping Tool?
+
+If you built your initial prototype elsewhere, here are some things to watch out for:
+
+### From Google AI Studio
+
+Google AI Studio automatically builds and deploys your code to Cloud Run — you never deal with a build process. When you move to local development, you'll need to set up a proper build pipeline yourself.
+
+**What to do:** Use the `google-ai-studio-to-domo.md` rules file. It will help the AI:
+- Detect that your project came from AI Studio
+- Set up Vite (or another bundler) for local builds
+- Configure the project to output static files that Domo can host
+- Handle the transition from Cloud Run to static deployment
+
+### From Lovable
+
+Lovable sometimes generates projects with **server-side rendering (SSR)**. This is a problem because Domo custom apps are **client-side only** — there's no server to render your pages.
+
+**Signs your project uses SSR:**
+- Next.js with `getServerSideProps` or `getStaticProps`
+- Remix loaders
+- SvelteKit with server routes
+- Files in `pages/api/` or `app/api/`
+- References to `process.env` that expect server-side secrets
+
+**What to do:** If your project has SSR, you'll need to refactor to a pure client-side app (React with Vite is recommended). The AI will detect this and warn you.
+
+---
+
 ## 📁 What's in this repo?
 
 ### Main Rules Files

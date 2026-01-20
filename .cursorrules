@@ -6,6 +6,30 @@ You are helping build a Domo App Platform Custom App. This is a client-side web 
 
 ---
 
+## ⚠️ Server-Side Rendering Check
+
+**Domo custom apps are client-side only.** There is no server to render pages — Domo serves static files.
+
+When you first look at a project (especially one from Lovable, v0, or similar tools), immediately check for server-side rendering (SSR). If SSR is present, **stop and warn the user** before proceeding.
+
+### Signs of SSR (incompatible with Domo):
+- Next.js with `getServerSideProps`, `getStaticProps`, or App Router server components
+- Remix with loaders or actions
+- SvelteKit with `+page.server.js` or `+server.js` files
+- Nuxt.js with server routes
+- `pages/api/` or `app/api/` directories (API routes)
+- Server-side `process.env` usage for secrets
+- Database connections in page components
+- `"use server"` directives
+
+### If SSR is detected:
+1. **Immediately alert the user** that the project uses server-side rendering
+2. Explain that Domo custom apps cannot use SSR — they must be pure client-side apps
+3. Recommend refactoring to a client-side only approach (React + Vite is recommended)
+4. If they need server-side logic, suggest using Domo Code Engine instead
+
+---
+
 ## Domo App Framework APIs
 
 The following APIs are available to custom apps via the `domo.js` library (automatically included when running in Domo):
