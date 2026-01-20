@@ -21,9 +21,9 @@ When you use AI coding tools like [Cursor](https://cursor.sh/), they don't know 
 
 ## Who is this for?
 
-This is designed for **less technical users** — Solutions Engineers, Business Analysts, and others who are building Domo custom apps but may not have deep development experience.
+This is for anyone who hasn't yet started crafting their own Cursor rules. It's a solid starting point that makes it much more likely the AI will generate code that correctly integrates with Domo's APIs — saving you time debugging and fixing hallucinated code.
 
-> **Note:** Instructions below are for **Cursor** only. If you're using Claude Code, you likely already know how to configure things — just use the `CLAUDE.md` file.
+> **Note:** Instructions below are for **Cursor** only. If you're using Claude Code, just use the `CLAUDE.md` file.
 
 ---
 
