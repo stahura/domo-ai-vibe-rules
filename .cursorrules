@@ -73,12 +73,27 @@ import domo from 'ryuu.js';
 Beyond the APIs, domo.js provides useful utilities for interacting with the Domo environment:
 
 ### Environment Info
+
+Access environment information. **WARNING: Can be spoofed! Do not use for security.**
+
 ```javascript
-console.log(domo.env.userId);    // Current user ID
+console.log(domo.env.userId);    // User ID (spoofable!)
 console.log(domo.env.customer);  // Customer/instance name
 console.log(domo.env.pageId);    // Current page ID
 console.log(domo.env.locale);    // Locale (e.g., 'en-US')
 console.log(domo.env.platform);  // 'desktop' or 'mobile'
+```
+
+**For secure user verification:**
+```javascript
+// ✅ SECURE - Server-verified identity
+const verifiedEnv = await domo.get('/domo/environment/v1/');
+const { userId, userName, userEmail } = verifiedEnv;
+
+// Or use IdentityClient from toolkit
+import { IdentityClient } from '@domoinc/toolkit';
+const response = await IdentityClient.get();
+const user = response.body; // { id, displayName, emailAddress, role }
 ```
 
 ### Event Listeners
@@ -140,6 +155,328 @@ domo.requestFiltersUpdate(
   () => console.log('Filter update acknowledged'),
   (response) => console.log('Filter update completed:', response)
 );
+```
+
+---
+
+## @domoinc/query - Data Query Builder
+
+**CRITICAL:** Use the Query API (via @domoinc/query) for all dataset queries in Domo apps. This is essential because:
+
+1. **Page Filter Integration** - The Query API automatically respects page-level filters when your app is embedded in a Domo dashboard. This is key for apps that need to respond to dashboard filter changes.
+
+2. **Performance** - The Query API allows you to query only the data you need at the aggregation level required, rather than fetching entire datasets. This is critical for performance, especially with large datasets.
+
+3. **Server-Side Processing** - Aggregations and filtering happen on Domo's servers, reducing data transfer and client-side processing.
+
+The Query library provides a chainable API for building complex data queries. It constructs URLs that work with `domo.get()` and the `/data/v1/` endpoint.
+
+**npm/yarn:**
+```bash
+yarn add @domoinc/query
+```
+
+```typescript
+import Query from '@domoinc/query';
+```
+
+**CDN (Vanilla JavaScript):**
+```html
+<script src="https://cdn.jsdelivr.net/npm/@domoinc/query@3.0.0/dist/main.min.js"></script>
+```
+
+```javascript
+// Query is available globally after CDN script loads
+const data = await new Query()
+  .select(['region', 'sales'])
+  .fetch('sales-dataset');
+```
+
+### Basic Usage
+
+```typescript
+// Simple query
+const data = await new Query()
+  .select(['region', 'sales', 'date'])
+  .fetch('sales-dataset');
+
+// With filtering
+const filtered = await new Query()
+  .select(['region', 'product', 'sales'])
+  .where('sales').greaterThan(1000)
+  .where('region').in(['North', 'South'])
+  .fetch('sales-dataset');
+
+// With grouping and aggregation
+const summary = await new Query()
+  .select(['region', 'sales', 'quantity'])
+  .groupBy('region')
+  .groupBy({ sales: 'sum', quantity: 'avg' })
+  .orderBy('sales', 'descending')
+  .limit(10)
+  .fetch('sales-dataset');
+```
+
+### Select
+
+```typescript
+// Select specific columns
+new Query().select(['col1', 'col2', 'col3'])
+
+// Select all (omit select)
+new Query().fetch('dataset')
+```
+
+### Where Filters
+
+All filter methods return the Query for chaining.
+
+```typescript
+// Comparison filters
+.where('amount').lessThan(100)           // .lt(100)
+.where('amount').lessThanOrEqual(100)    // .lte(100)
+.where('amount').greaterThan(100)        // .gt(100)
+.where('amount').greaterThanOrEqual(100) // .gte(100)
+.where('amount').equals(100)
+.where('amount').notEquals(100)
+.where('amount').between(100, 500)
+
+// String filters
+.where('name').contains('test')
+.where('name').notContains('test')
+
+// List filters
+.where('category').in(['A', 'B', 'C'])
+.where('status').notIn(['deleted', 'archived'])
+
+// Multiple conditions (AND)
+.where('amount').greaterThan(100)
+.where('status').equals('active')
+.where('region').in(['North', 'South'])
+```
+
+### Group By
+
+```typescript
+// Group by single column
+.groupBy('region')
+
+// Group by multiple columns
+.groupBy('region')
+.groupBy('product')
+
+// Group by column with aggregations (second parameter)
+.groupBy('region', { 
+  sales: 'sum',
+  quantity: 'avg',
+  price: 'max',
+  orders: 'count',
+  skus: 'unique'
+})
+
+// Multiple groupBy calls
+.groupBy('region')
+.groupBy('product', { sales: 'sum', orders: 'count' })
+```
+
+**Aggregation Functions:**
+- `'count'` - Count rows
+- `'sum'` - Sum values
+- `'avg'` - Average values
+- `'min'` - Minimum value
+- `'max'` - Maximum value
+- `'unique'` - Count distinct values
+
+#### CRITICAL - Aggregation Key Syntax
+
+**Aggregation keys MUST be the actual field names from your dataset, NOT custom aliases.**
+
+The key in the aggregation object determines the output property name. If you use an alias that doesn't match a field, you'll get `[object Object]` errors.
+
+```typescript
+// ✅ CORRECT - Keys match actual field names
+// If your dataset has fields: 'Sales_Amount', 'Order_Qty'
+.groupBy('region', { 
+  Sales_Amount: 'sum',   // Key matches dataset field
+  Order_Qty: 'count'     // Key matches dataset field
+})
+
+// Results: [{ region: 'North', Sales_Amount: 50000, Order_Qty: 150 }]
+
+// ❌ WRONG - Custom aliases as keys cause [object Object] errors
+.groupBy('region', { 
+  totalSales: 'sum',     // 'totalSales' is not a field name!
+  orderCount: 'count'    // 'orderCount' is not a field name!
+})
+
+// ✅ If you need custom names, rename AFTER fetching:
+const data = await new Query()
+  .groupBy('region', { Sales_Amount: 'sum' })
+  .fetch('sales');
+
+const renamed = data.map(row => ({
+  region: row.region,
+  totalSales: row.Sales_Amount  // Rename here
+}));
+```
+
+### Order By
+
+```typescript
+.orderBy('sales', 'descending')  // or 'desc'
+.orderBy('date', 'ascending')    // or 'asc'
+
+// Multiple sort columns
+.orderBy('region', 'ascending')
+.orderBy('sales', 'descending')
+```
+
+### Limit and Offset
+
+```typescript
+.limit(100)    // Max rows
+.offset(50)    // Skip rows (for pagination)
+
+// Pagination example
+const page = 2;
+const pageSize = 25;
+new Query()
+  .limit(pageSize)
+  .offset((page - 1) * pageSize)
+  .fetch('dataset');
+```
+
+### Date Operations
+
+#### dateGrain - Group by Date Period
+
+```typescript
+// Group by month
+.dateGrain('order_date', 'month')
+
+// Group by month with aggregations
+// NOTE: Aggregation keys must be actual field names!
+.dateGrain('order_date', 'month', { Revenue: 'sum', Order_Count: 'count' })
+
+// Available grains: 'day', 'week', 'month', 'quarter', 'year'
+.dateGrain('date', 'day')
+.dateGrain('date', 'week')
+.dateGrain('date', 'month')
+.dateGrain('date', 'quarter')
+.dateGrain('date', 'year')
+```
+
+**CRITICAL:** The third parameter (aggregations) follows the same rules as `groupBy` - keys must match actual dataset field names:
+
+```typescript
+// ✅ CORRECT - field names as keys
+.dateGrain('order_date', 'month', { Sales_Amount: 'sum' })
+
+// ❌ WRONG - custom aliases cause errors
+.dateGrain('order_date', 'month', { totalSales: 'sum' })
+```
+
+#### periodToDate - YTD, MTD, QTD, etc.
+
+```typescript
+// Year to date
+.periodToDate('date', 'year')
+
+// Month to date
+.periodToDate('date', 'month')
+
+// Quarter to date
+.periodToDate('date', 'quarter')
+
+// Full example
+const ytdSales = await new Query()
+  .select(['date', 'sales'])
+  .periodToDate('date', 'year')
+  .groupBy({ sales: 'sum' })
+  .fetch('sales');
+```
+
+#### previousPeriod - Last Period Comparison
+
+```typescript
+// Last year
+.previousPeriod('date', 'year')
+
+// Last month
+.previousPeriod('date', 'month')
+
+// Last quarter
+.previousPeriod('date', 'quarter')
+```
+
+#### rollingPeriod - Rolling Windows
+
+```typescript
+// Last 30 days
+.rollingPeriod('date', 'days', 30)
+
+// Last 12 weeks
+.rollingPeriod('date', 'weeks', 12)
+
+// Last 6 months
+.rollingPeriod('date', 'months', 6)
+
+// Last 4 quarters
+.rollingPeriod('date', 'quarters', 4)
+
+// Last 3 years
+.rollingPeriod('date', 'years', 3)
+```
+
+### Additional Options
+
+```typescript
+// Use fiscal calendar
+.useFiscalCalendar(true)
+
+// Enable beast modes (calculated fields)
+.useBeastModes()
+
+// Aggregate without grouping
+.aggregate({ total: 'sum', average: 'avg' })
+```
+
+### Complete Examples
+
+```typescript
+// Sales dashboard query
+const salesByRegion = await new Query()
+  .select(['region', 'product_category', 'sales', 'quantity', 'date'])
+  .where('sales').greaterThan(0)
+  .where('date').greaterThanOrEqual('2024-01-01')
+  .dateGrain('date', 'month')
+  .groupBy('region')
+  .groupBy('product_category')
+  .groupBy({ sales: 'sum', quantity: 'sum', orders: 'count' })
+  .orderBy('sales', 'descending')
+  .limit(100)
+  .fetch('sales-dataset');
+
+// YoY comparison
+const thisYear = await new Query()
+  .select(['month', 'revenue'])
+  .periodToDate('date', 'year')
+  .dateGrain('date', 'month', { revenue: 'sum' })
+  .fetch('revenue');
+
+const lastYear = await new Query()
+  .select(['month', 'revenue'])
+  .previousPeriod('date', 'year')
+  .dateGrain('date', 'month', { revenue: 'sum' })
+  .fetch('revenue');
+
+// Trend analysis - last 90 days
+const trend = await new Query()
+  .select(['date', 'sales', 'orders'])
+  .rollingPeriod('date', 'days', 90)
+  .dateGrain('date', 'day', { sales: 'sum', orders: 'count' })
+  .orderBy('date', 'ascending')
+  .fetch('sales');
 ```
 
 ---
@@ -263,6 +600,168 @@ import { HashRouter } from 'react-router-dom';
 ```
 
 `BrowserRouter` requires server-side rewrite rules which Domo doesn't provide by default.
+
+---
+
+## Common Gotchas & Troubleshooting
+
+### Critical Issues
+
+1. **datasetsMapping requires `fields` array (even if empty)**
+   - Omitting `fields` entirely causes: `Cannot read properties of undefined (reading 'map')`
+   - Always include `fields: []` even when not aliasing columns
+   ```json
+   // ✅ Correct
+   { "alias": "sales", "dataSetId": "abc-123", "fields": [] }
+   
+   // ❌ Wrong - missing fields property
+   { "alias": "sales", "dataSetId": "abc-123" }
+   ```
+
+2. **Query builder aggregation keys must be field names**
+   - Aggregation keys in `groupBy()` and `dateGrain()` must match actual dataset field names
+   - Using custom aliases causes `[object Object]` errors in results
+   ```typescript
+   // ✅ Correct - key matches dataset field
+   .groupBy('region', { Sales_Amount: 'sum' })
+   
+   // ❌ Wrong - custom alias as key
+   .groupBy('region', { totalSales: 'sum' })
+   ```
+
+3. **proxyId required for local dev**
+   - Without `proxyId` in manifest.json, local dev can't access AppDB or datasets
+   - Must create card first in Domo UI and copy the ID
+
+4. **Collections must be wired in UI**
+   - Defining collections in manifest.json isn't enough
+   - Must also create/map them in the Domo card UI
+
+5. **SQL endpoint ignores page filters**
+   - Use Query endpoint (`/data/v1/`) for dashboard-embedded apps
+   - SQL endpoint requires manual filter handling
+
+6. **AI responses are in choices array**
+   ```typescript
+   // ✅ Correct
+   const text = response.choices[0].output;
+   
+   // ❌ Wrong
+   const text = response.output;
+   ```
+
+7. **Strip base64 data URL prefix for image-to-text**
+   ```typescript
+   // ✅ Correct
+   const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+   
+   // ❌ Wrong - includes prefix
+   const base64 = dataUrl;
+   ```
+
+8. **Filter dataType is required**
+   ```typescript
+   // ✅ Correct
+   { column: 'amount', operator: 'GREATER_THAN', values: [100], dataType: 'NUMERIC' }
+   
+   // ❌ Wrong - missing dataType
+   { column: 'amount', operator: 'GREATER_THAN', values: [100] }
+   ```
+
+### Development Issues
+
+9. **External URLs restricted**
+   - Must whitelist domains in Admin > Network Security
+   - Fetch to external APIs will fail silently otherwise
+
+10. **Navigation on mobile**
+    - Routes auto-prefix with `/m#`
+    - Always use `domo.navigate()`, not `window.location` or `<a>` tags
+
+11. **Mobile apps are double iframes**
+    - Domo mobile app embeds your app in iframe within its webview
+    - Can cause viewport/scroll challenges
+
+12. **AppDB sync is not instant**
+    - Default sync to dataset is every 15 minutes
+    - Call sync endpoint if you need immediate availability:
+    ```javascript
+    await domo.post('/domo/datastores/v1/collections/MyCollection/sync');
+    ```
+
+### Toolkit Issues
+
+13. **Toolkit uses snake_case for AI methods**
+    ```typescript
+    // ✅ Correct
+    AIClient.generate_text()
+    AIClient.text_to_sql()
+    
+    // ❌ Wrong
+    AIClient.generateText()
+    AIClient.textToSql()
+    ```
+
+14. **Toolkit responses have body wrapper**
+    ```typescript
+    const response = await IdentityClient.get();
+    const user = response.body;  // ✅ Access via .body
+    const user = response;       // ❌ This is the wrapper, not the data
+    ```
+
+15. **AppDBClient requires instantiation**
+    ```typescript
+    // ✅ Correct - instantiate with collection name
+    const client = new AppDBClient.DocumentsClient('MyCollection');
+    
+    // ❌ Wrong - not a static method
+    AppDBClient.DocumentsClient.get();
+    ```
+
+### Debugging Tips
+
+```javascript
+// Log all Domo API calls
+const originalGet = domo.get;
+domo.get = async (...args) => {
+  console.log('domo.get called:', args);
+  const result = await originalGet.apply(domo, args);
+  console.log('domo.get result:', result);
+  return result;
+};
+
+// Check environment
+console.log('Domo env:', domo.env);
+console.log('Platform:', domo.env.platform);
+
+// Verify secure identity
+const identity = await domo.get('/domo/environment/v1/');
+console.log('Verified user:', identity);
+```
+
+### Error Handling Pattern
+
+```typescript
+const fetchWithErrorHandling = async (url, options) => {
+  try {
+    return await domo.get(url, options);
+  } catch (error) {
+    console.error(`API Error: ${url}`, error);
+    
+    if (error.status === 401) {
+      console.error('Unauthorized - user may need to re-authenticate');
+    } else if (error.status === 403) {
+      console.error('Forbidden - user lacks permission');
+    } else if (error.status === 404) {
+      console.error('Not found - check dataset alias or endpoint');
+    } else if (error.status >= 500) {
+      console.error('Server error - try again later');
+    }
+    
+    return null;
+  }
+};
+```
 
 ---
 
