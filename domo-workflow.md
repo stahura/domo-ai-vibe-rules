@@ -1,16 +1,74 @@
 # Rule: Domo App Platform Workflow Integration
 
-You are building a Domo Custom App that needs to trigger or interact with Domo Workflows. Workflows are automation pipelines in Domo that can orchestrate data operations, notifications, and integrations.
+You are building a Domo Custom App that needs to trigger Domo Workflows. Workflows are automation pipelines in Domo that can orchestrate data operations, notifications, and integrations.
+
+**Important:** Workflows return success or failure only — they do NOT return data. If you need to get data back from a server-side operation, use Code Engine instead.
 
 ## Prerequisites
 - The domo.js library must be available (included automatically when running in Domo)
-- Workflows must be created in Domo's Workflow editor
-- Workflows must be configured to allow triggering via API
+- Workflow(s) must be created in Domo's Workflow editor
 - For local development, use `@domoinc/ryuu-proxy` to proxy API calls
+
+---
+
+## Triggering a Workflow
+
+```javascript
+const startWorkflow = async (workflowAlias, body) => {
+  const instance = await domo.post(
+    `/domo/workflow/v1/models/${workflowAlias}/start`,
+    body
+  );
+  return instance;
+};
+
+// Example usage
+const result = await startWorkflow('workflow1', {
+  num1: 10,
+  num2: 20
+});
+console.log('Workflow started:', result.id);
+```
+
+The request body contains the workflow parameters:
+```json
+{
+  "parameter1": "value1",
+  "parameter2": 123
+}
+```
+
+---
+
+## Response Format
+
+```json
+{
+  "id": "2052e10a-d142-4391-a731-2be1ab1c0188",
+  "modelId": "a8afdc89-9491-4ee4-b7c3-b9e9b86c0138",
+  "modelName": "AddTwoNumbers",
+  "modelVersion": "1.1.0",
+  "createdBy": "8811501",
+  "createdOn": "2023-11-15T15:28:57.479Z",
+  "updatedBy": "8811501",
+  "updatedOn": "2023-11-15T15:28:57.479Z",
+  "status": "null"
+}
+```
+
+Response fields:
+- `id` - ID of this workflow execution
+- `modelId` - ID of the workflow instance/definition
+- `modelName` - Name of the workflow
+- `modelVersion` - Workflow version number
+- `createdBy` / `updatedBy` - User ID
+- `status` - Execution status
+
+---
 
 ## manifest.json Configuration
 
-Every Workflow your app uses MUST be declared in `manifest.json` under the `workflowMapping` array.
+Every Workflow your app triggers MUST be declared in `manifest.json` under the `workflowMapping` array.
 
 ```json
 {
@@ -32,24 +90,6 @@ Every Workflow your app uses MUST be declared in `manifest.json` under the `work
         },
         {
           "aliasedName": "num2",
-          "type": "number",
-          "list": false,
-          "children": null
-        }
-      ]
-    },
-    {
-      "alias": "workflow2",
-      "parameters": [
-        {
-          "aliasedName": "thing1",
-          "type": "number",
-          "list": false,
-          "value": 2,
-          "children": null
-        },
-        {
-          "aliasedName": "thing2",
           "type": "number",
           "list": false,
           "children": null
@@ -81,243 +121,25 @@ Key points:
 - `workflowMapping` is an **array** of workflow mappings
 - Each workflow has an `alias` (used in API calls)
 - `parameters` array defines inputs with `aliasedName`, `type`, `list`, `value` (optional default), and `children`
-- The workflow ID is mapped at publish time in the Domo Design Studio
+- The workflow ID is mapped at publish time in Domo Design Studio
 - Use `list: true` for array parameters
 
 ---
 
-## Triggering Workflows
+## Error Handling
 
-### Basic workflow trigger
 ```javascript
-const startWorkflow = async (workflowAlias, body) => {
-  const instance = await domo.post(
-    `/domo/workflow/v1/models/${workflowAlias}/start`,
-    body
-  );
-  return instance;
-};
-
-// Example usage
-const result = await startWorkflow('workflow1', {
-  num1: 10,
-  num2: 20
-});
-console.log('Workflow started:', result.id);
-```
-
-### Response format
-```json
-{
-  "id": "2052e10a-d142-4391-a731-2be1ab1c0188",
-  "modelId": "a8afdc89-9491-4ee4-b7c3-b9e9b86c0138",
-  "modelName": "AddTwoNumbers",
-  "modelVersion": "1.1.0",
-  "createdBy": "8811501",
-  "createdOn": "2023-11-15T15:28:57.479Z",
-  "updatedBy": "8811501",
-  "updatedOn": "2023-11-15T15:28:57.479Z",
-  "status": "null"
-}
-```
-
-Response fields:
-- `id` - ID of this workflow execution
-- `modelId` - ID of the workflow instance/definition
-- `modelName` - Name of the workflow
-- `modelVersion` - Workflow version number
-- `createdBy` / `updatedBy` - User ID
-- `status` - Execution status
-
-### Trigger with parameters
-```javascript
-const result = await startWorkflow('sendReport', {
-  reportType: 'weekly',
-  recipients: ['team@example.com', 'manager@example.com']
-});
-console.log('Workflow ID:', result.id);
-```
-
----
-
-## Checking Workflow Status
-
-### Get execution status
-```javascript
-// Use the 'id' from the start response
-const workflowId = 'id-from-start-response';
-
-domo.get(`/domo/workflow/v1/executions/${workflowId}`)
-  .then(status => {
-    console.log('Status:', status.state); // RUNNING, COMPLETED, FAILED
-    console.log('Output:', status.output);
-  });
-```
-
-### Poll for completion
-```javascript
-async function waitForWorkflow(workflowId, maxWaitMs = 60000) {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < maxWaitMs) {
-    const status = await domo.get(`/domo/workflow/v1/executions/${workflowId}`);
-
-    if (status.state === 'COMPLETED') {
-      return { success: true, output: status.output };
-    }
-
-    if (status.state === 'FAILED') {
-      return { success: false, error: status.error };
-    }
-
-    // Wait before polling again
-    await new Promise(resolve => setTimeout(resolve, 2000));
+async function triggerWorkflow(alias, params) {
+  try {
+    const result = await domo.post(`/domo/workflow/v1/models/${alias}/start`, params);
+    console.log('Workflow triggered successfully:', result.id);
+    return { success: true, id: result.id };
+  } catch (error) {
+    console.error(`Workflow error (${alias}):`, error);
+    return { success: false, error };
   }
-
-  return { success: false, error: 'Timeout waiting for workflow' };
 }
 ```
-
----
-
-## Common Patterns
-
-### React hook for workflow management
-```javascript
-import { useState, useCallback } from 'react';
-
-function useWorkflow(workflowAlias) {
-  const [executing, setExecuting] = useState(false);
-  const [lastExecution, setLastExecution] = useState(null);
-
-  const trigger = useCallback(async (parameters = {}) => {
-    setExecuting(true);
-
-    try {
-      const response = await domo.post(
-        `/domo/workflow/v1/models/${workflowAlias}/start`,
-        parameters
-      );
-
-      setLastExecution({
-        id: response.id,
-        modelName: response.modelName,
-        status: response.status,
-        startedAt: new Date()
-      });
-
-      return response.id;
-    } catch (error) {
-      console.error('Workflow trigger error:', error);
-      throw error;
-    } finally {
-      setExecuting(false);
-    }
-  }, [workflowAlias]);
-
-  const checkStatus = useCallback(async (workflowId) => {
-    const status = await domo.get(`/domo/workflow/v1/executions/${workflowId}`);
-    setLastExecution(prev => ({ ...prev, ...status }));
-    return status;
-  }, []);
-
-  const triggerAndWait = useCallback(async (parameters = {}, maxWaitMs = 60000) => {
-    const workflowId = await trigger(parameters);
-
-    const startTime = Date.now();
-    while (Date.now() - startTime < maxWaitMs) {
-      const status = await checkStatus(workflowId);
-
-      if (status.state === 'COMPLETED') {
-        return { success: true, output: status.output };
-      }
-      if (status.state === 'FAILED') {
-        return { success: false, error: status.error };
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-
-    return { success: false, error: 'Timeout' };
-  }, [trigger, checkStatus]);
-
-  return { trigger, checkStatus, triggerAndWait, executing, lastExecution };
-}
-```
-
-### Workflow service
-```javascript
-// services/workflow.js
-export const workflowService = {
-  async calculate(num1, num2) {
-    return domo.post('/domo/workflow/v1/models/workflow1/start', {
-      num1, num2
-    });
-  },
-
-  async sendReport(reportType, recipients) {
-    return domo.post('/domo/workflow/v1/models/sendReport/start', {
-      reportType, recipients
-    });
-  },
-
-  async getStatus(workflowId) {
-    return domo.get(`/domo/workflow/v1/executions/${workflowId}`);
-  }
-};
-```
-
-### UI component for workflow trigger
-```javascript
-function CalculateButton() {
-  const { trigger, executing, lastExecution } = useWorkflow('workflow1');
-
-  const handleClick = async () => {
-    try {
-      await trigger({ num1: 10, num2: 20 });
-      // Optionally show success notification
-    } catch (error) {
-      // Handle error
-    }
-  };
-
-  return (
-    <div>
-      <button onClick={handleClick} disabled={executing}>
-        {executing ? 'Running...' : 'Calculate'}
-      </button>
-      {lastExecution && (
-        <span>Status: {lastExecution.status}</span>
-      )}
-    </div>
-  );
-}
-```
-
----
-
-## Workflow Design Considerations
-
-1. **Input Parameters**
-   - Define parameters in manifest with `aliasedName` (not `alias` like Code Engine)
-   - Use `list: true` for array inputs
-   - Set default `value` when appropriate
-   - Document required vs optional parameters
-
-2. **Output Data**
-   - Workflows can return output data
-   - Keep output concise for API responses
-   - Store large results in datasets/AppDB
-
-3. **Error Handling**
-   - Workflows should handle their own errors gracefully
-   - Return meaningful error messages
-   - Consider retry logic within workflows
-
-4. **Timeouts**
-   - Long-running workflows need appropriate timeout handling
-   - Consider async patterns for very long operations
-   - Provide progress updates via AppDB or other means
 
 ---
 
@@ -333,6 +155,29 @@ function CalculateButton() {
 
 ---
 
+## Design Considerations
+
+1. **Input Parameters**
+   - Define parameters in manifest with `aliasedName` (not `alias` like Code Engine)
+   - Use `list: true` for array inputs
+   - Set default `value` when appropriate
+
+2. **No Data Return**
+   - Workflows only return success/failure
+   - If you need data back, use Code Engine instead
+   - For results, have the workflow write to AppDB or a dataset
+
+3. **Error Handling**
+   - Always wrap workflow calls in try/catch
+   - Provide user feedback on success/failure
+
+4. **Long-Running Workflows**
+   - Workflows may take time to complete
+   - The trigger returns immediately — it doesn't wait for completion
+   - Consider showing a "workflow started" message rather than waiting
+
+---
+
 ## Checklist
 - [ ] Workflow(s) created in Domo Workflow editor
 - [ ] Workflow mapped in `manifest.json` under `workflowMapping` array
@@ -341,6 +186,4 @@ function CalculateButton() {
 - [ ] Use `list: true` for array parameters
 - [ ] Workflow ID mapped in Domo Design Studio at publish time
 - [ ] Error handling for trigger failures
-- [ ] Status polling implemented if needed
-- [ ] Timeout handling for long-running workflows
-- [ ] User feedback (loading states, success/error messages)
+- [ ] User feedback (success/error messages)
