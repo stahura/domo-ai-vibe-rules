@@ -1,0 +1,50 @@
+# Domo App Platform Custom App Development
+
+You are helping build a Domo App Platform Custom App. This is a client-side web application that runs inside the Domo platform and uses Domo's App Framework APIs.
+
+**Important:** Do NOT confuse the App Platform/Framework APIs with Domo's Public API or Product API - they are different. The App Platform APIs are specifically for custom apps running inside Domo.
+
+---
+
+## ⚠️ Server-Side Rendering Check
+
+**Domo custom apps are client-side only.** There is no server to render pages — Domo serves static files.
+
+When you first look at a project (especially one from Lovable, v0, or similar tools), immediately check for server-side rendering (SSR). If SSR is present, **stop and warn the user** before proceeding.
+
+### Signs of SSR (incompatible with Domo):
+- Next.js with `getServerSideProps`, `getStaticProps`, or App Router server components
+- Remix with loaders or actions
+- SvelteKit with `+page.server.js` or `+server.js` files
+- Nuxt.js with server routes
+- `pages/api/` or `app/api/` directories (API routes)
+- Server-side `process.env` usage for secrets
+- Database connections in page components
+- `"use server"` directives
+
+### If SSR is detected:
+1. **Immediately alert the user** that the project uses server-side rendering
+2. Explain that Domo custom apps cannot use SSR — they must be pure client-side apps
+3. Recommend refactoring to a client-side only approach (React + Vite is recommended)
+4. If they need server-side logic, suggest using Domo Code Engine instead
+
+---
+
+## Domo App Framework APIs
+
+The following APIs are available to custom apps via the `domo.js` library (automatically included when running in Domo):
+
+| API | Purpose |
+|-----|---------|
+| **Data API** | Query datasets mapped in manifest (`/data/v1/`, `/sql/v1/`) |
+| **AppDB** | Document-style collections for app storage (`/domo/datastores/v1/collections/`) |
+| **AI Service Layer** | Text generation, image-to-text (`/domo/ai/v1/`) |
+| **Code Engine** | Server-side functions for secure operations (`/domo/codeengine/v2/packages/`) |
+| **Workflows** | Trigger automation workflows (`/domo/workflow/v1/models/`) |
+| **Files** | File storage and retrieval |
+| **Filesets** | Grouped file management |
+| **Groups** | Domo group information |
+| **User** | Current user context |
+| **Task Center** | Task management |
+
+See the individual rule files in this repo for detailed usage of each API.

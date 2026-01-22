@@ -1,3 +1,22 @@
+# ⚠️ DEPRECATED - This file is deprecated
+
+**This `.cursorrules` file is deprecated.** Cursor now uses `.cursor/rules/*.mdc` files instead.
+
+**Please use the new format:** All rules have been migrated to `.cursor/rules/` directory with individual `.mdc` files:
+- `01-overview.mdc` - Introduction, SSR check, API overview
+- `02-ryuu-js.mdc` - domo.js SDK utilities
+- `03-query.mdc` - @domoinc/query
+- `04-toolkit.mdc` - @domoinc/toolkit service clients
+- `05-da-cli.mdc` - DA CLI and conversion guide
+- `06-manifest.mdc` - manifest.json
+- `07-build-deploy.mdc` - Build and deployment
+- `08-routing-config.mdc` - Routing and Vite config
+- `09-gotchas.mdc` - Common gotchas and troubleshooting
+
+This file is kept for backward compatibility but will not be updated.
+
+---
+
 # Domo App Platform Custom App Development
 
 You are helping build a Domo App Platform Custom App. This is a client-side web application that runs inside the Domo platform and uses Domo's App Framework APIs.
