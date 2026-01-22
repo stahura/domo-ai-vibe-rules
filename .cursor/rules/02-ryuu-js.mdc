@@ -1,0 +1,107 @@
+# domo.js (ryuu.js) SDK
+
+## Installing domo.js (ryuu.js)
+
+**React / npm projects:**
+```bash
+npm install ryuu.js
+```
+```javascript
+import domo from 'ryuu.js';
+```
+
+**Vanilla JavaScript (CDN):**
+```html
+<script src="https://app.unpkg.com/ryuu.js@5.1.2"></script>
+```
+
+---
+
+## domo.js Utilities
+
+Beyond the APIs, domo.js provides useful utilities for interacting with the Domo environment:
+
+### Environment Info
+
+Access environment information. **WARNING: Can be spoofed! Do not use for security.**
+
+```javascript
+console.log(domo.env.userId);    // User ID (spoofable!)
+console.log(domo.env.customer);  // Customer/instance name
+console.log(domo.env.pageId);    // Current page ID
+console.log(domo.env.locale);    // Locale (e.g., 'en-US')
+console.log(domo.env.platform);  // 'desktop' or 'mobile'
+```
+
+**For secure user verification:**
+```javascript
+// ✅ SECURE - Server-verified identity
+const verifiedEnv = await domo.get('/domo/environment/v1/');
+const { userId, userName, userEmail } = verifiedEnv;
+
+// Or use IdentityClient from toolkit
+import { IdentityClient } from '@domoinc/toolkit';
+const response = await IdentityClient.get();
+const user = response.body; // { id, displayName, emailAddress, role }
+```
+
+### Event Listeners
+```javascript
+// React to dataset updates on the page
+domo.onDataUpdated((alias) => {
+  console.log(`Dataset ${alias} was updated`);
+  // Refresh your data or do nothing to prevent auto-reload
+});
+
+// React to page filter changes
+domo.onFiltersUpdated((filters) => {
+  console.log('Filters changed:', filters);
+  // Apply filters to your visualization
+});
+
+// React to Domo variable changes
+domo.onVariablesUpdated((variables) => {
+  console.log('Variables updated:', variables);
+});
+```
+
+### Navigation
+**Important:** Standard anchor tags with `href` do NOT work properly in Domo apps. You must use `domo.navigate()`:
+
+```javascript
+// Navigate within Domo
+domo.navigate('/page/123456789');
+
+// Open in new tab
+domo.navigate('/page/123456789', true);
+
+// External URLs also work
+domo.navigate('https://example.com', true);
+```
+
+### Fetch Multiple Datasets
+```javascript
+// Load multiple datasets in parallel
+const [sales, customers, products] = await domo.getAll([
+  '/data/v1/sales',
+  '/data/v1/customers',
+  '/data/v1/products'
+]);
+```
+
+### Update Page Filters Programmatically
+```javascript
+domo.requestFiltersUpdate(
+  [
+    {
+      column: 'category',
+      operator: 'IN',
+      values: ['Electronics', 'Clothing'],
+      dataType: 'STRING'
+    }
+  ],
+  true, // apply to page
+  () => console.log('Filter update acknowledged'),
+  (response) => console.log('Filter update completed:', response)
+);
+```
