@@ -63,6 +63,55 @@
    { column: 'amount', operator: 'GREATER_THAN', values: [100] }
    ```
 
+9. **`.aggregate()` method does NOT work**
+   - Causes error: `DA0057: An alias list was provided but it could not be parsed`
+   - Use `.groupBy()` with a grouping column instead
+   - Or use `.select()` with specific columns and aggregate client-side
+   ```typescript
+   // ❌ DOES NOT WORK
+   .aggregate({ 'Transactions': 'sum', 'Total Amount (USD)': 'sum' })
+   
+   // ✅ WORKAROUND 1 - Use groupBy with grouping column
+   .groupBy('region', { 'Transactions': 'sum', 'Total Amount (USD)': 'sum' })
+   
+   // ✅ WORKAROUND 2 - Select columns, aggregate client-side
+   .select(['Transactions', 'Total Amount (USD)'])
+   // Then: data.reduce((sum, row) => sum + row.Transactions, 0)
+   ```
+
+10. **`.groupBy()` requires a grouping column**
+    - Cannot use `.groupBy()` with only aggregations
+    - Must provide at least one column to group by
+    ```typescript
+    // ❌ DOES NOT WORK
+    .groupBy({ 'Transactions': 'sum' })
+    
+    // ✅ CORRECT
+    .groupBy('region', { 'Transactions': 'sum' })
+    // OR
+    .groupBy('region')
+    .groupBy({ 'Transactions': 'sum' })
+    ```
+
+11. **Never fetch full datasets**
+    - Always use `.select()` with specific columns
+    - Each visualization should have its own optimized query
+    - Use server-side aggregation when possible
+    ```typescript
+    // ❌ TERRIBLE - Fetches all columns
+    const allData = await new Query().fetch('dataset');
+    
+    // ✅ GOOD - Only needed columns
+    const data = await new Query()
+      .select(['col1', 'col2', 'col3'])
+      .fetch('dataset');
+    
+    // ✅ BEST - Server-side aggregation
+    const data = await new Query()
+      .groupBy('category', { 'amount': 'sum' })
+      .fetch('dataset');
+    ```
+
 ## Development Issues
 
 9. **External URLs restricted**

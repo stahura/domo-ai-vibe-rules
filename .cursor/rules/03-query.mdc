@@ -276,8 +276,10 @@ const ytdSales = await new Query()
 // Enable beast modes (calculated fields)
 .useBeastModes()
 
-// Aggregate without grouping
-.aggregate({ total: 'sum', average: 'avg' })
+// ⚠️ WARNING: .aggregate() does NOT work in practice
+// It causes error: "DA0057: An alias list was provided but it could not be parsed"
+// Use .groupBy() with a grouping column instead, or .select() + client-side aggregation
+// ❌ .aggregate({ total: 'sum', average: 'avg' })  // DOES NOT WORK
 ```
 
 ## Complete Examples

@@ -46,3 +46,14 @@ Once the ID is in your source manifest:
 ```bash
 npm run build && cd dist && domo publish
 ```
+
+## Build Checklist
+
+Before publishing, ensure:
+- [ ] `manifest.json` has correct `dataSetId` (not `id`) for datasets
+- [ ] `manifest.json` has `fields: []` in each dataset mapping
+- [ ] `thumbnail.png` exists and is 300x300 pixels
+- [ ] All queries use `.select()` with specific columns (never fetch all columns)
+- [ ] Each visualization has its own optimized query
+- [ ] No `.aggregate()` calls (use `.groupBy()` or client-side aggregation)
+- [ ] `.groupBy()` calls have a grouping column (not just aggregations)

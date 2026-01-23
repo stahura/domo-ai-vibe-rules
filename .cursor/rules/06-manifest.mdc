@@ -34,4 +34,23 @@ The `manifest.json` file is critical - it declares all external resources your a
 
 ## Required files
 - `manifest.json` - App configuration (required)
-- `thumbnail.png` - App thumbnail image (required, must be alongside manifest.json)
+- `thumbnail.png` - App thumbnail image (required, must be 300x300 pixels, must be alongside manifest.json)
+
+## Dataset Mapping Structure
+
+```json
+{
+  "datasetsMapping": [
+    {
+      "alias": "transactions",           // Used in code: new Query().fetch('transactions')
+      "dataSetId": "abc-123-def-456",   // ⚠️ Use 'dataSetId' NOT 'id'
+      "fields": []                       // ⚠️ REQUIRED - must be present even if empty
+    }
+  ]
+}
+```
+
+**Critical points:**
+- Use `dataSetId` (not `id`) for the dataset identifier
+- `fields` array is **required** - must be present even if empty `[]`
+- Omitting `fields` causes: `Cannot read properties of undefined (reading 'map')`
