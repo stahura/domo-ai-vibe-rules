@@ -121,8 +121,9 @@ try {
 
 1. **Input Sanitization** — Always sanitize inputs (like API keys) to prevent cross-site scripting and SQL injection attacks
 2. **Consistent Columns** — Every row in the dataset must have the same number of columns (use `null` for missing values)
-3. **JSON Parsing** — When APIs return JSON arrays, use `datagrid.magicParseJSON(jsonString)` instead of manual parsing
-4. **Error Messages** — Provide clear, actionable error messages in `auth.authenticationFailed()`
+3. **Use Domo-provided JavaScript Library** - These methods are provided by Domo in the Connector Dev Studio to make it easier for you to build your custom connector. You can reference them here: https://developer.domo.com/portal/e415bb99d21b2-reference
+4. **JSON Parsing** — When APIs return JSON arrays, use `datagrid.magicParseJSON(jsonString)` instead of manual parsing
+5. **Error Messages** — Provide clear, actionable error messages in `auth.authenticationFailed()`
 
 ---
 
@@ -134,5 +135,5 @@ try {
 - [ ] `dataProcessing.js` uses `datagrid.magicParseJSON()` for JSON arrays
 - [ ] All inputs are sanitized to prevent security vulnerabilities
 - [ ] Error handling provides clear messages
-- [ ] `reports.txt` documents all available reports/parameters
+- [ ] `README.md` documents all available reports/parameters
 - [ ] All rows have consistent column counts
