@@ -1,0 +1,56 @@
+# manifest.json
+
+The `manifest.json` file is critical - it declares all external resources your app needs. Domo uses this to:
+1. Know which datasets, collections, workflows, and code engine functions to connect
+2. Map aliases (used in your code) to actual Domo resource IDs (configured at publish time)
+
+## Basic structure
+```json
+{
+  "name": "My App Name",
+  "version": "1.0.0",
+  "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "fullpage": true,
+  "size": {
+    "width": 4,
+    "height": 3
+  },
+  "datasetsMapping": [],
+  "collections": [],
+  "workflowMapping": [],
+  "packageMapping": []
+}
+```
+
+## Key properties
+- `name` / `version` - App metadata
+- `id` - **Generated on first publish** (see deployment section)
+- `fullpage` - Set `true` for full-page apps
+- `size` - Card dimensions (width/height in grid units)
+- `datasetsMapping` - Datasets the app can query
+- `collections` - AppDB collections for storage
+- `workflowMapping` - Workflows the app can trigger
+- `packageMapping` - Code Engine functions the app can call
+
+## Required files
+- `manifest.json` - App configuration (required)
+- `thumbnail.png` - App thumbnail image (required, must be 300x300 pixels, must be alongside manifest.json)
+
+## Dataset Mapping Structure
+
+```json
+{
+  "datasetsMapping": [
+    {
+      "alias": "transactions",           // Used in code: new Query().fetch('transactions')
+      "dataSetId": "abc-123-def-456",   // ⚠️ Use 'dataSetId' NOT 'id'
+      "fields": []                       // ⚠️ REQUIRED - must be present even if empty
+    }
+  ]
+}
+```
+
+**Critical points:**
+- Use `dataSetId` (not `id`) for the dataset identifier
+- `fields` array is **required** - must be present even if empty `[]`
+- Omitting `fields` causes: `Cannot read properties of undefined (reading 'map')`

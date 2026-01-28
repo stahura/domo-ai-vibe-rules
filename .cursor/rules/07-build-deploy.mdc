@@ -1,0 +1,59 @@
+# Build & Deploy Workflow
+
+## Prerequisites
+- Node.js installed
+- Domo CLI installed (`npm install -g @domoinc/ryuu`)
+
+## Local development
+```bash
+npm install          # Install dependencies
+npm run dev          # Start dev server (usually Vite)
+```
+
+For API calls to work locally, you need ryuu-proxy configured and `domo login` authenticated.
+
+## Build for production
+```bash
+npm run build        # Outputs to dist/ (Vite) or build/ (CRA)
+```
+
+## Domo CLI Authentication
+```bash
+domo login           # Authenticate with your Domo instance
+```
+
+You'll be prompted for your Domo instance URL and credentials.
+
+## Publishing
+```bash
+cd dist              # Change to build output directory
+domo publish         # Publish to Domo
+```
+
+**Important - First publish:**
+- On first publish, Domo generates a new `id` for your app
+- This ID appears in the published `manifest.json` in your dist folder
+- **You must copy this ID back to your source `manifest.json`** (e.g., `public/manifest.json`)
+- If you don't, every publish creates a NEW app instead of updating the existing one
+
+```bash
+# After first publish, copy the generated ID:
+# dist/manifest.json → public/manifest.json (just the "id" field)
+```
+
+## Subsequent publishes
+Once the ID is in your source manifest:
+```bash
+npm run build && cd dist && domo publish
+```
+
+## Build Checklist
+
+Before publishing, ensure:
+- [ ] `manifest.json` has correct `dataSetId` (not `id`) for datasets
+- [ ] `manifest.json` has `fields: []` in each dataset mapping
+- [ ] `thumbnail.png` exists and is 300x300 pixels
+- [ ] All queries use `.select()` with specific columns (never fetch all columns)
+- [ ] Each visualization has its own optimized query
+- [ ] No `.aggregate()` calls (use `.groupBy()` or client-side aggregation)
+- [ ] `.groupBy()` calls have a grouping column (not just aggregations)

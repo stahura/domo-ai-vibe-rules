@@ -1,0 +1,180 @@
+# Performance Optimization - Critical Best Practices
+
+## NEVER Fetch Full Datasets
+
+**CRITICAL RULE:** Never fetch entire datasets, especially large ones (100k+ rows). Always use targeted queries with only the columns needed for each visualization.
+
+### Performance Impact
+
+```typescript
+// ❌ TERRIBLE - Fetches 300k rows × 30 columns = 9M data points
+const allData = await new Query()
+  .select(['col1', 'col2', 'col3', ...]) // All columns
+  .fetch('dataset');
+
+// ✅ GOOD - Fetches 300k rows × 2 columns = 600k data points (93% reduction)
+const totals = await new Query()
+  .select(['Transactions', 'Total Amount (USD)'])
+  .fetch('dataset');
+// Then aggregate client-side
+
+// ✅ BEST - Server-side aggregation, returns only aggregated results
+const totals = await new Query()
+  .groupBy('Merchant Category', { 'Total Amount (USD)': 'sum' })
+  .fetch('dataset');
+// Returns only ~10-20 rows (one per category)
+```
+
+## Query Optimization Strategy
+
+### 1. Use Server-Side Aggregation When Possible
+
+**Priority order:**
+1. **Best:** `.groupBy()` with aggregations (server-side)
+2. **Good:** `.select()` with only needed columns, then aggregate client-side
+3. **Acceptable:** `.select()` with multiple columns if aggregation isn't possible
+4. **Never:** Fetch all columns or entire dataset
+
+```typescript
+// ✅ BEST - Server aggregates, returns minimal data
+const salesByRegion = await new Query()
+  .groupBy('region', { 'Sales_Amount': 'sum', 'Order_Count': 'count' })
+  .fetch('sales');
+
+// ✅ GOOD - Only fetch columns needed, aggregate client-side
+const salesData = await new Query()
+  .select(['region', 'Sales_Amount'])
+  .fetch('sales');
+const totalSales = salesData.reduce((sum, row) => sum + row.Sales_Amount, 0);
+
+// ❌ BAD - Fetches all columns
+const allData = await new Query().fetch('sales');
+```
+
+### 2. One Query Per Visualization
+
+Each visualization should have its own optimized query:
+
+```typescript
+// ✅ CORRECT - Separate optimized queries
+const quickStats = await fetchQuickStats();      // Only Account Key, Account Status
+const riskMetrics = await fetchRiskMetrics();    // Only Transactions, KYC Status, etc.
+const categories = await fetchCategories();      // Grouped by Merchant Category
+
+// ❌ WRONG - One query for everything
+const allData = await fetchAllData();
+const quickStats = calculateFromAll(allData);
+const riskMetrics = calculateFromAll(allData);
+const categories = calculateFromAll(allData);
+```
+
+### 3. Column Selection Strategy
+
+**Always specify columns explicitly:**
+- Only select columns needed for the specific calculation
+- Don't use `.select()` without arguments (fetches all columns)
+- For aggregations, only select the grouping column + aggregated columns
+
+```typescript
+// ✅ CORRECT - Only 2 columns
+const data = await new Query()
+  .select(['Account Key', 'Account Status'])
+  .fetch('dataset');
+
+// ❌ WRONG - Fetches all columns
+const data = await new Query().fetch('dataset');
+```
+
+## Common Patterns
+
+### Pattern 1: Totals Without Grouping
+
+When you need totals but no grouping column:
+
+```typescript
+// Option A: Select only needed columns, sum client-side
+const totalsData = await new Query()
+  .select(['Transactions', 'Total Amount (USD)'])
+  .fetch('dataset');
+const totalTransactions = totalsData.reduce((sum, row) => sum + (row.Transactions || 0), 0);
+const totalVolume = totalsData.reduce((sum, row) => sum + (row['Total Amount (USD)'] || 0), 0);
+
+// Option B: Use a constant grouping column (if dataset has one)
+// Not always possible, but more efficient if available
+```
+
+### Pattern 2: Counts with Filters
+
+```typescript
+// ✅ CORRECT - Only fetch the column needed for counting
+const kycData = await new Query()
+  .select(['KYC Status'])
+  .fetch('dataset');
+const approvedCount = kycData.filter(row => row['KYC Status'] === 'APPROVED').length;
+
+// Better if possible: Use server-side count aggregation
+// (See Query API limitations below)
+```
+
+### Pattern 3: Unique Values
+
+```typescript
+// ✅ CORRECT - Only fetch the column needed
+const statesData = await new Query()
+  .select(['State'])
+  .fetch('dataset');
+const uniqueStates = new Set(statesData.map(row => row.State)).size;
+```
+
+## Query API Limitations
+
+### `.aggregate()` Doesn't Work
+
+**CRITICAL:** The `.aggregate()` method shown in some documentation **does not work** in practice. It causes error: `DA0057: An alias list was provided but it could not be parsed`.
+
+```typescript
+// ❌ DOES NOT WORK - Causes DA0057 error
+const totals = await new Query()
+  .aggregate({ 'Transactions': 'sum', 'Total Amount (USD)': 'sum' })
+  .fetch('dataset');
+
+// ✅ WORKAROUND - Use .groupBy() with a grouping column
+const totals = await new Query()
+  .groupBy('some_column', { 'Transactions': 'sum', 'Total Amount (USD)': 'sum' })
+  .fetch('dataset');
+
+// ✅ ALTERNATIVE - Select columns and aggregate client-side
+const totals = await new Query()
+  .select(['Transactions', 'Total Amount (USD)'])
+  .fetch('dataset');
+// Then sum client-side
+```
+
+### `.groupBy()` Requires a Grouping Column
+
+You cannot use `.groupBy()` with only aggregations - you must provide a grouping column:
+
+```typescript
+// ❌ DOES NOT WORK - No grouping column
+.groupBy({ 'Transactions': 'sum' })
+
+// ✅ WORKS - Has grouping column
+.groupBy('region', { 'Transactions': 'sum' })
+
+// ✅ WORKS - Multiple groupBy calls
+.groupBy('region')
+.groupBy({ 'Transactions': 'sum' })
+```
+
+## Performance Monitoring
+
+Always check:
+1. **Network tab** - How much data is being transferred?
+2. **Console** - Any warnings about large queries?
+3. **Response times** - Are queries taking too long?
+
+If a query is slow or returns too much data:
+- Reduce columns selected
+- Add filters to reduce rows
+- Use server-side aggregation instead of client-side
+- Consider pagination for large result sets

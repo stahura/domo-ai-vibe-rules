@@ -1,0 +1,208 @@
+# Common Gotchas & Troubleshooting
+
+## Critical Issues
+
+1. **datasetsMapping requires `fields` array (even if empty)**
+   - Omitting `fields` entirely causes: `Cannot read properties of undefined (reading 'map')`
+   - Always include `fields: []` even when not aliasing columns
+   ```json
+   // ✅ Correct
+   { "alias": "sales", "dataSetId": "abc-123", "fields": [] }
+   
+   // ❌ Wrong - missing fields property
+   { "alias": "sales", "dataSetId": "abc-123" }
+   ```
+
+2. **Query builder aggregation keys must be field names**
+   - Aggregation keys in `groupBy()` and `dateGrain()` must match actual dataset field names
+   - Using custom aliases causes `[object Object]` errors in results
+   ```typescript
+   // ✅ Correct - key matches dataset field
+   .groupBy('region', { Sales_Amount: 'sum' })
+   
+   // ❌ Wrong - custom alias as key
+   .groupBy('region', { totalSales: 'sum' })
+   ```
+
+3. **proxyId required for local dev**
+   - Without `proxyId` in manifest.json, local dev can't access AppDB or datasets
+   - Must create card first in Domo UI and copy the ID
+
+4. **Collections must be wired in UI**
+   - Defining collections in manifest.json isn't enough
+   - Must also create/map them in the Domo card UI
+
+5. **SQL endpoint ignores page filters**
+   - Use Query endpoint (`/data/v1/`) for dashboard-embedded apps
+   - SQL endpoint requires manual filter handling
+
+6. **AI responses are in choices array**
+   ```typescript
+   // ✅ Correct
+   const text = response.choices[0].output;
+   
+   // ❌ Wrong
+   const text = response.output;
+   ```
+
+7. **Strip base64 data URL prefix for image-to-text**
+   ```typescript
+   // ✅ Correct
+   const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+   
+   // ❌ Wrong - includes prefix
+   const base64 = dataUrl;
+   ```
+
+8. **Filter dataType is required**
+   ```typescript
+   // ✅ Correct
+   { column: 'amount', operator: 'GREATER_THAN', values: [100], dataType: 'NUMERIC' }
+   
+   // ❌ Wrong - missing dataType
+   { column: 'amount', operator: 'GREATER_THAN', values: [100] }
+   ```
+
+9. **`.aggregate()` method does NOT work**
+   - Causes error: `DA0057: An alias list was provided but it could not be parsed`
+   - Use `.groupBy()` with a grouping column instead
+   - Or use `.select()` with specific columns and aggregate client-side
+   ```typescript
+   // ❌ DOES NOT WORK
+   .aggregate({ 'Transactions': 'sum', 'Total Amount (USD)': 'sum' })
+   
+   // ✅ WORKAROUND 1 - Use groupBy with grouping column
+   .groupBy('region', { 'Transactions': 'sum', 'Total Amount (USD)': 'sum' })
+   
+   // ✅ WORKAROUND 2 - Select columns, aggregate client-side
+   .select(['Transactions', 'Total Amount (USD)'])
+   // Then: data.reduce((sum, row) => sum + row.Transactions, 0)
+   ```
+
+10. **`.groupBy()` requires a grouping column**
+    - Cannot use `.groupBy()` with only aggregations
+    - Must provide at least one column to group by
+    ```typescript
+    // ❌ DOES NOT WORK
+    .groupBy({ 'Transactions': 'sum' })
+    
+    // ✅ CORRECT
+    .groupBy('region', { 'Transactions': 'sum' })
+    // OR
+    .groupBy('region')
+    .groupBy({ 'Transactions': 'sum' })
+    ```
+
+11. **Never fetch full datasets**
+    - Always use `.select()` with specific columns
+    - Each visualization should have its own optimized query
+    - Use server-side aggregation when possible
+    ```typescript
+    // ❌ TERRIBLE - Fetches all columns
+    const allData = await new Query().fetch('dataset');
+    
+    // ✅ GOOD - Only needed columns
+    const data = await new Query()
+      .select(['col1', 'col2', 'col3'])
+      .fetch('dataset');
+    
+    // ✅ BEST - Server-side aggregation
+    const data = await new Query()
+      .groupBy('category', { 'amount': 'sum' })
+      .fetch('dataset');
+    ```
+
+## Development Issues
+
+9. **External URLs restricted**
+   - Must whitelist domains in Admin > Network Security
+   - Fetch to external APIs will fail silently otherwise
+
+10. **Navigation on mobile**
+    - Routes auto-prefix with `/m#`
+    - Always use `domo.navigate()`, not `window.location` or `<a>` tags
+
+11. **Mobile apps are double iframes**
+    - Domo mobile app embeds your app in iframe within its webview
+    - Can cause viewport/scroll challenges
+
+12. **AppDB sync is not instant**
+    - Default sync to dataset is every 15 minutes
+    - Call sync endpoint if you need immediate availability:
+    ```javascript
+    await domo.post('/domo/datastores/v1/collections/MyCollection/sync');
+    ```
+
+## Toolkit Issues
+
+13. **Toolkit uses snake_case for AI methods**
+    ```typescript
+    // ✅ Correct
+    AIClient.generate_text()
+    AIClient.text_to_sql()
+    
+    // ❌ Wrong
+    AIClient.generateText()
+    AIClient.textToSql()
+    ```
+
+14. **Toolkit responses have body wrapper**
+    ```typescript
+    const response = await IdentityClient.get();
+    const user = response.body;  // ✅ Access via .body
+    const user = response;       // ❌ This is the wrapper, not the data
+    ```
+
+15. **AppDBClient requires instantiation**
+    ```typescript
+    // ✅ Correct - instantiate with collection name
+    const client = new AppDBClient.DocumentsClient('MyCollection');
+    
+    // ❌ Wrong - not a static method
+    AppDBClient.DocumentsClient.get();
+    ```
+
+## Debugging Tips
+
+```javascript
+// Log all Domo API calls
+const originalGet = domo.get;
+domo.get = async (...args) => {
+  console.log('domo.get called:', args);
+  const result = await originalGet.apply(domo, args);
+  console.log('domo.get result:', result);
+  return result;
+};
+
+// Check environment
+console.log('Domo env:', domo.env);
+console.log('Platform:', domo.env.platform);
+
+// Verify secure identity
+const identity = await domo.get('/domo/environment/v1/');
+console.log('Verified user:', identity);
+```
+
+## Error Handling Pattern
+
+```typescript
+const fetchWithErrorHandling = async (url, options) => {
+  try {
+    return await domo.get(url, options);
+  } catch (error) {
+    console.error(`API Error: ${url}`, error);
+    
+    if (error.status === 401) {
+      console.error('Unauthorized - user may need to re-authenticate');
+    } else if (error.status === 403) {
+      console.error('Forbidden - user lacks permission');
+    } else if (error.status === 404) {
+      console.error('Not found - check dataset alias or endpoint');
+    } else if (error.status >= 500) {
+      console.error('Server error - try again later');
+    }
+    
+    return null;
+  }
+};
+```
