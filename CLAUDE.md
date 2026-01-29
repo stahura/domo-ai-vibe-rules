@@ -47,7 +47,24 @@ The following APIs are available to custom apps via the `domo.js` library (autom
 | **User** | Current user context |
 | **Task Center** | Task management |
 
-See the individual rule files in this repo for detailed usage of each API.
+### When to Include Additional API Documentation
+
+This file provides core App Platform knowledge. When working with specific APIs, add the corresponding detailed guide to your context:
+
+| Working on... | Include this file | What you'll get |
+|---------------|------------------|-----------------|
+| **Querying Domo datasets** | `domo-data-api.md` | Query patterns, SQL API, filters, pagination, local dev setup |
+| **Storing app data (collections)** | `domo-appdb.md` | CRUD operations, bulk operations, React hooks, upsert patterns |
+| **AI features (text/image)** | `domo-ai-endpoints.md` | Text generation, OCR/image-to-text, React hooks, error handling |
+| **Calling server-side functions** | `domo-code-engine.md` | Function invocation, parameters, output handling |
+| **Triggering workflows** | `domo-workflow.md` | Workflow triggers, response format, error handling, use cases |
+| **Migrating from Google AI Studio** | `google-ai-studio-to-domo.md` | Build pipeline setup, environment variables, deployment |
+| **Building custom connectors** | `domo-custom-connector-ide.md` | Authentication, data processing, pagination patterns |
+
+**Example usage:**
+- *"I need to fetch data from a Domo dataset"* → Add `domo-data-api.md` to context
+- *"I need to store user preferences"* → Add `domo-appdb.md` to context
+- *"I need AI text generation"* → Add `domo-ai-endpoints.md` to context
 
 ---
 
