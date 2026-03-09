@@ -1,0 +1,306 @@
+# @domoinc/da CLI - App Scaffolding and Code Generation
+
+The DA CLI (`@domoinc/da`) is a command-line tool for scaffolding Domo custom apps and generating boilerplate code. It's the **recommended way** to create new Domo apps and generate components.
+
+## Purpose
+
+DA CLI provides:
+- **Project scaffolding** - Creates new Domo apps with correct structure (Vite + React 18 + TypeScript)
+- **Code generation** - Generates components, reducers, and other boilerplate with proper Domo patterns
+- **Manifest management** - Manages environment-specific manifest configurations
+- **Best practices** - Ensures projects follow Domo conventions from the start
+
+## Installation
+
+```bash
+# Install globally
+pnpm add -g @domoinc/da
+
+# Or with npm
+npm install -g @domoinc/da
+```
+
+## Creating a New App
+
+```bash
+# Create new Domo app (recommended - Vite + React 18 + TypeScript)
+da new my-app-name
+cd my-app-name
+
+# With custom template
+da new my-app --template @myorg/custom-template
+da new my-app --template github.com/user/repo
+da new my-app --template ./local-template
+```
+
+**Project Structure Created:**
+```
+my-app/
+├── public/
+│   ├── manifest.json      # Domo app configuration
+│   └── thumbnail.png      # App icon in Domo
+├── src/
+│   ├── components/        # React components
+│   ├── reducers/          # Redux slices (if using)
+│   ├── services/          # API service layers
+│   ├── types/             # TypeScript definitions
+│   └── index.tsx          # App entry point
+├── package.json
+└── vite.config.ts
+```
+
+## Code Generation
+
+```bash
+# Generate component with styles, tests, and Storybook
+da generate component MyComponent
+# Creates:
+#   src/components/MyComponent/MyComponent.tsx
+#   src/components/MyComponent/MyComponent.module.scss
+#   src/components/MyComponent/MyComponent.test.tsx
+#   src/components/MyComponent/MyComponent.stories.tsx
+
+# Shorthand
+da g component MyComponent
+
+# Generate Redux slice (auto-imports to store)
+da generate reducer myFeature
+# Creates: src/reducers/myFeature/slice.ts
+
+# Shorthand
+da g reducer myFeature
+```
+
+## Manifest Management
+
+DA CLI helps manage multiple Domo environments (dev, staging, prod):
+
+```bash
+# Create environment-specific manifest overrides
+da manifest instance.prod "Production on customer.domo.com"
+da manifest instance.dev "Development on dev.domo.com"
+
+# Apply an override before publishing
+da apply-manifest instance.prod
+yarn upload
+```
+
+**Override file structure:**
+```json
+{
+  "instance.prod": {
+    "description": "Production environment",
+    "manifest": {
+      "id": "prod-app-design-id",
+      "proxyId": "prod-card-id"
+    }
+  }
+}
+```
+
+---
+
+## Converting Generated Apps (Lovable/v0) to Domo
+
+Many developers use AI tools like Lovable, v0, or similar LLM-based generators to create app prototypes. However, these tools typically generate apps with server-side rendering (SSR) that are **incompatible with Domo's client-side-only architecture**.
+
+### The Conversion Challenge
+
+Generated apps often include:
+- **Server-side rendering** (Next.js, Remix, SvelteKit, Nuxt)
+- **API routes** (`pages/api/` or `app/api/` directories)
+- **Server-side data fetching** (`getServerSideProps`, loaders, etc.)
+- **Framework-specific routing** (Next.js App Router, Remix routes)
+
+Domo apps must be:
+- **Pure client-side React** - No server rendering
+- **Static file-based** - Domo serves static files only
+- **Domo API integration** - Use `domo.get()`, `Query`, `AppDBClient`, etc. instead of backend endpoints
+
+### Recommended Conversion Pattern
+
+**DA CLI is NOT a conversion tool** - it doesn't automatically convert apps. However, you can use it as a reference structure and starting point.
+
+#### Step 1: Generate Reference Structure
+
+```bash
+# Create a fresh Domo app to use as reference
+da new my-converted-app
+cd my-converted-app
+
+# This gives you the correct structure to compare against
+```
+
+#### Step 2: Detect and Remove SSR Code
+
+**Check for SSR indicators:**
+- `getServerSideProps`, `getStaticProps` (Next.js)
+- `loader`, `action` functions (Remix)
+- `+page.server.js`, `+server.js` (SvelteKit)
+- `pages/api/` or `app/api/` directories
+- Server-side `process.env` usage
+- Database connections in components
+
+**Action:** Remove all server-side code. Domo apps run entirely in the browser.
+
+#### Step 3: Replace Data Fetching
+
+**Before (Next.js example):**
+```typescript
+// ❌ Server-side data fetching
+export async function getServerSideProps() {
+  const res = await fetch('https://api.example.com/data');
+  const data = await res.json();
+  return { props: { data } };
+}
+
+// ❌ API route
+// pages/api/users.ts
+export default async function handler(req, res) {
+  const users = await db.users.findMany();
+  res.json(users);
+}
+```
+
+**After (Domo):**
+```typescript
+// ✅ Client-side with Domo APIs
+import domo from 'ryuu.js';
+import Query from '@domoinc/query';
+import { AppDBClient } from '@domoinc/toolkit';
+
+// Fetch from Domo dataset
+const data = await domo.get('/data/v1/sales');
+
+// Or use Query API for filtered/aggregated data
+const summary = await new Query()
+  .select(['region', 'sales'])
+  .groupBy('region', { sales: 'sum' })
+  .fetch('sales-dataset');
+
+// Or use AppDB for document storage
+const tasksClient = new AppDBClient.DocumentsClient('Tasks');
+const tasks = await tasksClient.get();
+```
+
+#### Step 4: Update Routing
+
+**Before (Next.js):**
+```typescript
+// ❌ Next.js routing
+import Link from 'next/link';
+<Link href="/dashboard">Dashboard</Link>
+```
+
+**After (Domo):**
+```typescript
+// ✅ HashRouter for client-side routing
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import domo from 'ryuu.js';
+
+// Use HashRouter (works without server rewrites)
+<HashRouter>
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="/dashboard" element={<Dashboard />} />
+  </Routes>
+</HashRouter>
+
+// For Domo navigation, use domo.navigate()
+domo.navigate('/page/123456789');
+```
+
+#### Step 5: Fix Build Configuration
+
+**Before (Next.js):**
+```javascript
+// next.config.js
+module.exports = {
+  // Next.js config
+}
+```
+
+**After (Domo - Vite):**
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  base: './',  // CRITICAL: Relative paths for Domo
+  plugins: [react()],
+});
+```
+
+#### Step 6: Port Components
+
+Use DA CLI to generate new components with correct structure, then port logic:
+
+```bash
+# Generate component structure
+da generate component SalesChart
+
+# Copy component logic from generated app
+# Replace data fetching with Domo APIs
+# Update imports and dependencies
+```
+
+### What DA CLI Helps With
+
+✅ **Reference structure** - Shows correct Domo app organization  
+✅ **Component generation** - Creates properly structured components  
+✅ **Pattern examples** - Demonstrates Domo conventions  
+✅ **Starting fresh** - If conversion is too complex, start new and port logic  
+
+### What DA CLI Doesn't Do
+
+❌ **No automatic conversion** - Doesn't transform SSR to client-side  
+❌ **No migration wizard** - No step-by-step conversion tool  
+❌ **No code transformation** - Doesn't rewrite framework-specific code  
+❌ **No API migration** - Doesn't replace backend calls automatically  
+
+### Complete Conversion Checklist
+
+- [ ] Detect and remove all SSR code
+- [ ] Remove API routes (`pages/api/`, `app/api/`)
+- [ ] Replace `fetch()` calls to backend with Domo APIs
+- [ ] Update routing to `HashRouter`
+- [ ] Configure Vite with `base: './'`
+- [ ] Replace environment variables (use Domo APIs instead)
+- [ ] Update imports (remove Next.js/Remix specific)
+- [ ] Test all data fetching works with Domo APIs
+- [ ] Verify app builds and runs locally
+- [ ] Publish to Domo and test in platform
+
+### Example: Converting a Simple Dashboard
+
+**Original (Lovable/Next.js):**
+```typescript
+// pages/dashboard.tsx
+export async function getServerSideProps() {
+  const sales = await fetch('http://api.company.com/sales').then(r => r.json());
+  return { props: { sales } };
+}
+
+export default function Dashboard({ sales }) {
+  return <div>{/* Render sales data */}</div>;
+}
+```
+
+**Converted (Domo):**
+```typescript
+// src/components/Dashboard/Dashboard.tsx
+import { useEffect, useState } from 'react';
+import domo from 'ryuu.js';
+
+export default function Dashboard() {
+  const [sales, setSales] = useState([]);
+
+  useEffect(() => {
+    // Fetch from Domo dataset instead of backend
+    domo.get('/data/v1/sales').then(setSales);
+  }, []);
+
+  return <div>{/* Render sales data */}</div>;
+}
+```

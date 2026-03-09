@@ -1,0 +1,28 @@
+# Routing and Build Configuration
+
+## Base Path Configuration (Vite)
+
+Domo serves apps from a subpath, not root. Configure Vite for relative paths:
+
+```javascript
+// vite.config.js
+export default defineConfig({
+  base: './',
+  // ... other config
+});
+```
+
+## Routing (React Router)
+
+If using client-side routing, prefer `HashRouter` for App Platform:
+
+```javascript
+import { HashRouter } from 'react-router-dom';
+
+// HashRouter works without server rewrites
+<HashRouter>
+  <App />
+</HashRouter>
+```
+
+`BrowserRouter` requires server-side rewrite rules which Domo doesn't provide by default.
