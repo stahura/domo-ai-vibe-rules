@@ -1,5 +1,7 @@
 # Domo Agent Skills
 
+> Unofficial community repository of Domo App Platform agent skills and rules.
+
 A library of markdown-only Agent Skills and high-level rules for building Domo App Platform custom apps.  
 The structure is modeled after Google’s `stitch-skills` repository style: skill catalog at the root, one entrypoint file per skill, and simple install/discovery guidance.
 
@@ -91,14 +93,7 @@ Please install this Domo package for me:
 This repo is tool-agnostic by design (Cursor, Claude Code, and others).  
 Unlike older setups, it does not rely on Cursor/Claude preamble files in the root.
 
-## `npx skills add` requirements and fallback
+## If `npx skills add` is blocked
 
-- You do not need PyPI or Python packaging.
-- You do not need to publish an npm package just to host skill markdown.
-- You do need:
-  - a public GitHub repo
-  - stable skill names
-  - one-folder-per-skill with `SKILL.md`
-
-If users cannot use `skills` CLI in their environment, provide manual fallback:
-- copy desired `skills/<name>/SKILL.md` files into the agent’s local skills directory.
+Some corporate environments block `npx` or GitHub access.  
+If that happens, ask your agent to manually copy the specific `skills/<name>/SKILL.md` files into your local skills directory.
