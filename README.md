@@ -2,7 +2,7 @@
 
 > Unofficial community repository of Domo App Platform agent skills and rules.
 
-A library of markdown-only Agent Skills and high-level rules for building Domo App Platform custom apps.  
+A library of markdown-only Agent Skills and high-level rules for building Domo App Platform custom apps and embedding Domo content into external applications.
 The structure is modeled after Google’s `stitch-skills` repository style: skill catalog at the root, one entrypoint file per skill, and simple install/discovery guidance.
 
 ## Installation & Discovery
@@ -36,6 +36,8 @@ For new Domo app builds, ask your agent to start with the `domo-app-initial-buil
 - `domo-performance-optimizations` - Data query performance rules.
 - `migrating-lovable-to-domo` - Convert SSR-heavy generated apps to Domo-compatible client apps.
 - `migrating-googleai-to-domo` - Convert AI Studio-origin projects to Domo static deploy contract.
+- `domo-programmatic-filters` - Server-side programmatic filtering and dataset switching for embedded Domo dashboards and cards.
+- `domo-edit-embed` - Embedded edit experience via the Domo Identity Broker with JWT authentication and role-based access.
 - `domo-custom-connector-ide` - Connector IDE auth/data processing patterns (not for Domo app/card builds).
 
 ## Repository Structure
@@ -62,11 +64,13 @@ rules/
 ### One-time rules setup
 
 If you are non-technical, use this mental model:
+
 - install **skills** with one command
 - copy **rules** once
 - after that, just chat with your agent normally
 
 #### Cursor users (simple steps)
+
 1. Open your app project in Cursor.
 2. Make sure your project has a `.cursor/rules/` folder.
 3. Copy both files from this repo's `rules/` folder into your project’s `.cursor/rules/`:
@@ -74,6 +78,7 @@ If you are non-technical, use this mental model:
    - `domo-gotchas.md`
 
 #### Claude Code users (simple steps)
+
 1. Open your app project.
 2. Create a `rules/` folder in your project root (if it does not exist).
 3. Copy both files from this repo's `rules/` folder into your project `rules/` folder:
