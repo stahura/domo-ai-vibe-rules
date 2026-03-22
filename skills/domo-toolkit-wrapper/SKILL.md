@@ -149,6 +149,21 @@ const priorityStats = await tasksClient.get(
 );
 ```
 
+**CRITICAL response shape note:**
+- `.get()` returns document wrappers with metadata; your app fields are in `doc.content`.
+- Do not assume `docs[0].fieldName`; use `docs[0].content.fieldName`.
+
+```typescript
+const response = await tasksClient.get();
+const rawDocs = response.body || response;
+const docs = Array.isArray(rawDocs) ? rawDocs : [];
+
+const parsed = docs.map((doc) => ({
+  id: doc.id,
+  ...doc.content
+}));
+```
+
 **MongoDB Query Operators:**
 - `$eq` - Equals
 - `$ne` - Not equals

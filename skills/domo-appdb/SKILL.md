@@ -48,6 +48,64 @@ const highOpen = await tasksClient.get({
 });
 ```
 
+## AppDB response structure (critical)
+
+Documents returned by `.get()` are wrapped with metadata and your fields live inside `doc.content`.
+
+What `.create()` accepts:
+```typescript
+{ vendor: 'Acme', riskLevel: 'High', notes: 'Late payments' }
+```
+
+What `.get()` returns (shape):
+```json
+[
+  {
+    "id": "04b1756e-7b6d-4d77-842f-7975a6474d8a",
+    "datastoreId": "a3b85171-...",
+    "collectionId": "ba194a7d-...",
+    "syncRequired": true,
+    "owner": 767612617,
+    "createdOn": "2026-03-22T02:22:42.030Z",
+    "updatedOn": "2026-03-22T02:22:42.030Z",
+    "updatedBy": 767612617,
+    "content": {
+      "vendor": "Acme",
+      "riskLevel": "High",
+      "notes": "Late payments"
+    }
+  }
+]
+```
+
+Key points:
+- Your app fields are nested inside `doc.content`, not at the top level.
+- `doc.id` is the document ID used for `.update()` and `.delete()`.
+- Metadata fields (`datastoreId`, `collectionId`, `owner`, `createdOn`, etc.) are top-level.
+- Overall result may be in `response.body` or directly the array.
+
+Required parsing pattern:
+```typescript
+const response = await tasksClient.get();
+const rawDocs = response.body || response;
+const docs = Array.isArray(rawDocs) ? rawDocs : [];
+
+const parsed = docs.map((doc) => ({
+  id: doc.id,
+  ...doc.content
+}));
+```
+
+Common mistake:
+```typescript
+// WRONG: fields are inside content
+const docs = response.body || response;
+docs[0].vendor; // undefined
+
+// CORRECT
+docs[0].content.vendor; // "Acme"
+```
+
 ### Update
 ```typescript
 await tasksClient.update({
@@ -95,5 +153,6 @@ Collections still must exist in `manifest.json` under `collections`.
 ## Checklist
 - [ ] `collections` mapping exists in manifest
 - [ ] `AppDBClient.DocumentsClient` used for CRUD
+- [ ] `.get()` results are unwrapped from `doc.content` before UI/use
 - [ ] Query/update operators (`$eq`, `$in`, `$set`, `$inc`, etc.) used correctly
 - [ ] Error handling and loading states included in UI flows
