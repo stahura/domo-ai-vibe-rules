@@ -122,6 +122,19 @@ If you are non-technical, use this mental model:
    - `core-custom-apps-rule.md`
    - `custom-app-gotchas.md`
 
+#### Cortex Code users (simple steps)
+
+1. Open your app project.
+2. Create a `rules/` folder in your project root (if it does not exist).
+3. Copy both files from this repo's `rules/` folder into your project `rules/` folder:
+   - `core-custom-apps-rule.md`
+   - `custom-app-gotchas.md`
+
+Skills can also be loaded directly by asking your agent to read the skill file, e.g.:
+```text
+Please read skills/pb-apps-initial-build/SKILL.md from stahura/domo-ai-vibe-rules and follow it.
+```
+
 #### Easiest option: ask your agent to do it for you
 
 You can paste this directly to your agent:
