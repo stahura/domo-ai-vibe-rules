@@ -116,11 +116,11 @@ async function executeFunction(alias: string, payload: Record<string, unknown>) 
 }
 ```
 
-## Canonical Rules References
+## Related Skills & Rules
 
-- Toolkit patterns: `.cursor/rules/04-toolkit.mdc`
-- Manifest mapping details: `.cursor/rules/06-manifest.mdc`
-- Operational gotchas: `.cursor/rules/09-gotchas.mdc`
+- Toolkit patterns: `cap-apps-toolkit`
+- Manifest mapping details: `cap-apps-manifest`
+- Operational gotchas: `rules/custom-app-gotchas.md`
 
 ## Checklist
 - [ ] Calls use `domo.post('/domo/codeengine/v2/packages/{alias}', params)` pattern

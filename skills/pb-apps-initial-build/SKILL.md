@@ -1,8 +1,8 @@
 ---
-
-## name: pb-apps-initial-build
-
-description: Orchestrates a new Domo custom app build or existing-app takeover from scratch. Loads rules, sequences capability skills, and tracks progress through manifest, data, UI, and publish phases. Use when starting a new Domo app project, taking over an existing app, or normalizing an app to platform best practices.
+name: pb-apps-initial-build
+description: "Orchestrates a new Domo custom app build or existing-app takeover from scratch. Loads rules, sequences capability skills, and tracks progress through manifest, data, UI, and publish phases. Use when starting a new Domo app project, taking over an existing app, or normalizing an app to platform best practices."
+globs: "**/manifest.json"
+---
 
 # Domo App Initial Build Playbook
 

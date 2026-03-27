@@ -60,11 +60,11 @@ Critical gotcha:
 - Use `@domoinc/ryuu-proxy` for local API routing.
 - Authenticate with `domo login`.
 
-## Canonical Rules References
+## Related Skills & Rules
 
-- Query patterns and caveats: `.cursor/rules/03-query.mdc`
-- Performance constraints: `.cursor/rules/10-performance-optimization.mdc`
-- Query gotchas: `.cursor/rules/09-gotchas.mdc`
+- Query patterns and caveats: `cap-apps-dataset-query`
+- Performance constraints: `cap-apps-performance`
+- Query gotchas: `rules/custom-app-gotchas.md`
 
 ## Checklist
 - [ ] `datasetsMapping` aliases configured and valid

@@ -82,11 +82,11 @@ async function runWorkflow(workflowAlias: string, payload: Record<string, unknow
 }
 ```
 
-## Canonical Rules References
+## Related Skills & Rules
 
-- Toolkit workflow methods: `.cursor/rules/04-toolkit.mdc`
-- Workflow mapping requirements: `.cursor/rules/06-manifest.mdc`
-- Runtime caveats: `.cursor/rules/09-gotchas.mdc`
+- Toolkit workflow methods: `cap-apps-toolkit`
+- Workflow mapping requirements: `cap-apps-manifest`
+- Runtime caveats: `rules/custom-app-gotchas.md`
 
 ## Checklist
 - [ ] `workflowMapping` is configured

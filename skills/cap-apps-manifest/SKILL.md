@@ -1,6 +1,7 @@
 ---
 name: cap-apps-manifest
 description: Configure manifest mappings for datasets, workflows, collections, and Code Engine packagesMapping contracts.
+globs: "**/manifest.json"
 ---
 
 # manifest.json

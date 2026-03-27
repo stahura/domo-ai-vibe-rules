@@ -1,6 +1,7 @@
 ---
 name: cap-connector-dev
 description: Patterns for Domo Custom Connector IDE work only (not Domo App Platform custom apps).
+globs: "**/connector.js"
 ---
 
 # Scope Note

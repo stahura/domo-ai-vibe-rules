@@ -135,7 +135,7 @@ Please install this Domo package for me:
 
 ## Compatibility
 
-This repo is tool-agnostic by design (Cursor, Claude Code, and others).  
+This repo is tool-agnostic by design (Cursor, Claude Code, Cortex Code, and others).  
 Unlike older setups, it does not rely on Cursor/Claude preamble files in the root.
 
 ## If `npx skills add` is blocked

@@ -1,6 +1,7 @@
 ---
 name: cap-apps-publish
 description: Build and publish Domo apps with dist workflow and first-publish ID handling.
+globs: "**/manifest.json"
 ---
 
 # Build & Deploy Workflow

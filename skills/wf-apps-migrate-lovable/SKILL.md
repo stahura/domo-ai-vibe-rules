@@ -1,6 +1,7 @@
 ---
 name: wf-apps-migrate-lovable
 description: Convert SSR-heavy Lovable/v0 apps into client-only Domo apps.
+globs: "**/next.config.{js,mjs,ts}"
 ---
 
 # Migrating Lovable to Domo
@@ -184,8 +185,7 @@ Domo requires a `manifest.json` in the publish directory:
     "width": 10,
     "height": 10
   },
-  "mapping": [],
-  "fileName": "index.html",
+  "datasetsMapping": [],
   "id": "",
   "proxyId": ""
 }
@@ -193,8 +193,7 @@ Domo requires a `manifest.json` in the publish directory:
 
 - `name` — Display name in Domo
 - `size` — Card dimensions (columns x rows on the Domo dashboard grid)
-- `mapping` — Dataset mappings (empty array if using mock data or AppDB)
-- `fileName` — Entry HTML file (always `index.html`)
+- `datasetsMapping` — Dataset mappings (empty array if using mock data or AppDB)
 - `id` — Leave empty; `domo publish` fills this on first publish
 
 #### Step 8: Create Thumbnail

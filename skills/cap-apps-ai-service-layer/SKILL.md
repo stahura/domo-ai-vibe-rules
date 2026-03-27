@@ -129,10 +129,10 @@ const output = typeof outputCandidate === 'string' ? outputCandidate.trim() : ''
 if (!output) throw new Error('AI returned no usable output');
 ```
 
-## Canonical Rules References
+## Related Skills & Rules
 
-- Toolkit AI methods and caveats: `.cursor/rules/04-toolkit.mdc`
-- Naming/response gotchas: `.cursor/rules/09-gotchas.mdc`
+- Toolkit AI methods and caveats: `cap-apps-toolkit`
+- Naming/response gotchas: `rules/custom-app-gotchas.md`
 
 ## Checklist
 - [ ] `AIClient` methods use snake_case (`generate_text`, `text_to_sql`, etc.)
