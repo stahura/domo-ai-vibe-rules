@@ -21,6 +21,12 @@ alwaysApply: true
 - Use relative asset base for Domo hosting (`base: './'`).
 - Prefer `HashRouter` unless rewrite behavior is known and intentional.
 
+## CLI skills are optional
+- All skills under `skills/cli/` use the **community-domo-cli** (not the official Domo CLI `@domoinc/ryuu`). They automate tasks like creating AppDB collections, Code Engine packages, or fetching dataset/resource IDs.
+- **Before using any `cli/` skill**, read `skills/cli/community-cli-howto/SKILL.md` first for install, auth setup, supported commands, and troubleshooting.
+- These skills are **strictly optional helpers**. If the community CLI is not installed or the user does not want to use it, **skip those skills gracefully** and fall back to asking the user to provide the needed IDs/resources manually or perform the step in the Domo UI.
+- Other skills (e.g. `code-engine`, `appdb`) may suggest using a `cli/` skill first. That suggestion is a convenience, not a requirement — it must **never block the build**.
+
 ## API index
 - Data API
 - AppDB
@@ -37,6 +43,7 @@ alwaysApply: true
 - domo.js usage -> `skills/apps/domo-js/SKILL.md`
 - Toolkit usage -> `skills/apps/toolkit/SKILL.md`
 - AppDB -> `skills/apps/appdb/SKILL.md`
+- Community CLI howto (start here for any CLI skill) -> `skills/cli/community-cli-howto/SKILL.md`
 - AppDB collection create (datastore + collection lifecycle) -> `skills/cli/appdb-collection-create/SKILL.md`
 - AI services -> `skills/apps/ai-service-layer/SKILL.md`
 - Code Engine -> `skills/apps/code-engine/SKILL.md`
