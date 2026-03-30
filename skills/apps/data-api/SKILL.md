@@ -11,14 +11,6 @@ This rule is **toolkit/query-first**. Use `@domoinc/query` for dataset reads in 
 
 ## Canonical Query Approach
 
-### 0) Resolve schema before coding query/UI mappings
-- Read dataset schema for each `datasetsMapping.dataSetId` and map actual field names up front.
-- Define explicit app-level mapping for:
-  - date/time field used for trends
-  - numeric metric fields (sales/revenue/profit/quantity, etc.)
-  - categorical dimensions (region/category/segment/etc.)
-- Do not assume canonical names exist. If required fields are absent, return a clear mapping error.
-
 ### 1) Use `@domoinc/query` for dataset queries
 ```bash
 yarn add @domoinc/query

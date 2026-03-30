@@ -145,24 +145,6 @@ Collections still must exist in `manifest.json` under `collections`.
 }
 ```
 
-## Endpoint Interop Gotcha (when not using toolkit)
-
-If you must call AppDB endpoints directly with `domo.get/post`, the `collections/{...}` path segment should use the **collection name** (alias/name), not the collection UUID.
-
-Example:
-
-```typescript
-// ✅ Correct
-await domo.post('/domo/datastores/v1/collections/TasksCollection/documents', {
-  content: { title: 'hello' }
-});
-
-// ❌ Wrong (will often return DA0088 invalid collection name)
-await domo.post('/domo/datastores/v1/collections/04b1756e-7b6d-4d77-842f-7975a6474d8a/documents', {
-  content: { title: 'hello' }
-});
-```
-
 ## Canonical Rules References
 
 - Toolkit AppDB patterns: `.cursor/rules/04-toolkit.mdc`
