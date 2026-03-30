@@ -1,7 +1,7 @@
 ---
-name: initial-build
+
+## name: initial-build  
 description: Orchestrates a new Domo custom app build or existing-app takeover from scratch. Loads rules, sequences capability skills, and tracks progress through manifest, data, UI, and publish phases. Use when starting a new Domo app project, taking over an existing app, or normalizing an app to platform best practices.
----
 
 # Domo App Initial Build Playbook
 
@@ -12,7 +12,7 @@ description: Orchestrates a new Domo custom app build or existing-app takeover f
 
 ## Progress checklist
 
-Copy this checklist and update it as you work:
+Copy this checklist and update it as you work
 
 ```
 Build Progress:
@@ -34,7 +34,6 @@ Apply before writing any code:
 
 - `rules/core-custom-apps-rule.md`
 - `rules/custom-app-gotchas.md`
-- `rules/default-theme-rule.md`
 
 ## Phase 1 — Manifest & contracts
 
@@ -86,11 +85,11 @@ Move to typed `@domoinc/toolkit` clients where they add value (structured respon
 Only load the skills your app actually requires (3 examples are listed here but you have access to many more skills):
 
 
-| Feature needed                                 | Skill                       |
-| ---------------------------------------------- | --------------------------- |
-| AI text generation or text-to-SQL              | `ai-service-layer` |
+| Feature needed                                 | Skill                                                       |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| AI text generation or text-to-SQL              | `ai-service-layer`                                          |
 | Server-side functions (secrets, external APIs) | `code-engine` + `code-engine-create` + `code-engine-update` |
-| Triggering automation workflows                | `workflow`         |
+| Triggering automation workflows                | `workflow`                                                  |
 
 
 **Decision guide:** If the user hasn't mentioned AI, Code Engine, or Workflows, skip this phase entirely. Don't add complexity the app doesn't need.
@@ -126,3 +125,4 @@ After publishing, confirm:
 - Use Vite `base: './'`.
 - Prefer `HashRouter` unless rewrites are intentionally handled.
 - Treat `domo.env.`* as convenience only; use verified identity for trust decisions.
+
