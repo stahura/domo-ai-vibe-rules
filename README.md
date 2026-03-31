@@ -83,7 +83,7 @@ More directories can be added as new skills are contributed.
 
 ### Connectors (`skills/connectors/`)
 
-- `connector-dev` — Connector IDE auth/data processing patterns (not for Domo app/card builds).
+- `connector-dev` — Connector IDE auth/data processing patterns (not for Domo app/card builds). This skill needs to be called manually in order to apply correctly.  LLMs have a lot of knowledge in this area so they will try to do it themselves.  
 
 ### CLI (`skills/cli/`)
 
