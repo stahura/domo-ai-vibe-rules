@@ -8,13 +8,17 @@ skills/<feature>/<skill-name>/SKILL.md
 
 Current feature groups:
 
+- `administration/`
 - `apps/`
 - `cli/`
 - `connectors/`
+- `datagen/`
 - `documents/`
 - `domo-everywhere/`
 - `skill-orchestration/`
 - `themes/`
+- `transformation/`
+- `visualization/`
 
 CLI skills currently available:
 
