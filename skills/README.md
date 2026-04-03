@@ -11,6 +11,7 @@ Current feature groups:
 - `apps/`
 - `cli/`
 - `connectors/`
+- `datagen/`
 - `documents/`
 - `domo-everywhere/`
 - `skill-orchestration/`
