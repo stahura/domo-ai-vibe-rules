@@ -247,25 +247,30 @@ Joins two upstream actions on specified keys.
   "id": "MergeJoin-accounts-opps",
   "name": "Join Accounts & Opp Summary",
   "dependsOn": ["LoadFromVault-accounts", "GroupBy-opp-summary"],
+  "disabled": false,
+  "removeByDefault": false,
+  "notes": [],
   "settings": {"preferredDatabaseEntityType": "TEMP_VIEW"},
   "gui": {"x": 576, "y": 320, "color": null, "colorSource": null, "sampleJson": null},
+  "previewRowLimit": null,
   "joinType": "LEFT OUTER",
-  "relationshipType": "MANY_TO_MANY",
+  "relationshipType": "MTM",
   "step1": "LoadFromVault-accounts",
   "step2": "GroupBy-opp-summary",
   "keys1": ["Id"],
   "keys2": ["AccountId"],
+  "on": null,
+  "schemaModification1": [],
   "schemaModification2": [
     {"name": "AccountId", "rename": "Opp_AccountId", "remove": true}
-  ],
-  "tables": [{}]
+  ]
 }
 ```
 
 | Field | Description |
 |---|---|
 | `joinType` | `"LEFT OUTER"`, `"INNER"`, `"RIGHT OUTER"`, `"FULL OUTER"` |
-| `relationshipType` | `"MANY_TO_MANY"`, `"ONE_TO_ONE"`, `"ONE_TO_MANY"`, `"MANY_TO_ONE"` |
+| `relationshipType` | **`"MTM"`** — use this abbreviation, NOT `"MANY_TO_MANY"` (causes validation errors) |
 | `step1` | Action ID for the left side of the join |
 | `step2` | Action ID for the right side of the join |
 | `keys1` | Array of column names from step1 to join on |
@@ -761,18 +766,17 @@ Selects specific columns and optionally renames them.
 - Only columns listed in `select` are passed through; all others are dropped
 - Omit `rename` to keep the original column name
 
-**Alternative format** (from other verified dataflows) — uses `fields` instead of `select`, with explicit `remove` control:
+**Alternative format** — uses `fields` instead of `select`. **Only list columns you want to KEEP** (with optional rename). Unlisted columns are dropped. Do NOT add `remove: true` entries — they cause `DP-0003` validation errors.
 
 ```json
 "fields": [
-  {"name": "SourceCol", "rename": "TargetCol", "type": null, "dateFormat": null, "settings": {}, "remove": false},
-  {"name": "DropThisCol", "rename": "", "type": null, "dateFormat": null, "settings": {}, "remove": true}
+  {"name": "ID", "rename": "Dataflow ID"},
+  {"name": "Display Name", "rename": "Dataflow Name"},
+  {"name": "Link", "rename": "Dataflow Link"}
 ]
 ```
 
-**Important:** Do NOT set `"remove": true` AND provide a `"rename"` on the same field — remove wins and the column is dropped entirely (no rename happens).
-
-**Important:** The `SelectValues` action type caused a `BAD REQUEST` error when used as the final step before `PublishToVault` during our testing. Removing it and publishing directly from the upstream join resolved the issue. If you experience commit failures, try removing `SelectValues` from the pipeline.
+The minimal field entry is just `{"name": "...", "rename": "..."}`. Do NOT include `type`, `dateFormat`, `settings`, or `remove` — these cause `DP-0003 Action is improperly configured` errors on the fields format.
 
 ### PublishToVault (Output Node)
 
@@ -784,33 +788,39 @@ Writes the final data to a Domo dataset.
   "id": "PublishToVault-output",
   "name": "SFDC | Account Summary",
   "dependsOn": ["MergeJoin-final"],
+  "disabled": false,
+  "removeByDefault": false,
+  "notes": [],
   "settings": {"preferredDatabaseEntityType": "TEMP_VIEW"},
   "gui": {"x": 1248, "y": 320, "color": null, "colorSource": null, "sampleJson": null},
-  "inputs": ["MergeJoin-final"],
+  "previewRowLimit": null,
   "dataSource": {
     "type": "DataFlow",
     "name": "SFDC | Account Summary",
     "cloudId": "domo"
   },
   "versionChainType": "REPLACE",
-  "schemaSource": "DATAFLOW",
-  "partitioned": false,
-  "tables": [{}]
+  "partitionIdColumns": [],
+  "upsertColumns": [],
+  "retainPartitionExpression": ""
 }
 ```
 
 | Field | Description |
 |---|---|
-| `inputs` | Array with a single action ID — the final transform step |
-| `dependsOn` | Same as `inputs` |
+| `dependsOn` | Array with a single action ID — the final transform step |
 | `dataSource.type` | `"DataFlow"` |
 | `dataSource.name` | Name for the output dataset |
-| `dataSource.guid` | UUID of existing output dataset (omit for new datasets) |
+| `dataSource.guid` | UUID of existing output dataset — **omit entirely for new datasets** |
 | `dataSource.cloudId` | `"domo"` |
 | `versionChainType` | `"REPLACE"` (full replace) or `"APPEND"` |
-| `schemaSource` | `"DATAFLOW"` — schema is inferred from the data |
+| `partitionIdColumns` | `[]` — always empty unless using partitioning |
+| `upsertColumns` | `[]` — always empty unless doing upserts |
+| `retainPartitionExpression` | `""` — always empty string |
 
-For new dataflows (first creation), omit the `guid` field. Domo will create the output dataset on first execution and assign a guid automatically.
+**CRITICAL:** Do NOT include `inputs`, `schemaSource`, `partitioned`, or `tables` in PublishToVault. These fields cause `DP-DSCF` commit failures where the ETL processes all rows successfully but then fails to write to the output dataset. This was confirmed through extensive testing (April 2026).
+
+For new dataflows, omit `guid` entirely. Domo assigns a real output dataset UUID on the first successful run.
 
 ## Complete Example: Account Summary ETL
 
@@ -1048,13 +1058,37 @@ for e in errors:
 
 ## Common Pitfalls
 
-### 1. SelectValues Before PublishToVault Can Cause Commit Failures
+### 1. `DP-DSCF` Commit Failure — Wrong PublishToVault Structure
 
-During testing, having a `SelectValues` action as the immediate input to `PublishToVault` caused a `"Failed to commit data to data source"` error. Removing `SelectValues` and connecting the upstream join directly to `PublishToVault` resolved the issue. The output dataset then contains all columns from the upstream action.
+The error `"Failed to commit data to data source <UUID>"` (code `DP-DSCF`) is caused by incorrect `PublishToVault` fields. The ETL will process all rows successfully but then fail at the commit step.
 
-### 2. First Run May Fail on New Output Datasets
+**Root cause (confirmed April 2026):** Using `inputs`, `schemaSource`, `partitioned`, or `tables` in the `PublishToVault` action.
 
-When creating a dataflow with `dataSourceId: null` in the output, the first execution creates the output dataset but may fail with a commit error. Running the dataflow a second time after the output dataset exists typically succeeds. In our testing, removing `SelectValues` avoided this issue entirely.
+**Fix:** Use this exact structure — `partitionIdColumns`, `upsertColumns`, `retainPartitionExpression` — and omit `inputs`, `schemaSource`, `partitioned`, `tables`:
+
+```json
+{
+  "type": "PublishToVault",
+  "dataSource": {"type": "DataFlow", "name": "Output Name", "cloudId": "domo"},
+  "versionChainType": "REPLACE",
+  "partitionIdColumns": [],
+  "upsertColumns": [],
+  "retainPartitionExpression": ""
+}
+```
+
+### 2. SelectValues `fields` Format — Only List Columns to Keep
+
+The `fields` format of `SelectValues` causes `DP-0003 Action is improperly configured` if you include entries with `"remove": true` or extra fields like `type`, `dateFormat`, `settings`. Only list columns you want to **keep**:
+
+```json
+"fields": [
+  {"name": "ID", "rename": "Dataset ID"},
+  {"name": "Name", "rename": "Dataset Name"}
+]
+```
+
+Columns not listed are automatically dropped. Do NOT add remove entries.
 
 ### 3. Column Name Conflicts in Joins
 
@@ -1072,15 +1106,13 @@ For `MergeJoin`, the `dependsOn` array must contain both `step1` and `step2` act
 
 The `gui.x` and `gui.y` values determine where nodes appear in the Domo Magic ETL visual editor. Space nodes approximately 224px apart horizontally and 192px vertically for a clean layout. Input nodes typically start at `x: 128`.
 
-### 7. Dataflow Creation via API — Auth & DRAFT Limitations
+### 7. Dataflow Creation via API — Auth (Updated April 2026)
 
-**Auth requirement:** `POST /api/dataprocessing/v1/dataflows` is an internal API. Developer tokens (`DDCI...`) get **403 Forbidden** even for Admin users. You must use SID-based auth (refresh token → access token → SID → `X-Domo-Authentication` header). The body **must** include `"databaseType": "MAGIC"`.
+**Auth:** `POST /api/dataprocessing/v1/dataflows` works with developer tokens (`DDCI...`) on most instances (confirmed April 2026). The body **must** include `"databaseType": "MAGIC"`. The created dataflow is NOT in DRAFT state and can be executed immediately via API — no UI save required.
 
-**DRAFT limitation (verified March 2026):** The POST creates a dataflow in `DRAFT` state with `outputs: []`. The `outputs` array from the request body is ignored. Neither `PUT /dataflows/{id}` nor `PUT /dataflows/{id}/patch` can change `draft`, `enabled`, or `runState`. Execution via `POST /dataflows/{id}/executions` returns 500 for DRAFT dataflows because the output datasets aren't registered.
+**Outputs:** When POST includes `"outputs": [{"dataSourceId": null, "dataSourceName": "...", "versionChainType": "REPLACE"}]`, Domo assigns a real output dataset UUID immediately. The first successful execution creates the actual dataset.
 
-**What works:** Creating the dataflow structure (actions, inputs, GUI positions) via API, then **opening it in the Domo UI** to save/publish it (which transitions it out of DRAFT and registers outputs). After the first UI save, all subsequent updates and executions work via API.
-
-**CLI:** The CLI has `set-dataflow-properties -d <file> -c` which calls the same POST endpoint, but since the CLI only supports developer token auth (`connect -token`), it gets 403. The CLI can still rename (`-n`), enable/disable (`-e`), and subscribe (`-s`) to existing dataflows. It can export definitions (`list-dataflow -i <ID> -d -f <file>`) and run dataflows (`dataflow-run-now -i <ID>`).
+**CLI:** The `domo` (ryuu) CLI is for Custom App publishing only and has no dataflow commands. The Java CLI (`domoutil.jar`) has dataflow commands but requires separate setup.
 
 ### 8. Aggregation Type Names Are Not What You'd Expect
 
@@ -1116,9 +1148,9 @@ concat(year(`date_ymd`), MONTHNAME(`date_ymd`))
 
 Known working functions: `year()`, `MONTHNAME()`, `concat()`, `DATE()`.
 
-### 11. runState is DRAFT on Creation
+### 11. Dataflows Created via POST Can Be Executed Immediately (Updated April 2026)
 
-When creating a new dataflow via POST, the `runState` will be `DRAFT`. **As of March 2026, DRAFT dataflows cannot be executed via API** — executions return 500. The `outputs` array is also not populated during POST. You must open the dataflow in the Domo UI and save it once to transition out of DRAFT, register outputs, and enable execution. After the first UI save, API updates and executions work normally.
+Contrary to earlier notes, dataflows created via `POST /api/dataprocessing/v1/dataflows` with a dev token are NOT in DRAFT state and **can be executed immediately** via `POST .../executions`. The `outputs` array IS populated on creation when `dataSourceId: null` is passed. No UI save required. Executions return a valid execution ID and run to completion.
 
 ### 12. CLI dataflow-run-now Can Fail on New Dataflows
 
@@ -1132,9 +1164,9 @@ No need to specify `responsibleUserId` in the POST body — it defaults to the a
 
 A single LoadFromVault node can feed multiple downstream branches — just reference its ID in multiple `dependsOn` arrays. This avoids loading the same dataset twice.
 
-### 15. PublishToVault inputs Array Is Required
+### 15. PublishToVault — Use `dependsOn` Only, NOT `inputs`
 
-The PublishToVault action requires BOTH `"inputs"` (array) AND `"dependsOn"` (array). If `numOutputs` = 0 after creation, the `dataSource` object is likely missing from the action — PUT to fix.
+The `PublishToVault` action uses `dependsOn` to reference its upstream action. Do NOT include an `inputs` array — it is not part of the working format and contributes to `DP-DSCF` commit failures. If `numOutputs` = 0 after creation, the `dataSource` object is likely missing from the action — PUT the corrected definition to fix.
 
 ### 16. API Token Authentication
 
@@ -1145,6 +1177,29 @@ x-domo-developer-token: <TOKEN>
 ```
 
 This is different from OAuth — no client ID/secret exchange is needed.
+
+### 19. All Non-LoadFromVault Actions Require `disabled`, `removeByDefault`, `notes`
+
+Every action except `LoadFromVault` must include these fields or the dataflow may behave unexpectedly in the UI:
+
+```json
+"disabled": false,
+"removeByDefault": false,
+"notes": [],
+"previewRowLimit": null
+```
+
+`MergeJoin` additionally requires `"on": null` and explicit `"schemaModification1": []` and `"schemaModification2": []` (even when empty).
+
+`LoadFromVault` uses `"previewRowLimit": 10000` (not null).
+
+### 20. `relationshipType` Must Be `"MTM"` Not `"MANY_TO_MANY"`
+
+The `MergeJoin` field `relationshipType` must be the abbreviated form `"MTM"`. Using `"MANY_TO_MANY"` causes validation errors. Other valid values: `"OTO"`, `"OTM"`, `"MTO"`.
+
+### 21. Always Ask for a Master Dataset Anchor Before Building Lineage ETLs
+
+Before building any dataset lineage ETL, ask: **"Is there a master 'My Datasets' or similar list dataset that every output row should be tied back to?"** This anchor dataset (typically containing Dataset ID, Name, Link, Owner, etc.) should be loaded as the LEFT side of the final join so all datasets appear in the output — even those with no card/ETL associations (standalone datasets). Missing this anchor means the output only covers datasets that happen to appear in other metadata tables, missing any standalone ones.
 
 ### 17. Do NOT Use `?hydrate=full` When Fetching Dataflows
 
@@ -1179,10 +1234,16 @@ All action types discovered across existing dataflows in the instance:
 
 ## Workflow: Creating a New Magic ETL
 
-1. **Get input dataset schemas** — use `get-schema -id <UUID>` on each input dataset to understand available columns
-2. **Export an existing dataflow as a template** — `list-dataflow -i <ID> -d -f template.json`
-3. **Build the JSON definition** — define LoadFromVault nodes for inputs, GroupBy/MergeJoin for transforms, PublishToVault for output
-4. **Create via API** — `POST /api/dataprocessing/v1/dataflows`
-5. **Execute** — `dataflow-run-now -i <NEW_ID>` or `POST /api/dataprocessing/v1/dataflows/<ID>/executions`
-6. **Check status** — `GET /api/dataprocessing/v1/dataflows/<ID>/executions?limit=1`
-7. **Iterate** — if it fails, update via `PUT /api/dataprocessing/v1/dataflows/<ID>` and re-run
+### Pre-Flight Questions (ask before building)
+- What are all the input dataset IDs and their column schemas? (query each via `/api/query/v1/execute/<UUID>` with `SELECT * FROM table LIMIT 2`)
+- Is there a **master/anchor dataset** (e.g., "My Datasets") that every output row should tie back to? If yes, get its UUID — it becomes the LEFT side of the final join.
+- What are the exact desired output column names and which input fields map to each?
+
+### Build Steps
+1. **Get input dataset schemas** — `POST /api/query/v1/execute/<UUID>` with `{"sql": "SELECT * FROM table LIMIT 2"}` on each input dataset
+2. **Build the JSON definition** — use the confirmed working action structures from this skill doc
+3. **Create via API** — `POST /api/dataprocessing/v1/dataflows` with dev token — works immediately, no UI save needed
+4. **Execute** — `POST /api/dataprocessing/v1/dataflows/<ID>/executions`
+5. **Check status** — `GET /api/dataprocessing/v1/dataflows/<ID>/executions/<EXEC_ID>` — poll until `state` is `SUCCESS` or `FAILED_DATA_FLOW`
+6. **On failure** — check `errors[]` array in execution response for `actionId` and `localizedMessage`, fix the specific action, `PUT` the updated definition, re-run
+7. **Export for debugging** — `GET /api/dataprocessing/v1/dataflows/<ID>` returns the full saved definition including any server-assigned GUIDs
