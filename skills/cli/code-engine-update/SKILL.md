@@ -34,13 +34,27 @@ POST /api/codeengine/v2/packages
 
 with `id` and `version` set in body for versioned update behavior.
 
+## Release Safety Rule
+
+Hard rule: never call any Code Engine release endpoint unless the user explicitly says **\"release\"**.
+
+- Do not infer release from context.
+- Do not release as part of \"finish\", \"publish\", or \"make it work\".
+- If release appears necessary, stop and ask for explicit release approval first.
+
 ## Update/New-Version Behavior
 
-Use this decision model:
+Preferred create/update model:
 
-- no `packageId` -> create flow (handoff to `code-engine-create`)
-- `packageId` only -> update current package context
-- `packageId` + `version` -> create/update that explicit version
+1. Create a new package: `POST /api/codeengine/v2/packages`
+2. Create a new version of an existing package: also `POST /api/codeengine/v2/packages` with `id` and `version` (for example `1.0.1`) in the request body, including code/manifest payload.
+3. Update an existing package version: `PUT /api/codeengine/v2/packages/{id}/versions/{version}`
+4. If update fails because the target version is deployed/immutable, create a new version and then update that new version.
+
+Execution notes:
+
+- For new-version creation, prefer creating the version with full code+manifest payload immediately.
+- Use `PUT` for subsequent changes to that specific version.
 
 Always emit resulting `packageId` and `version` for downstream manifest sync.
 
