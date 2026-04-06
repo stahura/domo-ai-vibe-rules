@@ -19,8 +19,10 @@ Skills install into `~/.claude/skills/` on your machine. This folder is hidden b
 **Or run it yourself:**
 
 ```bash
-npx skills add https://github.com/stahura/domo-ai-vibe-rules/skills --all
+npx skills add https://github.com/stahura/domo-ai-vibe-rules/skills --all -g
 ```
+
+The `-g` flag installs skills globally so they are available in every project. Leave it off to install only in your current directory — but you will need to re-install in each new project you start.
 
 For new Domo app builds, ask your agent to start with the `basic-app-build` skill first — it sequences the other skills for you.
 
