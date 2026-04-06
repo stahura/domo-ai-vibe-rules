@@ -1,7 +1,7 @@
 # Domo Deck Theme Reference
 
 Complete CSS, HTML patterns, and inline assets for Domo-branded slide decks. Referenced by the main SKILL.md during Phase 1.
-
+Read `references/domo-theme.md` for full domo design patterns.
 ## Inline Domo Logo (SVG)
 
 Use this SVG directly in `<img>` tags via a data URI. No external file needed.
