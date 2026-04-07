@@ -21,6 +21,7 @@ description: Build and manage Domo App Studio apps via REST API. Covers app crea
 Domo App Studio (formerly "Data Apps") provides a multi-page dashboard builder with a canvas-based layout system. Each app contains multiple **views** (pages), and each view has a **layout** that controls where cards are positioned.
 
 Key concepts:
+
 - **App** (`dataAppId`) — the top-level container (e.g., `453445400`)
 - **View** (`viewId`) — a page within the app. The `viewId` doubles as a `pageId` for card operations
 - **Layout** (`layoutId`) — the canvas definition for a view. Each view has its own layout with a separate numeric ID
@@ -35,10 +36,12 @@ Key concepts:
 
 Creates a new App Studio app with a single default landing view.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `POST` |
-| **Path** | `/content/v1/dataapps` |
+
+| Field      | Value                  |
+| ---------- | ---------------------- |
+| **Method** | `POST`                 |
+| **Path**   | `/content/v1/dataapps` |
+
 
 **Body**:
 
@@ -81,10 +84,12 @@ The app is created with one default view. The `landingViewId` is the `viewId` of
 
 Returns all views, navigation, theme, and app-level settings.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `GET` |
-| **Path** | `/content/v1/dataapps/:dataAppId` |
+
+| Field      | Value                             |
+| ---------- | --------------------------------- |
+| **Method** | `GET`                             |
+| **Path**   | `/content/v1/dataapps/:dataAppId` |
+
 
 **Optional query params**: `?includeHiddenViews=true`
 
@@ -118,10 +123,12 @@ Note: The `layout` field in views is always `null` here — layouts are fetched 
 
 Updates app-level settings (views, nav, theme). Does NOT update layouts.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `PUT` |
-| **Path** | `/content/v1/dataapps/:dataAppId?includeHiddenViews=true` |
+
+| Field      | Value                                                     |
+| ---------- | --------------------------------------------------------- |
+| **Method** | `PUT`                                                     |
+| **Path**   | `/content/v1/dataapps/:dataAppId?includeHiddenViews=true` |
+
 
 **Body**: The full app object as returned by GET. You MUST send the complete object — partial updates cause `400 Bad Request`. Read-only fields (`userAccess`, `isOwner`, `isFavorite`, `canEdit`) can be included (they are ignored) or omitted.
 
@@ -247,10 +254,12 @@ Returns the full navigation array including system items (HOME, AI_ASSISTANT, CO
 
 **UPDATE navigation (reorder, rename, set icons):**
 
-| Field | Value |
-|-------|-------|
-| **Method** | `PUT` |
-| **Path** | `/content/v1/dataapps/:dataAppId/navigation/reorder` |
+
+| Field      | Value                                                |
+| ---------- | ---------------------------------------------------- |
+| **Method** | `PUT`                                                |
+| **Path**   | `/content/v1/dataapps/:dataAppId/navigation/reorder` |
+
 
 **Body**: The full navigation array as returned by GET, with modifications. You can change `title`, `icon`, `navOrder`, and `visible` fields.
 
@@ -274,10 +283,12 @@ Entity types: `HOME`, `VIEW`, `AI_ASSISTANT`, `CONTROLS`, `DISTRIBUTE`, `MORE`
 
 Returns the full layout definition for a view, including all content items and their positions.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `GET` |
-| **Path** | `/content/v4/pages/:pageId/layouts` |
+
+| Field      | Value                               |
+| ---------- | ----------------------------------- |
+| **Method** | `GET`                               |
+| **Path**   | `/content/v4/pages/:pageId/layouts` |
+
 
 **Response**:
 
@@ -313,11 +324,13 @@ Returns the full layout definition for a view, including all content items and t
 
 You **must** acquire a write lock before updating a layout. Without it, you get `403 WL003: Cannot edit without valid writelock`.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `PUT` |
-| **Path** | `/content/v4/pages/layouts/:layoutId/writelock` |
-| **Body** | `{}` |
+
+| Field      | Value                                           |
+| ---------- | ----------------------------------------------- |
+| **Method** | `PUT`                                           |
+| **Path**   | `/content/v4/pages/layouts/:layoutId/writelock` |
+| **Body**   | `{}`                                            |
+
 
 **Response**:
 
@@ -334,11 +347,13 @@ You **must** acquire a write lock before updating a layout. Without it, you get 
 
 Updates the layout (card positions, styles, canvas vs appendix). Must hold write lock.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `PUT` |
-| **Path** | `/content/v4/pages/layouts/:layoutId` |
-| **Content-Type** | `application/json;charset=utf-8` |
+
+| Field            | Value                                 |
+| ---------------- | ------------------------------------- |
+| **Method**       | `PUT`                                 |
+| **Path**         | `/content/v4/pages/layouts/:layoutId` |
+| **Content-Type** | `application/json;charset=utf-8`      |
+
 
 **Body**: The full layout object (same structure as GET response). See "Layout Structure" below.
 
@@ -346,10 +361,12 @@ Updates the layout (card positions, styles, canvas vs appendix). Must hold write
 
 Always release the lock when done editing.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `DELETE` |
-| **Path** | `/content/v4/pages/layouts/:layoutId/writelock` |
+
+| Field      | Value                                           |
+| ---------- | ----------------------------------------------- |
+| **Method** | `DELETE`                                        |
+| **Path**   | `/content/v4/pages/layouts/:layoutId/writelock` |
+
 
 ---
 
@@ -359,20 +376,24 @@ Always release the lock when done editing.
 
 Adds an existing card to an App Studio view. The card goes to the **appendix** by default.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `POST` |
-| **Path** | `/content/v1/pages/:pageId/cards/:cardId` |
-| **Body** | `{}` |
+
+| Field      | Value                                     |
+| ---------- | ----------------------------------------- |
+| **Method** | `POST`                                    |
+| **Path**   | `/content/v1/pages/:pageId/cards/:cardId` |
+| **Body**   | `{}`                                      |
+
 
 This is the same as standard Domo page card assignment. The `pageId` is the `viewId` from the app structure.
 
 ### 9. List Cards on a Page
 
-| Field | Value |
-|-------|-------|
-| **Method** | `GET` |
-| **Path** | `/content/v1/pages/:pageId/cards` |
+
+| Field      | Value                             |
+| ---------- | --------------------------------- |
+| **Method** | `GET`                             |
+| **Path**   | `/content/v1/pages/:pageId/cards` |
+
 
 Returns an array of card objects with `id` and `title`.
 
@@ -380,10 +401,12 @@ Returns an array of card objects with `id` and `title`.
 
 Creates a new KPI card and adds it to the page in one step.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `PUT` |
-| **Path** | `/content/v3/cards/kpi?pageId=:pageId` |
+
+| Field      | Value                                  |
+| ---------- | -------------------------------------- |
+| **Method** | `PUT`                                  |
+| **Path**   | `/content/v3/cards/kpi?pageId=:pageId` |
+
 
 See `domo-card-crud.md` for the full card body schema.
 
@@ -391,10 +414,12 @@ See `domo-card-crud.md` for the full card body schema.
 
 Removes a card from an App Studio page without deleting the card itself. The card remains in Domo and on any other pages it's assigned to.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `DELETE` |
-| **Path** | `/content/v1/pages/:pageId/cards/:cardId` |
+
+| Field      | Value                                     |
+| ---------- | ----------------------------------------- |
+| **Method** | `DELETE`                                  |
+| **Path**   | `/content/v1/pages/:pageId/cards/:cardId` |
+
 
 No request body needed. Returns empty response on success.
 
@@ -404,11 +429,13 @@ No request body needed. Returns empty response on success.
 
 The Domo overview/home page uses the special page ID `-100000`. Cards can be added to it using the same endpoint as any other page.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `POST` |
-| **Path** | `/content/v1/pages/-100000/cards/:cardId` |
-| **Body** | `{}` |
+
+| Field      | Value                                     |
+| ---------- | ----------------------------------------- |
+| **Method** | `POST`                                    |
+| **Path**   | `/content/v1/pages/-100000/cards/:cardId` |
+| **Body**   | `{}`                                      |
+
 
 **Verified**: Added 34 cards to page `-100000` in a single batch. All succeeded.
 
@@ -465,22 +492,24 @@ The `content` array defines what items exist on the page. Each item has a `conte
 
 ### Content Item Properties
 
-| Property | Description |
-|----------|-------------|
-| `contentKey` | Unique key within this layout, links to template entries |
-| `type` | `CARD`, `HEADER`, `SPACER`, `SEPARATOR` |
-| `cardId` / `cardUrn` | The Domo card ID (for `CARD` type only) |
-| `style` | Card styling — see "Card Styles" below |
-| `hideTitle` | Hide the card title |
-| `hideDescription` | Hide the card description |
-| `hideFooter` | Hide the card footer |
-| `hideSummary` | Hide the summary number |
-| `hideBorder` | Hide the card border |
-| `hideMargins` | Hide margins around the card |
-| `fitToFrame` | Scale card to fit its frame |
-| `acceptFilters` | Whether this card accepts page-level filters |
-| `acceptDateFilter` | Whether this card accepts date filters |
-| `acceptSegments` | Whether this card accepts segments |
+
+| Property             | Description                                              |
+| -------------------- | -------------------------------------------------------- |
+| `contentKey`         | Unique key within this layout, links to template entries |
+| `type`               | `CARD`, `HEADER`, `SPACER`, `SEPARATOR`                  |
+| `cardId` / `cardUrn` | The Domo card ID (for `CARD` type only)                  |
+| `style`              | Card styling — see "Card Styles" below                   |
+| `hideTitle`          | Hide the card title                                      |
+| `hideDescription`    | Hide the card description                                |
+| `hideFooter`         | Hide the card footer                                     |
+| `hideSummary`        | Hide the summary number                                  |
+| `hideBorder`         | Hide the card border                                     |
+| `hideMargins`        | Hide margins around the card                             |
+| `fitToFrame`         | Scale card to fit its frame                              |
+| `acceptFilters`      | Whether this card accepts page-level filters             |
+| `acceptDateFilter`   | Whether this card accepts date filters                   |
+| `acceptSegments`     | Whether this card accepts segments                       |
+
 
 ### Template Arrays (Standard & Compact)
 
@@ -520,16 +549,19 @@ The `standard.template` and `compact.template` arrays define the **grid position
 
 ### Canvas vs Appendix
 
-| Property | Canvas | Appendix |
-|----------|--------|----------|
-| `virtual` | `false` | `true` |
-| `virtualAppendix` | `false` | `true` |
+
+| Property          | Canvas  | Appendix |
+| ----------------- | ------- | -------- |
+| `virtual`         | `false` | `true`   |
+| `virtualAppendix` | `false` | `true`   |
+
 
 To move a card from the appendix to the canvas, set both to `false` and position it in the grid.
 
 ### Grid System
 
 **Standard layout** (desktop):
+
 - Grid width: `60` units
 - Typical card widths: `10` (6 across), `15` (4 across), `20` (3 across), `30` (2 across), `60` (full width)
 - Typical card height: `10` units for KPI/filter cards, `22` for charts, `25` for tables, `30` for large charts
@@ -538,6 +570,7 @@ To move a card from the appendix to the canvas, set both to `false` and position
 - Separator height: `2` units
 
 **Compact layout** (mobile):
+
 - Grid width: `12` units
 - Typical card width: `12` (full width, stacked vertically)
 - Typical card height: `6` for KPI cards, `8` for charts, `10` for tables
@@ -545,13 +578,15 @@ To move a card from the appendix to the canvas, set both to `false` and position
 
 ### Content Type Elements
 
-| Type | Purpose | Has contentKey in content array? |
-|------|---------|----------------------------------|
-| `CARD` | A Domo card | Yes |
-| `HEADER` | Section title text | Yes (with `text` field) |
-| `SPACER` | Empty vertical space | No (template only) |
-| `SEPARATOR` | Horizontal divider line | No (template only) |
-| `PAGE_BREAK` | Page break marker (appendix artifact) | No (template only) |
+
+| Type         | Purpose                               | Has contentKey in content array? |
+| ------------ | ------------------------------------- | -------------------------------- |
+| `CARD`       | A Domo card                           | Yes                              |
+| `HEADER`     | Section title text                    | Yes (with `text` field)          |
+| `SPACER`     | Empty vertical space                  | No (template only)               |
+| `SEPARATOR`  | Horizontal divider line               | No (template only)               |
+| `PAGE_BREAK` | Page break marker (appendix artifact) | No (template only)               |
+
 
 ---
 
@@ -668,6 +703,7 @@ DELETE /content/v4/pages/layouts/{layoutId}/writelock
 ### Example: 6 filter cards in a row
 
 Content entries:
+
 ```json
 {
   "contentKey": 7,
@@ -682,6 +718,7 @@ Content entries:
 ```
 
 Standard template (6 cards, 10 units wide each):
+
 ```json
 {"type": "SPACER", "contentKey": 0, "x": 0, "y": 0, "width": 60, "height": 3, "virtualAppendix": false, "virtual": false},
 {"type": "CARD", "contentKey": 2, "x": 0,  "y": 3, "width": 10, "height": 10, "virtualAppendix": false, "virtual": false},
@@ -813,16 +850,18 @@ requests.delete(f"{BASE}/content/v4/pages/layouts/{layout_id}/writelock", header
 
 ### Recommended Card Sizes
 
-| Card Type | Width | Height | Layout Pattern |
-|-----------|-------|--------|----------------|
-| KPI / single value | 15 | 10 | 4 across |
-| KPI / single value | 20 | 10 | 3 across |
-| Chart (bar, line, pie) | 20 | 22 | 3 across |
-| Chart (bar, line, pie) | 30 | 22 | 2 across |
-| Table (detail) | 60 | 25 | Full width |
-| Table (summary) | 30-40 | 25 | 1-2 across |
-| Header | 60 | 4 | Full width |
-| Separator | 60 | 2 | Full width |
+
+| Card Type              | Width | Height | Layout Pattern |
+| ---------------------- | ----- | ------ | -------------- |
+| KPI / single value     | 15    | 10     | 4 across       |
+| KPI / single value     | 20    | 10     | 3 across       |
+| Chart (bar, line, pie) | 20    | 22     | 3 across       |
+| Chart (bar, line, pie) | 30    | 22     | 2 across       |
+| Table (detail)         | 60    | 25     | Full width     |
+| Table (summary)        | 30-40 | 25     | 1-2 across     |
+| Header                 | 60    | 4      | Full width     |
+| Separator              | 60    | 2      | Full width     |
+
 
 ### Multi-Section Layout Pattern
 
@@ -1868,3 +1907,4 @@ if in_std_not_cmp:
     print(f"ERROR: standard keys missing from compact template: {in_std_not_cmp}")
 # in_std_not_content is OK — these are SEPARATOR/PAGE_BREAK appendix artifacts
 ```
+
