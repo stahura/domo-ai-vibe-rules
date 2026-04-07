@@ -1732,21 +1732,72 @@ This creates visual continuity between the sidebar and page banners. Always do t
 
 Icons are set via the `/navigation/reorder` endpoint. The body must be the **full navigation array** as returned by GET — partial payloads cause `400 Bad Request`.
 
-Proven icon names for LEFT-nav apps (verified across 170+ apps):
-
-| Page type | Recommended icons |
-|-----------|------------------|
-| Overview / Dashboard | `analytics`, `pop-chart`, `chart-bar-vertical` |
-| Production / Operations | `gauge`, `dataflow`, `cube-filled` |
-| Quality / Compliance | `certified`, `checkbox-marked-outline`, `check-in-icon` |
-| Supply Chain / Logistics | `globe`, `data-app`, `search` |
-| Financial | `money-universal`, `benchmark`, `books` |
-| People / HR | `people`, `person`, `person-card` |
-| Settings / Admin | `controls`, `pages-gear`, `code-tags` |
-
 **HOME icon**: Always set `icon.value = "home"` for the HOME navigation item.
 
-**WARNING**: Google Material icon names (`dashboard`, `monetization_on`, `trending_up`, `store`, `inventory_2`, `assignment_return`, `local_shipping`, `shopping_cart`, `warehouse`) do NOT render in Domo's left nav. Domo uses its own internal icon set. Prefer the proven names listed above. If an icon name is wrong, the nav item renders with no visible icon.
+**WARNING**: Google Material icon names (`monetization_on`, `trending_up`, `inventory_2`, `assignment_return`) do NOT render in Domo's left nav. Domo uses its own internal icon set. **ONLY use icons from the catalog below.** If an icon name is wrong, the nav item renders with no visible icon (blank space).
+
+#### Recommended icons by page type
+
+| Page type | Recommended icons (pick one) |
+|-----------|------------------------------|
+| Overview / Dashboard | `analytics`, `pop-chart`, `chart-bar-vertical`, `select-chart`, `badge-layout-8` |
+| Production / Operations | `gauge`, `dataflow`, `cube-filled`, `completed-submissions` |
+| Quality / Compliance | `certified`, `checkbox-marked-outline`, `check-in-icon`, `approval-center` |
+| Supply Chain / Logistics | `globe`, `data-app`, `local_shipping`, `warehouse`, `shopping_cart` |
+| Retail / Store | `store`, `cube-filled`, `numbers`, `toolbox` |
+| Financial | `money-universal`, `money`, `benchmark`, `books`, `calculator` |
+| People / HR / Patients | `people`, `person`, `person-card`, `person-plus`, `people-plus`, `heart` |
+| Time / Scheduling | `clock`, `calendar-simple`, `calendar-time`, `alarm`, `interrupting-timer` |
+| Documents / Reports | `document`, `document-outline`, `books`, `newspaper`, `clipboard-copy` |
+| AI / ML / Intelligence | `ai-chat`, `magic`, `wand`, `lightbulb`, `lightning-bolt`, `sciency-data`, `analyzer` |
+| Marketing / Campaigns | `area-chart`, `funnel`, `bell-outline`, `video`, `image` |
+| Settings / Admin | `controls`, `pages-gear`, `code-tags`, `pencil-box`, `lock-closed` |
+| Geography / Location | `globe`, `map-marker`, `building` |
+| Forecasting / Goals | `forecast`, `goals`, `trophy`, `exclamation-triangle` |
+| Education | `graduation-cap`, `domo-university` |
+| Health / Safety | `heart`, `glasses`, `adc` |
+| Inventory / Products | `cube-filled`, `domobox`, `table`, `tag-multiple`, `badge-layout-small` |
+
+#### Complete Domo icon catalog (133 verified names)
+
+Scanned from 100+ live App Studio apps. Every name below is confirmed to render correctly:
+
+```
+abc                    adc                    ai-chat                airplane
+alarm                  align-center-icon      align-left-icon        analytics
+analyzer               approval-center        approval-center-alt    appstore
+area-chart             arrow-box              arrow-merge            arrow-right-circle
+arrow-up-circle        avatar                 axis                   badge-layout-8
+badge-layout-medium    badge-layout-mixed     badge-layout-small     bell-outline
+benchmark              beta                   books                  building
+calculator             calendar-simple        calendar-time          camera
+card-notebook          card-poll              cell-phone             certified
+certified-company      chart-bar-vertical     chart-line             chart-properties
+check-in-icon          checkbox-marked-outline clipboard-copy        clock
+code-tags              color                  completed-submissions  controls
+cube-filled            dashboard              data-app               data-science
+database               dataflow               document               document-outline
+domo                   domo-university        domobox                dot-plot-chart
+dots-vertical          drill                  exclamation-triangle   flag
+forecast               format-list-checks     funnel                 funnel-strike
+gauge                  glasses                globe                  goals
+graduation-cap         handshake              heart                  home
+image                  inbox-full             interrupting-timer     lightbulb
+lightning-bolt         link                   local_shipping         lock-closed
+magic                  map-marker             marker                 money
+money-universal        newspaper              non-interrupting-timer numbers
+pages                  pages-bars             pages-chart            pages-gear
+paperclip              pencil                 pencil-box             people
+people-plus            person                 person-card            person-plus
+phone                  play-circle-outline    pop-chart              presentation
+question-circle        ringing-bell           sandcastle             sciency-data
+search                 seeding                select-chart           shopping_cart
+smile                  store                  sync                   table
+table-column           tag-multiple           tag-vertical           toolbox
+trophy                 variable               video                  wand
+warehouse              workflow               workspace              x-circle
+your-submissions
+```
 
 ---
 
@@ -1787,6 +1838,9 @@ Proven icon names for LEFT-nav apps (verified across 170+ apps):
 | **Banner height = 14** | Banners should use height 14 (not 7) in standard template to accommodate subheader text. Compact: height 8. |
 | **Dark mode: c60 invisible text** | `c60` (AUTOMATIC_COLOR) does NOT reliably detect dark card/page backgrounds. On dark themes, it defaults to dark text — making ALL native text invisible. **MANDATORY**: Replace every `c60` font color reference across cards, navigation, headers, and components with `c58` (your light text color). See "Dark Mode Theme" section. This is the #1 dark mode failure. |
 | **Dark mode: font property names** | Theme font properties use `family`, `weight`, `size`, `style` (not `fontFamily`/`fontWeight`/`fontSize`). Setting the wrong property names silently fails — fonts revert to theme defaults on next GET. |
+| **Pro-code colors are NOT inherited** | Pro-code components render in iframes and use their own CSS — they do NOT inherit the App Studio theme colors. When the theme palette changes, every pro-code component (banners, charts) must be manually updated with the new hex values AND republished via `domo publish`. Forgetting this creates jarring green-charts-on-copper-theme mismatches. |
+| **Font family must match across all surfaces** | The App Studio theme `fonts[].family` (Sans/Serif/Slab) must match all pro-code CSS `font-family` stacks. Mixing Serif native cards with Sans pro-code charts looks broken. When updating fonts, update BOTH the theme AND every pro-code `app.css`. |
+| **Nav icons: use only catalog names** | Domo uses its own internal icon set (133 verified names). Google Material icon names like `inventory_2`, `assignment_return`, `trending_up` render as blank/invisible. See the "Complete Domo icon catalog" section above. Always pick from the verified catalog. |
 
 ### Layout Update Debugging Checklist
 

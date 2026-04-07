@@ -1,13 +1,63 @@
 ---
-name: domo-app-theme
+
+## name: domo-app-theme
 description: Clean, professional dashboard theme for Domo custom apps. CSS custom properties, layout patterns, typography, and design polish that feel native to the Domo platform. Includes OKLCH color palette, layered shadows, concentric border radius, tabular numbers, and micro-interaction patterns.
----
 
 # Domo Custom App Theme
 
 A clean, professional dashboard theme used across Domo custom apps. Designed to feel native to the Domo platform while being modern and readable. Corporate but not sterile — hierarchy comes from font weight and subtle shadows rather than color. Feels Domo-native / Salesforce-adjacent.
 
 Author: David Johnson
+
+## Themed Design System (DESIGN.md)
+
+This skill operates across **three styling layers** that must stay coherent:
+
+1. **Design Intent** — mood, palette, typography, component recipes (the "what it should feel like")
+2. **App Studio Theme JSON** — native Domo schema with `c1`–`c60` color slots, `f1`–`f8` fonts, `ca1`–`ca8` card styles
+3. **Pro-Code CSS** — custom properties, inline styles, Recharts/Chart.js colors
+
+Each curated theme has a dedicated **DESIGN.md** file in [themes/](themes/) that serves as the single source of truth for all three layers. A DESIGN.md contains:
+
+- **Visual Theme and Atmosphere** — mood, density, philosophy (prevents generic output)
+- **Color System with Slot Mapping Table** — every color has a semantic role, hex, OKLCH, theme slot (`c` number), and CSS variable in one row. This is the Rosetta Stone between native JSON and pro-code CSS.
+- **Typography with Font Slot Mapping** — type scale mapped to `f1`–`f8` theme slots
+- **Card and Component Styles** — cards, buttons, inputs, nav, tables with `ca`/`b` slot references
+- **Chart Palette** — series colors with `colorRange` index mapping
+- **Do's and Don'ts** — theme-specific guardrails (e.g., c60 dark mode fix)
+- **Agent Quick Reference** — copy-paste CSS block, COLORS object, example prompts
+- **Importable Theme JSON** — complete JSON that can be imported directly into App Studio
+
+### Available Themes
+
+| Theme | File | Mode | Accent | Best for |
+|-------|------|------|--------|----------|
+| **Core Themes** | | | | |
+| Charcoal Ember Dark | [charcoal-ember-dark.DESIGN.md](themes/charcoal-ember-dark.DESIGN.md) | Dark | Warm orange | Benchmarks, performance, technical |
+| Emerald Dark | [emerald-dark.DESIGN.md](themes/emerald-dark.DESIGN.md) | Dark | Bright emerald | SaaS, analytics, dev tools |
+| Neon Magenta Dark | [neon-magenta-dark.DESIGN.md](themes/neon-magenta-dark.DESIGN.md) | Dark | Hot pink / magenta | CRM, engagement, consumer |
+| Corporate Light | [corporate-light.DESIGN.md](themes/corporate-light.DESIGN.md) | Light | Cool blue-gray | Executive, corporate, general |
+| **Punk Subgenre Themes** | | | | |
+| Cyberpunk | [cyberpunk.DESIGN.md](themes/cyberpunk.DESIGN.md) | Dark | Neon cyan | Tech monitoring, cybersecurity, real-time |
+| Steampunk | [steampunk.DESIGN.md](themes/steampunk.DESIGN.md) | Dark | Polished brass | Manufacturing, logistics, heritage |
+| Solarpunk | [solarpunk.DESIGN.md](themes/solarpunk.DESIGN.md) | Light | Leaf green | Sustainability, ESG, wellness |
+| Dieselpunk | [dieselpunk.DESIGN.md](themes/dieselpunk.DESIGN.md) | Dark | Rust orange | Military, industrial, supply chain |
+| Biopunk | [biopunk.DESIGN.md](themes/biopunk.DESIGN.md) | Dark | Bioluminescent green | Biotech, pharma, genomics, lab |
+| Dreadpunk | [dreadpunk.DESIGN.md](themes/dreadpunk.DESIGN.md) | Dark | Deep crimson | Risk, security, audit, compliance |
+| Dungeonpunk | [dungeonpunk.DESIGN.md](themes/dungeonpunk.DESIGN.md) | Dark | Arcane amber | Gaming, fantasy, creative, inventory |
+| Atompunk | [atompunk.DESIGN.md](themes/atompunk.DESIGN.md) | Light | Atomic orange | Energy, aerospace, innovation, R&D |
+
+For the 50 light chart palettes (which share the Corporate Light structural base but vary chart series colors), see [palette-overlays.md](themes/palette-overlays.md).
+
+### When to Use a DESIGN.md
+
+- **Building a new App Studio app**: Start from a DESIGN.md. Use its Slot Mapping Table to configure the native theme AND its CSS block for pro-code components.
+- **Applying a dark theme**: Use the DESIGN.md instead of the generic dark mode guidance below. The DESIGN.md includes the exact `c58`/`c60` fix, component colors, and importable JSON.
+- **Debugging visual inconsistency**: Check the Slot Mapping Table — if a semantic role maps to different values in the theme JSON vs. pro-code CSS, they're out of sync.
+
+### Relationship to This Skill
+
+The content below defines the **default light theme** — structural colors, typography rules, component recipes, spacing, shadows, transitions, and design principles. These are theme-agnostic patterns that apply regardless of which DESIGN.md is active. The DESIGN.md files override the color system and component color values but inherit the layout, spacing, typography philosophy, shadow structure, transition timing, and micro-interaction patterns documented here.
 
 ## CSS Custom Properties
 
@@ -98,41 +148,49 @@ Never use Bold (700) or Black (900) for UI text — they overpower the minimal f
 
 ### Type Scale
 
-| Role                         | Size | Weight | Extra                           |
-| ---------------------------- | ---- | ------ | ------------------------------- |
-| Page title                   | 22px | 600    | `text-wrap: balance`            |
-| Card / section titles        | 16px | 600    | `text-wrap: balance`            |
-| Body text / descriptions     | 13px | 400    | line-height 1.5, `text-wrap: pretty` |
-| Labels / captions            | 11px | 400    | uppercase, letter-spacing 0.04em |
-| Chart axis text              | 11px | 400    | `fill` color, not CSS `color`   |
-| Badges / status text         | 11px | 600    | only place small text gets weight |
-| KPI / summary numbers        | 28px | 600    | `font-variant-numeric: tabular-nums` |
+
+| Role                         | Size | Weight | Extra                                                      |
+| ---------------------------- | ---- | ------ | ---------------------------------------------------------- |
+| Page title                   | 22px | 600    | `text-wrap: balance`                                       |
+| Card / section titles        | 16px | 600    | `text-wrap: balance`                                       |
+| Body text / descriptions     | 13px | 400    | line-height 1.5, `text-wrap: pretty`                       |
+| Labels / captions            | 11px | 400    | uppercase, letter-spacing 0.04em                           |
+| Chart axis text              | 11px | 400    | `fill` color, not CSS `color`                              |
+| Badges / status text         | 11px | 600    | only place small text gets weight                          |
+| KPI / summary numbers        | 28px | 600    | `font-variant-numeric: tabular-nums`                       |
 | KPI labels                   | 11px | 300    | uppercase, letter-spacing 0.04em — fades behind the number |
-| Micro text (avatar initials) | 9px  | 600    | letter-spacing 0.5px            |
-| Dynamic numbers              | any  | —      | `font-variant-numeric: tabular-nums` |
+| Micro text (avatar initials) | 9px  | 600    | letter-spacing 0.5px                                       |
+| Dynamic numbers              | any  | —      | `font-variant-numeric: tabular-nums`                       |
+
 
 ### Font Stack
 
-```css
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-```
+The font family is a design decision set in the project's `DESIGN.md`. Domo App Studio supports three font families:
 
-This is a system sans-serif stack — the same approach used by GitHub, Stripe, and Linear. It loads instantly (no network request), renders natively on every platform, and feels clean and modern. In Domo's App Studio theme editor, this maps to the **"Sans"** font family.
+| Domo family | Pro-code CSS `font-family` | Feel |
+|-------------|----------------------------|------|
+| **Sans** (default) | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | Clean, modern, tech-forward (GitHub, Stripe, Linear) |
+| **Serif** | `Georgia, "Times New Roman", "Palatino Linotype", serif` | Editorial, warm, premium (NYT, Medium) |
+| **Slab** | `"Roboto Slab", "Rockwell", "Courier New", serif` | Bold, structured, industrial |
+
+**CRITICAL**: The App Studio theme `fonts[].family` and all pro-code CSS `font-family` must use the **same** family. Mixing Sans native cards with Serif pro-code components (or vice versa) breaks visual cohesion. When a `DESIGN.md` specifies a font family, apply it everywhere.
 
 ### App Studio Native Font Settings
 
-Configure the App Studio theme editor font slots to match the pro-code typography:
+Configure the App Studio theme editor font slots. Replace `{family}` with the chosen family from the table above:
 
-| Slot | Style preset | Font family | Weight | Size |
-|------|-------------|-------------|--------|------|
-| Card Title | Heading 4 | Sans | SemiBold | 16px |
-| Card Description | Body | Sans | Regular | 13px |
-| Timeframe | Paragraph | Sans | Light | 11px |
-| Chart text | Body | Sans | Regular | 11px |
-| Summary number | Heading 5 | Sans | SemiBold | 28px |
-| Summary number label | Paragraph | Sans | Light | 11px |
+| Slot                 | Style preset | Font family | Weight   | Size |
+| -------------------- | ------------ | ----------- | -------- | ---- |
+| Card Title           | Heading 4    | {family}    | SemiBold | 16px |
+| Card Description     | Body         | {family}    | Regular  | 13px |
+| Timeframe            | Paragraph    | {family}    | Light    | 11px |
+| Chart text           | Body         | {family}    | Regular  | 11px |
+| Summary number       | Heading 5    | {family}    | SemiBold | 28px |
+| Summary number label | Paragraph    | {family}    | Light    | 11px |
+
 
 This creates a consistent look between native cards and pro-code cards on the same page. The key choices:
+
 - **Card Title at SemiBold** — authoritative without being heavy
 - **Timeframe at Light** — barely-there, unobtrusive, lets the data breathe
 - **Summary number label at Light** — the label recedes so the number dominates
@@ -140,14 +198,16 @@ This creates a consistent look between native cards and pro-code cards on the sa
 
 ### Weight Map (Domo App Studio ↔ CSS)
 
-| App Studio weight | CSS `font-weight` | When to use |
-|---|---|---|
-| Extra Light | 200 | Never in standard UI — too faint for readability |
-| Light | 300 | KPI labels, timeframe text, secondary captions |
-| Regular | 400 | Body text, descriptions, chart axis, table cells |
-| SemiBold | 600 | Headings, KPI values, active buttons, badges |
-| Bold | 700 | Avoid — breaks the minimal feel |
-| Black | 900 | Never — too heavy for any dashboard context |
+
+| App Studio weight | CSS `font-weight` | When to use                                      |
+| ----------------- | ----------------- | ------------------------------------------------ |
+| Extra Light       | 200               | Never in standard UI — too faint for readability |
+| Light             | 300               | KPI labels, timeframe text, secondary captions   |
+| Regular           | 400               | Body text, descriptions, chart axis, table cells |
+| SemiBold          | 600               | Headings, KPI values, active buttons, badges     |
+| Bold              | 700               | Avoid — breaks the minimal feel                  |
+| Black             | 900               | Never — too heavy for any dashboard context      |
+
 
 ### Rules
 
@@ -307,12 +367,14 @@ For **buttons, cards, and containers** that need depth, prefer `box-shadow` over
 
 Never use `transition: all` or `transition-property: all`. Always specify exact properties — `all` forces the browser to watch every property and causes unexpected transitions on colors, padding, or shadows you didn't intend to animate.
 
-| Element           | Transition                                                    |
-| ----------------- | ------------------------------------------------------------- |
+
+| Element           | Transition                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------- |
 | Buttons/controls  | `transition-property: scale, background-color, border-color, box-shadow` 150ms ease-out |
-| Progress bars     | `transition-property: width` 300ms ease                       |
-| Card hover shadow | `transition-property: box-shadow` 150ms ease-out              |
-| Gantt bars        | `transition-property: opacity` 150ms ease (hover to 0.85)     |
+| Progress bars     | `transition-property: width` 300ms ease                                                 |
+| Card hover shadow | `transition-property: box-shadow` 150ms ease-out                                        |
+| Gantt bars        | `transition-property: opacity` 150ms ease (hover to 0.85)                               |
+
 
 Use CSS transitions for interactive state changes (hover, toggle, open/close) — they can be interrupted mid-animation. Reserve CSS keyframe animations for one-shot sequences (loading spinners, enter animations).
 
@@ -352,23 +414,28 @@ With this theme: card radius is 10px, card padding is 20px. Since padding (20px)
 
 ## Dark Mode
 
-The light theme above is the default. For dark mode apps, use one of the three curated dark themes defined in [color-palettes.md](color-palettes.md) (D1 Emerald Dark, D2 Neon Magenta Dark, D3 Charcoal Ember Dark). Each includes full structural variables (backgrounds, surfaces, text, borders, shadows) and chart series colors.
+The light theme above is the default. For dark mode apps, **prefer a themed DESIGN.md file** from [themes/](themes/) — it provides the complete visual contract including slot mappings, importable JSON, and agent-ready prompts. Currently available: [Charcoal Ember Dark](themes/charcoal-ember-dark.DESIGN.md).
+
+For palettes without a full DESIGN.md, use one of the three curated dark themes defined in [color-palettes.md](color-palettes.md) (D1 Emerald Dark, D2 Neon Magenta Dark, D3 Charcoal Ember Dark). Each includes structural variables (backgrounds, surfaces, text, borders, shadows) and chart series colors.
 
 **Key adaptations when switching to dark mode:**
 
-| Property | Light mode | Dark mode |
-|----------|-----------|-----------|
-| Page background | `oklch(0.96 0.01 H)` | `oklch(0.12–0.16 0.005–0.025 H)` |
-| Card surface | `oklch(1 0 0)` (white) | `oklch(0.18–0.22 0.01–0.035 H)` |
-| Text primary | `oklch(0.37 0.014 256)` (dark) | `oklch(0.93–0.97 0.003–0.008 H)` (near-white) |
-| Text secondary | `oklch(0.51 0.016 249)` | `oklch(0.65–0.75 0.01–0.025 H)` |
-| Borders | `oklch(0.80 0.015 H)` | `oklch(0.25–0.35 0.01–0.035 H)` |
-| Shadows | `oklch(text / 0.04–0.08)` | `oklch(0 0 0 / 0.20–0.35)` (higher opacity) |
-| Chart series L | 0.55–0.68 | 0.70–0.80 (brighter on dark) |
-| Chart series C | 0.09–0.13 | 0.07–0.11 (slightly reduced) |
-| Status badge bg | light tint `oklch(0.93+ ...)` | dark tint `oklch(0.20–0.25 ...)` |
+
+| Property        | Light mode                     | Dark mode                                     |
+| --------------- | ------------------------------ | --------------------------------------------- |
+| Page background | `oklch(0.96 0.01 H)`           | `oklch(0.12–0.16 0.005–0.025 H)`              |
+| Card surface    | `oklch(1 0 0)` (white)         | `oklch(0.18–0.22 0.01–0.035 H)`               |
+| Text primary    | `oklch(0.37 0.014 256)` (dark) | `oklch(0.93–0.97 0.003–0.008 H)` (near-white) |
+| Text secondary  | `oklch(0.51 0.016 249)`        | `oklch(0.65–0.75 0.01–0.025 H)`               |
+| Borders         | `oklch(0.80 0.015 H)`          | `oklch(0.25–0.35 0.01–0.035 H)`               |
+| Shadows         | `oklch(text / 0.04–0.08)`      | `oklch(0 0 0 / 0.20–0.35)` (higher opacity)   |
+| Chart series L  | 0.55–0.68                      | 0.70–0.80 (brighter on dark)                  |
+| Chart series C  | 0.09–0.13                      | 0.07–0.11 (slightly reduced)                  |
+| Status badge bg | light tint `oklch(0.93+ ...)`  | dark tint `oklch(0.20–0.25 ...)`              |
+
 
 **Component adjustments:**
+
 - Buttons: invert — default bg becomes surface color, text becomes near-white, hover lightens the surface
 - Cards: no white background — use `--surface` from the dark palette. Shadow opacity increases
 - Status badges: swap to dark-tinted backgrounds with brighter text (L 0.75+)

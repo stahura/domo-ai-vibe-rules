@@ -325,7 +325,15 @@ A pro-code card renders in an iframe with its own CSS — it does not inherit th
 
 ### Color Palette Workflow for Pro-Code Apps
 
-When building pro-code apps, you MUST use the same curated palette that was applied to the App Studio theme. The palette source is `domo-app-theme/color-palettes.md`. Pro-code apps should use the OKLCH values via CSS custom properties, or convert to hex for inline JS references. Define a `COLORS` object at the top of each pro-code `app.js` with the project palette values.
+When building pro-code apps, you MUST use the same curated palette that was applied to the App Studio theme. The palette source is the project's `DESIGN.md` (from `domo-app-theme/themes/`). Pro-code apps should use the OKLCH values via CSS custom properties, or convert to hex for inline JS references. Define a `COLORS` object at the top of each pro-code `app.js` with the project palette values.
+
+**CRITICAL — Theme Color Inheritance**: Pro-code components render in iframes and do NOT inherit the App Studio theme colors. Every color used in pro-code CSS and JS must be **explicitly derived from the same DESIGN.md** that was used for the App Studio theme. This includes:
+- Banner gradient backgrounds, accent overlays, brand text color, top border
+- Chart primary color (P), grid lines, axis text, tooltip backgrounds
+- Multi-series chart line/bar colors (C1, C2, C3...)
+- All text colors (titles, subtitles, labels, legends)
+
+If the theme palette changes (e.g., from green to copper), **every pro-code component must be updated and republished** with the new colors. There is no automatic inheritance. Forgetting this creates jarring mismatches between native Domo cards (which follow the theme) and pro-code cards (which use hardcoded values).
 
 ## Time Axis Tick Density
 
@@ -723,7 +731,15 @@ const getLineConfig = (color) => ({
 });
 ```
 
-**Font-family**: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` — system sans stack matching the `domo-app-theme` default and Domo's native "Sans" font family.
+**Font-family**: Must match the App Studio theme's font family setting from the project's `DESIGN.md`. Map as follows:
+
+| Theme font family | Pro-code CSS `font-family` |
+|-------------------|----------------------------|
+| Sans              | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` |
+| Serif             | `Georgia, "Times New Roman", "Palatino Linotype", serif` |
+| Slab              | `"Roboto Slab", "Rockwell", "Courier New", serif` |
+
+**NEVER hardcode a font stack that doesn't match the App Studio theme.** If the theme uses Serif fonts, all pro-code components must also use Serif. Mismatched fonts between native cards and pro-code cards break visual cohesion.
 
 **Container layout**: `.app-container` with `height: 100vh`, `.chart-container` with `flex: 1; min-height: 0; padding: 16px`. Canvas set to `width: 100% !important; height: 100% !important`.
 
