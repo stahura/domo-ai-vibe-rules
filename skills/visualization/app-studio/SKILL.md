@@ -5,7 +5,7 @@ description: Build and manage Domo App Studio apps via REST API. Covers app crea
 
 # Domo App Studio — Layouts, Pages & Card Management
 
-> **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always select a curated palette from `domo-app-theme/color-palettes.md` (50 OKLCH palettes across 9 harmony types). Pick a palette suited to the use case or ask the user. Use OKLCH values in pro-code CSS; convert to hex for native card `series_N_color` overrides. All App Studio theme colors, pro-code chart colors, banner colors, and card styling must use the chosen palette. See "Custom Color Palette" section under Theme Management.
+> **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always select a curated palette from `domo-app-theme/references/color-palettes.md` (50 OKLCH palettes across 9 harmony types). Pick a palette suited to the use case or ask the user. Use OKLCH values in pro-code CSS; convert to hex for native card `series_N_color` overrides. All App Studio theme colors, pro-code chart colors, banner colors, and card styling must use the chosen palette. See "Custom Color Palette" section under Theme Management.
 
 > **CLI vs API**: The Java CLI has no App Studio commands. All App Studio operations (creating apps, managing views, configuring layouts) require the REST API via curl. This is one area where you must go directly to the API.
 
@@ -1294,7 +1294,7 @@ Filter cards should be **compact** — they are controls, not content. Use minim
 | Standard (desktop) | 20 (3 across) or 15 (4 across) | **6** | Minimal height for low-profile appearance |
 | Compact (mobile) | 12 (full width, stacked) | **6–8** | Stacked vertically |
 
-**Recommended page layout with filters (CANONICAL — matches pb-apps-initial-build Step 7):**
+**Recommended page layout with filters (CANONICAL — matches basic-app-build Step 7):**
 
 ```
 y=0:   Banner (h=14)
@@ -1412,7 +1412,7 @@ Both provide page-level interactivity, but they work differently:
 
 ## Design-Aware Layout
 
-These rules make layouts feel intentional rather than mechanically packed. For detailed layout density presets and spacing examples, see [layout-design.md](layout-design.md).
+These rules make layouts feel intentional rather than mechanically packed. For detailed layout density presets and spacing examples, see [layout-design.md](references/layout-design.md).
 
 ### Breathing Room
 
@@ -1491,11 +1491,11 @@ The `theme` object inside the app controls all visual styling — colors, fonts,
 
 ### Custom Color Palette (NEVER use Domo native colors)
 
-**CRITICAL: Never use Domo's native/default color palette.** Always select a curated palette from `domo-app-theme/color-palettes.md`. This file contains 50 perceptually-uniform OKLCH palettes across 9 harmony types (Analogous, Monochromatic, Triad, Complementary, Split Complementary, Square, Compound, Shades, Signature). Pick the palette that best suits the use case and data domain, or ask the user for preference.
+**CRITICAL: Never use Domo's native/default color palette.** Always select a curated palette from `domo-app-theme/references/color-palettes.md`. This file contains 50 perceptually-uniform OKLCH palettes across 9 harmony types (Analogous, Monochromatic, Triad, Complementary, Split Complementary, Square, Compound, Shades, Signature). Pick the palette that best suits the use case and data domain, or ask the user for preference.
 
 #### Palette Selection Workflow
 
-1. Read `domo-app-theme/color-palettes.md` and review the harmony type table to identify the best fit for the dashboard's data story
+1. Read `domo-app-theme/references/color-palettes.md` and review the harmony type table to identify the best fit for the dashboard's data story
 2. Select a specific palette (e.g., "Pacific Drift" for corporate analytics, "Mineral" for manufacturing/industrial)
 3. The palette provides 6 OKLCH series colors (`--c1` through `--c6`)
 4. **For pro-code CSS**: use the OKLCH values directly
@@ -1564,7 +1564,7 @@ The theme's `c8-c42` color slots control UI chrome (nav, pills, buttons, backgro
 - Choose brand hue that works across multiple shades
 - Reject palettes that look good as swatches but fail in cards/buttons/headings
 - For light mode: default to light backgrounds; chart series ORDER_SOURCE colors (c8, c22, c29, c36) must have sufficient contrast on white backgrounds
-- For dark mode: use the dark mode palettes from `domo-app-theme/color-palettes.md` and follow the dark mode theme rules below
+- For dark mode: use the dark mode palettes from `domo-app-theme/references/color-palettes.md` and follow the dark mode theme rules below
 
 #### Dark Mode Theme (CRITICAL — `c60` Font Color Override)
 

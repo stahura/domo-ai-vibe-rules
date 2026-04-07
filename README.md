@@ -70,6 +70,8 @@ More directories can be added as new skills are contributed.
 ### Orchestrator Skills (`skills/orchestrator-skills/`)
 
 - `basic-app-build` — Kickoff sequence for new Domo app builds; routes to the right rules and skills in order.
+- `initial-build` — Orchestration playbook (same intent as `basic-app-build`; separate folder name).
+- `basic-app-build-w-video` — `basic-app-build` plus Remotion-oriented styling, sample data, and a short demo video phase.
 
 ### Apps (`skills/apps/`)
 
@@ -102,9 +104,11 @@ More directories can be added as new skills are contributed.
 
 ### Visualization (`skills/visualization/`)
 
-- `app-studio` — Build and manage Domo App Studio apps via REST API. Covers app creation, view/page management, canvas layouts, card placement, dark mode theming, and multi-page dashboard configuration.
-- `app-studio-pro-code` — Build and embed pro-code JavaScript custom apps inside Domo App Studio pages. Covers library selection (React + Recharts / Chart.js), design patterns, chart type variety, dark mode CSS, banner background patterns, and App Studio variable integration.
-- `card-creation` — Create native Domo cards (KPI, bar, line, pie, table, etc.) via API with chart property configuration, beast mode calculations, and conditional formatting.
+- `app-studio` — App Studio REST API: apps, views, layouts, cards, theming.
+- `app-studio-pro-code` — Pro-code custom apps embedded in App Studio (filters, variables, charts).
+- `card-creation` — Native KPI/card CRUD via Product API.
+- `beast-mode-creation` — Beast modes (calculated fields): formulas, validation, dataset vs card scope.
+- `variable-creation` — Card variables / interactive controls: templates, registration, save flow.
 
 ### Connectors (`skills/connectors/`)
 
@@ -133,19 +137,31 @@ More directories can be added as new skills are contributed.
 
 ### Administration (`skills/administration/`)
 
-- `workspaces` — Domo workspace and instance administration patterns.
+- `workspaces` — Workspace API (reverse-engineered): add/list/remove workspace content.
 
 ## Repository Structure
 
+Each skill is a folder with a single entrypoint `SKILL.md` (supporting files live in `references/` or other subfolders — not listed here).
+
 ```text
 skills/
-├── administration/
-│   └── workspaces/SKILL.md
+├── administration/workspaces/SKILL.md
 ├── apps/
+│   ├── ai-service-layer/SKILL.md
 │   ├── appdb/SKILL.md
+│   ├── code-engine/SKILL.md
+│   ├── da-cli/SKILL.md
+│   ├── data-api/SKILL.md
 │   ├── dataset-query/SKILL.md
 │   ├── domo-js/SKILL.md
-│   └── ...
+│   ├── manifest/SKILL.md
+│   ├── migrate-googleai/SKILL.md
+│   ├── migrate-lovable/SKILL.md
+│   ├── performance/SKILL.md
+│   ├── publish/SKILL.md
+│   ├── sql-query/SKILL.md
+│   ├── toolkit/SKILL.md
+│   └── workflow/SKILL.md
 ├── cli/
 │   ├── appdb-collection-create/SKILL.md
 │   ├── code-engine-create/SKILL.md
@@ -155,25 +171,25 @@ skills/
 │   ├── connector-dev/SKILL.md
 │   ├── data-upload-java-cli/SKILL.md
 │   └── json-no-code-connector/SKILL.md
-├── datagen/
-│   └── domo-data-generator/SKILL.md
-├── documents/
-│   └── html-deck/SKILL.md
+├── datagen/domo-data-generator/SKILL.md
+├── documents/html-deck/SKILL.md
 ├── domo-everywhere/
 │   ├── edit-embed/SKILL.md
+│   ├── embed-portal/SKILL.md
 │   ├── jsapi-filters/SKILL.md
-│   ├── programmatic-filters/SKILL.md
-│   └── embed-portal/SKILL.md
+│   └── programmatic-filters/SKILL.md
 ├── orchestrator-skills/
-│   └── basic-app-build/SKILL.md
-├── themes/
-│   └── domo-app-theme/SKILL.md
-├── transformation/
-│   └── magic-etl/SKILL.md
+│   ├── basic-app-build/SKILL.md
+│   ├── basic-app-build-w-video/SKILL.md
+│   └── initial-build/SKILL.md
+├── themes/domo-app-theme/SKILL.md
+├── transformation/magic-etl/SKILL.md
 └── visualization/
     ├── app-studio/SKILL.md
     ├── app-studio-pro-code/SKILL.md
-    └── card-creation/SKILL.md
+    ├── beast-mode-creation/SKILL.md
+    ├── card-creation/SKILL.md
+    └── variable-creation/SKILL.md
 
 rules/
 ├── core-custom-apps-rule.md

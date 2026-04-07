@@ -31,8 +31,8 @@ Deck Build Progress:
 ### Use the Domo theme — MANDATORY FIRST STEP
 
 1. Read [references/domo-theme.md](references/domo-theme.md) — it contains a **complete, copy-paste-ready HTML skeleton** that produces slides matching the Domo template exactly.
-2. Read [assets/logo-data-uri.txt](assets/logo-data-uri.txt) — it contains the actual Domo logo as a base64 PNG data URI. Replace every `LOGO_DATA_URI` placeholder in the skeleton with this value.
-3. The logo PNG is also at [assets/domologo.png](assets/domologo.png).
+2. Read [references/assets/logo-data-uri.txt](references/assets/logo-data-uri.txt) — it contains the actual Domo logo as a base64 PNG data URI. Replace every `LOGO_DATA_URI` placeholder in the skeleton with this value.
+3. The logo PNG is also at [references/assets/domologo.png](references/assets/domologo.png).
 
 **Do not skip this step.** Copy the complete skeleton from the theme file, then build slides into it. Every content slide MUST have:
 

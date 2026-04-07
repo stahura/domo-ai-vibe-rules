@@ -72,7 +72,7 @@ Execute the following sub-steps **in order**:
 
 ### Step 1: Custom color palette (FIRST — before any cards or pro-code)
 
-Select a curated palette from `domo-app-theme/color-palettes.md` (50 OKLCH palettes across 9 harmony types). Pick the palette that best suits the use case and data domain. This palette drives everything below — App Studio theme, pro-code charts, and native card series overrides. Use OKLCH values in pro-code CSS; convert to hex for native card `series_N_color` overrides and App Studio theme slots. NEVER use Domo default colors.
+Select a curated palette from `domo-app-theme/references/color-palettes.md` (50 OKLCH palettes across 9 harmony types). Pick the palette that best suits the use case and data domain. This palette drives everything below — App Studio theme, pro-code charts, and native card series overrides. Use OKLCH values in pro-code CSS; convert to hex for native card `series_N_color` overrides and App Studio theme slots. NEVER use Domo default colors.
 
 ### Step 2: Custom app icon
 

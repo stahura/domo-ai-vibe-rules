@@ -5,7 +5,7 @@ description: Build and embed pro-code JavaScript custom apps inside Domo App Stu
 
 # Pro-Code Custom Apps in App Studio
 
-> **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always use the project's curated palette selected from `domo-app-theme/color-palettes.md`. Use OKLCH values directly in pro-code CSS; convert to hex for native card overrides. All chart series, text, grid, and status colors must use the chosen palette.
+> **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always use the project's curated palette selected from `domo-app-theme/references/color-palettes.md`. Use OKLCH values directly in pro-code CSS; convert to hex for native card overrides. All chart series, text, grid, and status colors must use the chosen palette.
 
 App Studio's Pro Code Editor allows embedding full JavaScript custom apps as cards on the App Studio canvas. This skill bridges two existing workflows: building custom apps (`initial-build`) and placing cards on App Studio pages (`app-studio`).
 
@@ -67,8 +67,8 @@ Use `app-studio` to create and place native cards (items 1–6 above). Follow th
 For each pro-code component, run through the `initial-build` playbook with the following skill stack pre-loaded:
 
 **Always load:**
-- Custom palette from `domo-app-theme/color-palettes.md` — select a curated OKLCH palette suited to the use case
-- `make-interfaces-feel-better` design principles — see [design-skills.md](design-skills.md)
+- Custom palette from `domo-app-theme/references/color-palettes.md` — select a curated OKLCH palette suited to the use case
+- `make-interfaces-feel-better` design principles — see [design-skills.md](references/design-skills.md)
 
 **Load when applicable:**
 - `writing-better` — when the app has significant user-facing text (labels, tooltips, error messages, empty states, help text).
@@ -145,7 +145,7 @@ Set content entry properties for pro-code cards:
 
 ## App Studio Integration: Filters & Variables
 
-Pro-code cards embedded in App Studio receive two types of external input: **page-level filters** (from native filter cards) and **variables** (from App Studio variable controls). Both require explicit listeners registered at the top level. For detailed patterns and production examples, see [app-studio-integration.md](app-studio-integration.md).
+Pro-code cards embedded in App Studio receive two types of external input: **page-level filters** (from native filter cards) and **variables** (from App Studio variable controls). Both require explicit listeners registered at the top level. For detailed patterns and production examples, see [app-studio-integration.md](references/app-studio-integration.md).
 
 ### Page-Level Filters
 
@@ -310,7 +310,7 @@ if (state.isUpdatingVariable) return;
 
 A pro-code card renders in an iframe with its own CSS — it does not inherit the App Studio app's theme. To maintain visual consistency:
 
-1. **NEVER use Domo's native color palette.** Always use the curated palette selected from `domo-app-theme/color-palettes.md`. Use OKLCH values directly in CSS custom properties, or convert to hex for inline JS color references. All chart series, text, grid lines, and status colors must match the App Studio theme's custom palette. Example palette mapping for pro-code:
+1. **NEVER use Domo's native color palette.** Always use the curated palette selected from `domo-app-theme/references/color-palettes.md`. Use OKLCH values directly in CSS custom properties, or convert to hex for inline JS color references. All chart series, text, grid lines, and status colors must match the App Studio theme's custom palette. Example palette mapping for pro-code:
    - Series 1 (primary): brand-500 from the custom palette
    - Series 2: secondary ORDER_SOURCE (c22) from the custom palette
    - Series 3: tertiary ORDER_SOURCE (c29) from the custom palette
@@ -325,7 +325,7 @@ A pro-code card renders in an iframe with its own CSS — it does not inherit th
 
 ### Color Palette Workflow for Pro-Code Apps
 
-When building pro-code apps, you MUST use the same curated palette that was applied to the App Studio theme. The palette source is the project's `DESIGN.md` (from `domo-app-theme/themes/`). Pro-code apps should use the OKLCH values via CSS custom properties, or convert to hex for inline JS references. Define a `COLORS` object at the top of each pro-code `app.js` with the project palette values.
+When building pro-code apps, you MUST use the same curated palette that was applied to the App Studio theme. The palette source is the project's `DESIGN.md` (from `domo-app-theme/references/themes/`). Pro-code apps should use the OKLCH values via CSS custom properties, or convert to hex for inline JS references. Define a `COLORS` object at the top of each pro-code `app.js` with the project palette values.
 
 **CRITICAL — Theme Color Inheritance**: Pro-code components render in iframes and do NOT inherit the App Studio theme colors. Every color used in pro-code CSS and JS must be **explicitly derived from the same DESIGN.md** that was used for the App Studio theme. This includes:
 - Banner gradient backgrounds, accent overlays, brand text color, top border
@@ -370,7 +370,7 @@ For the compact (mobile) template:
 
 ## Design Skills Integration
 
-For detailed guidance on applying design polish to pro-code apps, see [design-skills.md](design-skills.md).
+For detailed guidance on applying design polish to pro-code apps, see [design-skills.md](references/design-skills.md).
 
 ## Complete Workflow Example
 
@@ -507,7 +507,7 @@ html, body { width: 100%; height: 100%; overflow: hidden;
 
 **Per-page titles**: Create a **separate banner design per page** (e.g., `mfg-banner-overview/`, `mfg-banner-production/`), each with hardcoded title and subtitle in its `index.html`. Do NOT share a single design across pages — iframe cards cannot receive URL params from the App Studio host. Publish each design separately, then create one card instance per design on the correct page via the context API.
 
-**Color palette alignment**: Use the curated palette from `domo-app-theme/color-palettes.md` in ALL pro-code components. NEVER use Domo native/default colors. Chart series colors should match the App Studio theme's ORDER_SOURCE values (c8, c22, c29, c36).
+**Color palette alignment**: Use the curated palette from `domo-app-theme/references/color-palettes.md` in ALL pro-code components. NEVER use Domo native/default colors. Chart series colors should match the App Studio theme's ORDER_SOURCE values (c8, c22, c29, c36).
 
 ### Banner Background Patterns
 
@@ -618,7 +618,7 @@ Dark mode: `--hatch-color: rgba(232, 122, 32, 0.04)`
 - **Text readability**: The banner text area (left 40% of the banner) should have the strongest gradient coverage. Place radial/focal patterns toward the right side of the banner where there's no text.
 - **Performance**: Pure CSS gradients have zero loading cost. Never use `<canvas>`, JavaScript particle systems, or external image files for banner patterns.
 
-**Dark mode pro-code apps**: When using a dark mode palette (D1 Emerald, D2 Neon Magenta, D3 Charcoal Ember from `color-palettes.md`), pro-code CSS must explicitly set light text colors, dark container backgrounds, and dark-adapted grid/axis colors. Pro-code apps handle dark mode correctly by design (explicit CSS) — the critical failure point is the **App Studio native theme**. After applying dark background colors to the theme, you MUST replace all `c60` font color references with `c58` across cards, navigation, headers, and components. Without this, native elements (hero cards, filter dropdowns, nav text, section headers) render with invisible dark-on-dark text. See `app-studio` skill's "Dark Mode Theme" section for the mandatory fix.
+**Dark mode pro-code apps**: When using a dark mode palette (D1 Emerald, D2 Neon Magenta, D3 Charcoal Ember from `domo-app-theme/references/color-palettes.md`), pro-code CSS must explicitly set light text colors, dark container backgrounds, and dark-adapted grid/axis colors. Pro-code apps handle dark mode correctly by design (explicit CSS) — the critical failure point is the **App Studio native theme**. After applying dark background colors to the theme, you MUST replace all `c60` font color references with `c58` across cards, navigation, headers, and components. Without this, native elements (hero cards, filter dropdowns, nav text, section headers) render with invisible dark-on-dark text. See `app-studio` skill's "Dark Mode Theme" section for the mandatory fix.
 
 ## Pro-Code Chart Patterns (ONLY when explicitly requested)
 

@@ -17,7 +17,7 @@ This skill operates across **three styling layers** that must stay coherent:
 2. **App Studio Theme JSON** — native Domo schema with `c1`–`c60` color slots, `f1`–`f8` fonts, `ca1`–`ca8` card styles
 3. **Pro-Code CSS** — custom properties, inline styles, Recharts/Chart.js colors
 
-Each curated theme has a dedicated **DESIGN.md** file in [themes/](themes/) that serves as the single source of truth for all three layers. A DESIGN.md contains:
+Each curated theme has a dedicated **DESIGN.md** file in [references/themes/](references/themes/) that serves as the single source of truth for all three layers. A DESIGN.md contains:
 
 - **Visual Theme and Atmosphere** — mood, density, philosophy (prevents generic output)
 - **Color System with Slot Mapping Table** — every color has a semantic role, hex, OKLCH, theme slot (`c` number), and CSS variable in one row. This is the Rosetta Stone between native JSON and pro-code CSS.
@@ -33,21 +33,21 @@ Each curated theme has a dedicated **DESIGN.md** file in [themes/](themes/) that
 | Theme | File | Mode | Accent | Best for |
 |-------|------|------|--------|----------|
 | **Core Themes** | | | | |
-| Charcoal Ember Dark | [charcoal-ember-dark.DESIGN.md](themes/charcoal-ember-dark.DESIGN.md) | Dark | Warm orange | Benchmarks, performance, technical |
-| Emerald Dark | [emerald-dark.DESIGN.md](themes/emerald-dark.DESIGN.md) | Dark | Bright emerald | SaaS, analytics, dev tools |
-| Neon Magenta Dark | [neon-magenta-dark.DESIGN.md](themes/neon-magenta-dark.DESIGN.md) | Dark | Hot pink / magenta | CRM, engagement, consumer |
-| Corporate Light | [corporate-light.DESIGN.md](themes/corporate-light.DESIGN.md) | Light | Cool blue-gray | Executive, corporate, general |
+| Charcoal Ember Dark | [charcoal-ember-dark.DESIGN.md](references/themes/charcoal-ember-dark.DESIGN.md) | Dark | Warm orange | Benchmarks, performance, technical |
+| Emerald Dark | [emerald-dark.DESIGN.md](references/themes/emerald-dark.DESIGN.md) | Dark | Bright emerald | SaaS, analytics, dev tools |
+| Neon Magenta Dark | [neon-magenta-dark.DESIGN.md](references/themes/neon-magenta-dark.DESIGN.md) | Dark | Hot pink / magenta | CRM, engagement, consumer |
+| Corporate Light | [corporate-light.DESIGN.md](references/themes/corporate-light.DESIGN.md) | Light | Cool blue-gray | Executive, corporate, general |
 | **Punk Subgenre Themes** | | | | |
-| Cyberpunk | [cyberpunk.DESIGN.md](themes/cyberpunk.DESIGN.md) | Dark | Neon cyan | Tech monitoring, cybersecurity, real-time |
-| Steampunk | [steampunk.DESIGN.md](themes/steampunk.DESIGN.md) | Dark | Polished brass | Manufacturing, logistics, heritage |
-| Solarpunk | [solarpunk.DESIGN.md](themes/solarpunk.DESIGN.md) | Light | Leaf green | Sustainability, ESG, wellness |
-| Dieselpunk | [dieselpunk.DESIGN.md](themes/dieselpunk.DESIGN.md) | Dark | Rust orange | Military, industrial, supply chain |
-| Biopunk | [biopunk.DESIGN.md](themes/biopunk.DESIGN.md) | Dark | Bioluminescent green | Biotech, pharma, genomics, lab |
-| Dreadpunk | [dreadpunk.DESIGN.md](themes/dreadpunk.DESIGN.md) | Dark | Deep crimson | Risk, security, audit, compliance |
-| Dungeonpunk | [dungeonpunk.DESIGN.md](themes/dungeonpunk.DESIGN.md) | Dark | Arcane amber | Gaming, fantasy, creative, inventory |
-| Atompunk | [atompunk.DESIGN.md](themes/atompunk.DESIGN.md) | Light | Atomic orange | Energy, aerospace, innovation, R&D |
+| Cyberpunk | [cyberpunk.DESIGN.md](references/themes/cyberpunk.DESIGN.md) | Dark | Neon cyan | Tech monitoring, cybersecurity, real-time |
+| Steampunk | [steampunk.DESIGN.md](references/themes/steampunk.DESIGN.md) | Dark | Polished brass | Manufacturing, logistics, heritage |
+| Solarpunk | [solarpunk.DESIGN.md](references/themes/solarpunk.DESIGN.md) | Light | Leaf green | Sustainability, ESG, wellness |
+| Dieselpunk | [dieselpunk.DESIGN.md](references/themes/dieselpunk.DESIGN.md) | Dark | Rust orange | Military, industrial, supply chain |
+| Biopunk | [biopunk.DESIGN.md](references/themes/biopunk.DESIGN.md) | Dark | Bioluminescent green | Biotech, pharma, genomics, lab |
+| Dreadpunk | [dreadpunk.DESIGN.md](references/themes/dreadpunk.DESIGN.md) | Dark | Deep crimson | Risk, security, audit, compliance |
+| Dungeonpunk | [dungeonpunk.DESIGN.md](references/themes/dungeonpunk.DESIGN.md) | Dark | Arcane amber | Gaming, fantasy, creative, inventory |
+| Atompunk | [atompunk.DESIGN.md](references/themes/atompunk.DESIGN.md) | Light | Atomic orange | Energy, aerospace, innovation, R&D |
 
-For the 50 light chart palettes (which share the Corporate Light structural base but vary chart series colors), see [palette-overlays.md](themes/palette-overlays.md).
+For the 50 light chart palettes (which share the Corporate Light structural base but vary chart series colors), see [palette-overlays.md](references/themes/palette-overlays.md).
 
 ### When to Use a DESIGN.md
 
@@ -218,7 +218,7 @@ This creates a consistent look between native cards and pro-code cards on the sa
 
 ## Color Palette
 
-For curated chart and data visualization palettes (50 palettes across 9 harmony types), see [color-palettes.md](color-palettes.md). The palettes below define the theme's structural colors — backgrounds, surfaces, text, and status indicators.
+For curated chart and data visualization palettes (50 palettes across 9 harmony types), see [color-palettes.md](references/color-palettes.md). The palettes below define the theme's structural colors — backgrounds, surfaces, text, and status indicators.
 
 ### Core Colors
 
@@ -414,9 +414,9 @@ With this theme: card radius is 10px, card padding is 20px. Since padding (20px)
 
 ## Dark Mode
 
-The light theme above is the default. For dark mode apps, **prefer a themed DESIGN.md file** from [themes/](themes/) — it provides the complete visual contract including slot mappings, importable JSON, and agent-ready prompts. Currently available: [Charcoal Ember Dark](themes/charcoal-ember-dark.DESIGN.md).
+The light theme above is the default. For dark mode apps, **prefer a themed DESIGN.md file** from [references/themes/](references/themes/) — it provides the complete visual contract including slot mappings, importable JSON, and agent-ready prompts. Currently available: [Charcoal Ember Dark](references/themes/charcoal-ember-dark.DESIGN.md).
 
-For palettes without a full DESIGN.md, use one of the three curated dark themes defined in [color-palettes.md](color-palettes.md) (D1 Emerald Dark, D2 Neon Magenta Dark, D3 Charcoal Ember Dark). Each includes structural variables (backgrounds, surfaces, text, borders, shadows) and chart series colors.
+For palettes without a full DESIGN.md, use one of the three curated dark themes defined in [color-palettes.md](references/color-palettes.md) (D1 Emerald Dark, D2 Neon Magenta Dark, D3 Charcoal Ember Dark). Each includes structural variables (backgrounds, surfaces, text, borders, shadows) and chart series colors.
 
 **Key adaptations when switching to dark mode:**
 
