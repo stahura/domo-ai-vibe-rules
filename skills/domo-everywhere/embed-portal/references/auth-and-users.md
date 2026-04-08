@@ -1,6 +1,6 @@
-# Authentication & User Management
+# Authentication, User Management & Dashboard Registry
 
-Detailed implementation patterns for login, session management, and user CRUD. Choose the approach that matches your user management decision.
+Detailed implementation patterns for login, session management, user CRUD, dashboard management, and per-user filter configuration. Choose the approach that matches your user management decision.
 
 ## Table of Contents
 - [Domo AppDB Approach](#domo-appdb-approach)
@@ -11,6 +11,10 @@ Detailed implementation patterns for login, session management, and user CRUD. C
 - [User CRUD API](#user-crud-api)
 - [Password Reset](#password-reset)
 - [Route Protection Middleware](#route-protection-middleware)
+- [Dashboard Registry API](#dashboard-registry-api)
+- [Admin Panel: Dashboard Management UI](#admin-panel-dashboard-management-ui)
+- [Admin Panel: Per-User Filter Editor](#admin-panel-per-user-filter-editor)
+- [Dynamic Sidebar Navigation](#dynamic-sidebar-navigation)
 
 ---
 
@@ -439,3 +443,354 @@ export const config = {
   matcher: ['/home/:path*', '/api/:path*'],
 }
 ```
+
+---
+
+## Dashboard Registry API
+
+The dashboard registry stores the list of available embed IDs. Any authenticated user can list dashboards; only admins can create, rename, or delete them.
+
+If using AppDB, add a `Dashboards` collection alongside `Users` in your constants:
+
+```typescript
+export const COLLECTIONS: Record<string, string> = {
+  Users: 'your-users-collection-uuid',
+  Dashboards: 'your-dashboards-collection-uuid',
+}
+```
+
+### List and Create Dashboards
+
+```typescript
+// app/api/dashboards/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyToken } from '@/lib/verifyToken'
+import { listDocuments, createDocument, findByField } from '@/lib/domoAppDb'
+
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get('token')?.value
+  if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+
+  const auth = await verifyToken(token)
+  if (auth.status !== 200) return NextResponse.json({ message: auth.message }, { status: auth.status })
+
+  const dashboards = await listDocuments('Dashboards')
+  return NextResponse.json(dashboards)
+}
+
+export async function POST(req: NextRequest) {
+  const token = req.cookies.get('token')?.value
+  if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+
+  const auth = await verifyToken(token)
+  if (auth.status !== 200) return NextResponse.json({ message: auth.message }, { status: auth.status })
+  if (auth.data!.user.role !== 'admin') {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
+
+  const { embedID, name } = await req.json()
+  if (!embedID || !name) {
+    return NextResponse.json({ message: 'embedID and name are required' }, { status: 400 })
+  }
+
+  const existing = await findByField('Dashboards', 'embedID', embedID)
+  if (existing) {
+    return NextResponse.json({ message: 'Dashboard with this embed ID already exists' }, { status: 409 })
+  }
+
+  const result = await createDocument('Dashboards', { embedID, name })
+  return NextResponse.json({ id: result.id, embedID, name }, { status: 201 })
+}
+```
+
+### Rename and Delete a Dashboard
+
+```typescript
+// app/api/dashboards/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyToken } from '@/lib/verifyToken'
+import { deleteDocument, updateDocument } from '@/lib/domoAppDb'
+
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const token = req.cookies.get('token')?.value
+  if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+
+  const auth = await verifyToken(token)
+  if (auth.status !== 200) return NextResponse.json({ message: auth.message }, { status: auth.status })
+  if (auth.data!.user.role !== 'admin') return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+
+  const { embedID, name } = await req.json()
+  if (!embedID || !name) {
+    return NextResponse.json({ message: 'embedID and name are required' }, { status: 400 })
+  }
+
+  await updateDocument('Dashboards', id, { embedID, name })
+  return NextResponse.json({ id, embedID, name })
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const token = req.cookies.get('token')?.value
+  if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+
+  const auth = await verifyToken(token)
+  if (auth.status !== 200) return NextResponse.json({ message: auth.message }, { status: auth.status })
+  if (auth.data!.user.role !== 'admin') return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+
+  await deleteDocument('Dashboards', id)
+  return NextResponse.json({ message: 'Dashboard deleted' })
+}
+```
+
+---
+
+## Admin Panel: Dashboard Management UI
+
+Build a tabbed admin page with **Users** and **Dashboards** tabs. The Dashboards tab provides a table of registered dashboards with add, rename, and delete actions.
+
+### Dashboard Table
+
+Display each dashboard's name and embed ID. Actions column includes Rename and Delete buttons.
+
+```tsx
+// Inside the admin page component — Dashboards tab content
+
+const [dashboards, setDashboards] = useState<Dashboard[]>([])
+const [showAddDashboard, setShowAddDashboard] = useState(false)
+const [newDashboardName, setNewDashboardName] = useState('')
+const [newDashboardEmbedID, setNewDashboardEmbedID] = useState('')
+const [renamingDashboard, setRenamingDashboard] = useState<Dashboard | null>(null)
+const [renameValue, setRenameValue] = useState('')
+
+const fetchDashboards = async () => {
+  const res = await fetch('/api/dashboards', { credentials: 'include' })
+  if (res.ok) setDashboards(await res.json())
+}
+
+const handleAddDashboard = async (e: React.FormEvent) => {
+  e.preventDefault()
+  const res = await fetch('/api/dashboards', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ embedID: newDashboardEmbedID, name: newDashboardName }),
+    credentials: 'include',
+  })
+  if (res.ok) {
+    setShowAddDashboard(false)
+    setNewDashboardName('')
+    setNewDashboardEmbedID('')
+    fetchDashboards()
+  }
+}
+
+const handleRenameDashboard = async (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!renamingDashboard || !renameValue.trim()) return
+  const res = await fetch(`/api/dashboards/${renamingDashboard.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ embedID: renamingDashboard.embedID, name: renameValue.trim() }),
+    credentials: 'include',
+  })
+  if (res.ok) {
+    setRenamingDashboard(null)
+    setRenameValue('')
+    fetchDashboards()
+  }
+}
+
+const handleDeleteDashboard = async (id: string) => {
+  if (!confirm('Delete this dashboard? Users who have it assigned will no longer see it.')) return
+  await fetch(`/api/dashboards/${id}`, { method: 'DELETE', credentials: 'include' })
+  fetchDashboards()
+}
+```
+
+### Add Dashboard Modal
+
+Two fields: **Name** (display name) and **Embed ID** (the 5-character ID from Domo's embed dialog). Validate both are non-empty before submitting.
+
+### Rename Dashboard Modal
+
+Pre-populate the current name. Show the embed ID as read-only context (embed IDs don't change — if a user needs a different embed ID, they delete and re-add).
+
+---
+
+## Admin Panel: Per-User Filter Editor
+
+When editing a user, each assigned dashboard should expand to show a filter configuration section. This is the admin interface for the portal's core data isolation feature — without it, `UserDashboard.filters` is always empty and every user sees all data.
+
+### Filter Editor Component
+
+For each dashboard the user is assigned to, render the filter rows beneath the checkbox:
+
+```tsx
+// Inside the edit user modal — replace the simple dashboard checkbox list
+
+{dashboards.map(d => {
+  const assignedDashboard = editingUser.dashboards?.find(ud => ud.embedID === d.embedID)
+  const assigned = !!assignedDashboard
+  return (
+    <div key={d.embedID} className="rounded-lg border border-white/5 overflow-hidden">
+      {/* Dashboard toggle */}
+      <label className="flex items-center gap-2 text-sm text-white cursor-pointer px-3 py-2.5 bg-content-bg/50">
+        <input
+          type="checkbox"
+          checked={assigned}
+          onChange={() => {
+            const updatedDashboards = assigned
+              ? editingUser.dashboards.filter(ud => ud.embedID !== d.embedID)
+              : [...(editingUser.dashboards || []), { embedID: d.embedID, name: d.name, filters: [] }]
+            setEditingUser({ ...editingUser, dashboards: updatedDashboards })
+          }}
+        />
+        {d.name} <span className="text-gray-500 text-xs font-mono">({d.embedID})</span>
+      </label>
+
+      {/* Filter editor — only shown when dashboard is assigned */}
+      {assigned && (
+        <div className="px-3 py-2 border-t border-white/5 space-y-2">
+          <p className="text-xs text-gray-500">
+            Filters restrict what data this user sees on this dashboard.
+          </p>
+
+          {/* Existing filter rows */}
+          {(assignedDashboard.filters || []).map((f, fi) => (
+            <div key={fi} className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={f.column}
+                onChange={e => {
+                  const filters = [...assignedDashboard.filters]
+                  filters[fi] = { ...filters[fi], column: e.target.value }
+                  const updatedDashboards = editingUser.dashboards.map(ud =>
+                    ud.embedID === d.embedID ? { ...ud, filters } : ud
+                  )
+                  setEditingUser({ ...editingUser, dashboards: updatedDashboards })
+                }}
+                placeholder="Column"
+                className="w-24 px-2 py-1 bg-content-bg border border-white/10 rounded text-xs"
+              />
+              <select
+                value={f.operator}
+                onChange={e => {
+                  const filters = [...assignedDashboard.filters]
+                  filters[fi] = { ...filters[fi], operator: e.target.value }
+                  const updatedDashboards = editingUser.dashboards.map(ud =>
+                    ud.embedID === d.embedID ? { ...ud, filters } : ud
+                  )
+                  setEditingUser({ ...editingUser, dashboards: updatedDashboards })
+                }}
+                className="w-20 px-1.5 py-1 bg-content-bg border border-white/10 rounded text-xs"
+              >
+                <option value="EQUALS">EQUALS</option>
+                <option value="NOT_EQUALS">NOT_EQUALS</option>
+                <option value="IN">IN</option>
+                <option value="NOT_IN">NOT_IN</option>
+                <option value="GREATER_THAN">GREATER_THAN</option>
+                <option value="LESS_THAN">LESS_THAN</option>
+                <option value="BETWEEN">BETWEEN</option>
+                <option value="LIKE">LIKE</option>
+              </select>
+              <input
+                type="text"
+                value={f.values.join(', ')}
+                onChange={e => {
+                  const filters = [...assignedDashboard.filters]
+                  filters[fi] = {
+                    ...filters[fi],
+                    values: e.target.value.split(',').map(v => v.trim()).filter(Boolean)
+                  }
+                  const updatedDashboards = editingUser.dashboards.map(ud =>
+                    ud.embedID === d.embedID ? { ...ud, filters } : ud
+                  )
+                  setEditingUser({ ...editingUser, dashboards: updatedDashboards })
+                }}
+                placeholder="Values (comma-separated)"
+                className="flex-1 px-2 py-1 bg-content-bg border border-white/10 rounded text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const filters = assignedDashboard.filters.filter((_, i) => i !== fi)
+                  const updatedDashboards = editingUser.dashboards.map(ud =>
+                    ud.embedID === d.embedID ? { ...ud, filters } : ud
+                  )
+                  setEditingUser({ ...editingUser, dashboards: updatedDashboards })
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+
+          {/* Add filter button */}
+          <button
+            type="button"
+            onClick={() => {
+              const filters = [
+                ...(assignedDashboard.filters || []),
+                { column: '', operator: 'EQUALS', values: [] }
+              ]
+              const updatedDashboards = editingUser.dashboards.map(ud =>
+                ud.embedID === d.embedID ? { ...ud, filters } : ud
+              )
+              setEditingUser({ ...editingUser, dashboards: updatedDashboards })
+            }}
+            className="text-xs text-accent hover:text-accent-hover"
+          >
+            + Add filter
+          </button>
+        </div>
+      )}
+    </div>
+  )
+})}
+```
+
+### How It Connects
+
+The filters saved here flow through the embed token request automatically:
+
+1. Admin sets filter `Region = "West"` on Dashboard 1 for a user
+2. User logs in, navigates to Dashboard 1
+3. `GET /api/getembedtoken` reads `user.dashboards[].filters`
+4. Filters are passed to the Domo embed token request (see `programmatic-filters` skill)
+5. Domo enforces the filter server-side — the user only sees West region data
+
+Empty filters (`[]`) means no restrictions — the user sees all data on that dashboard.
+
+---
+
+## Dynamic Sidebar Navigation
+
+The authenticated layout must build the sidebar from dynamic data, not hardcoded embed IDs.
+
+```tsx
+// app/home/layout.tsx — relevant state and fetch logic
+
+const [user, setUser] = useState<User | null>(null)
+const [allDashboards, setAllDashboards] = useState<Dashboard[]>([])
+
+useEffect(() => {
+  fetch('/api/me', { credentials: 'include' })
+    .then(res => res.ok ? res.json() : Promise.reject())
+    .then(setUser)
+    .catch(() => router.push('/login'))
+}, [])
+
+useEffect(() => {
+  fetch('/api/dashboards', { credentials: 'include' })
+    .then(res => res.ok ? res.json() : [])
+    .then(setAllDashboards)
+    .catch(() => {})
+}, [])
+
+// Admins see all registered dashboards; others see only their assignments
+const dashboards = user?.role === 'admin'
+  ? allDashboards.map(d => ({ embedID: d.embedID, name: d.name }))
+  : user?.dashboards?.map(d => ({ embedID: d.embedID, name: d.name })) || []
+```
+
+Each dashboard entry renders as a sidebar link to `/home/{embedID}`. The `[embedId]/page.tsx` route handles fetching the embed token and rendering the iframe.

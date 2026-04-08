@@ -62,20 +62,21 @@ src/
 │   │   ├── login/route.ts          # Login endpoint
 │   │   ├── logout/route.ts         # Logout endpoint
 │   │   ├── users/
-│   │   │   ├── route.ts            # CRUD users
-│   │   │   ├── [id]/route.ts       # Single user ops
-│   │   │   └── me/route.ts         # Current user
+│   │   │   ├── route.ts            # CRUD users (GET list, POST create)
+│   │   │   └── [id]/route.ts       # Single user ops (PUT, DELETE)
+│   │   ├── me/route.ts             # Current user session
+│   │   ├── dashboards/
+│   │   │   ├── route.ts            # Dashboard registry (GET list, POST create)
+│   │   │   └── [id]/route.ts       # Single dashboard ops (PUT rename, DELETE)
 │   │   ├── getembedtoken/route.ts  # Read-only embed tokens  (if read-only or both)
 │   │   ├── editembed/route.ts      # Edit-mode JWT           (if edit or both)
-│   │   ├── embed-ids/route.ts      # Manage embed ID mappings
 │   │   └── password-reset/route.ts # Password reset flow
 │   ├── login/page.tsx              # Login page
-│   ├── home/page.tsx               # Main dashboard view
-│   ├── components/
-│   │   ├── Header.tsx
-│   │   ├── Sidebar.tsx             # Dashboard navigation
-│   │   ├── EmbedDashboard.tsx      # Iframe embed component
-│   │   └── ManageUsers.tsx         # User admin UI (if admin role)
+│   ├── home/
+│   │   ├── layout.tsx              # Authenticated layout with sidebar
+│   │   ├── page.tsx                # Default redirect
+│   │   ├── [embedId]/page.tsx      # Dashboard embed view
+│   │   └── admin/page.tsx          # Admin panel (users + dashboards + filters)
 │   └── layout.tsx                  # Root layout with JS API init
 ├── lib/
 │   ├── domoAppDb.ts                # AppDB CRUD wrapper (if AppDB chosen)
@@ -112,7 +113,7 @@ APP_JWT_SECRET=           # Your own secret for login session tokens (separate f
 
 ## Phase 3: Build — Implementation Order
 
-Build in this order. Steps 1–2 are portal-specific (implemented here). Steps 3–5 are owned by sub-skills — your job is to wire the portal's data model into them, not re-implement them.
+Build in this order. Steps 1–3 are portal-specific (implemented here). Steps 4–6 are owned by sub-skills — your job is to wire the portal's data model into them, not re-implement them.
 
 ### Step 1: Authentication & Login
 
@@ -136,7 +137,7 @@ Read `references/auth-and-users.md` for full implementation patterns.
 
 Also portal-specific. Build:
 - User CRUD API routes with role-based access
-- Admin UI component for managing users (optional — some portals manage users through a separate admin tool)
+- Admin UI component for managing users
 
 **User data model:**
 
@@ -168,14 +169,51 @@ interface DashboardFilter {
 }
 ```
 
-Each user's `dashboards` array defines what they can see and what filters restrict their data. This feeds directly into the embed token request in Step 3.
+Each user's `dashboards` array defines what they can see and what filters restrict their data. This feeds directly into the embed token request in Step 4.
 
 Role hierarchy:
-- **Admin**: full CRUD on all users, can assign any role
+- **Admin**: full CRUD on all users, manage dashboard registry, can assign any role
 - **Editor**: can create viewers; if edit mode is enabled, can also edit dashboards in Domo
 - **Viewer**: view assigned dashboards only, no user management
 
-### Step 3: Read-Only Embeds (if read-only or both)
+#### Per-User Filter Configuration UI
+
+The user edit modal must include a filter editor for each assigned dashboard. Without this, filters can only be set by directly editing the database — which means the portal's core data isolation feature has no admin interface.
+
+For each dashboard checkbox that is checked, expand a filter section beneath it where admins can:
+- Add filter rules (column name, operator dropdown, comma-separated values)
+- Edit existing filter rules inline
+- Remove individual filter rules
+- See all Domo-supported operators: `EQUALS`, `NOT_EQUALS`, `IN`, `NOT_IN`, `GREATER_THAN`, `LESS_THAN`, `BETWEEN`, `LIKE`
+
+Read `references/auth-and-users.md` for the full filter editor component implementation.
+
+### Step 3: Dashboard Registry
+
+Read `references/auth-and-users.md` for full implementation patterns.
+
+Portal-specific. The list of available dashboards (embed IDs) must be **dynamic, not hardcoded**. Store them in the same data layer as users (AppDB, external DB, etc.) and manage them through the admin UI.
+
+Build:
+- Dashboard CRUD API routes (admin-only for create/update/delete, authenticated for list)
+- Admin UI for adding new dashboards (name + embed ID), renaming, and deleting
+- Sidebar navigation that reads from the dashboard registry dynamically
+
+**Dashboard data model:**
+
+```typescript
+interface PortalDashboard {
+  id: string       // Document ID from storage
+  embedID: string  // Domo embed ID (5-char from embed dialog)
+  name: string     // Display name in sidebar and admin UI
+}
+```
+
+If using AppDB, create a `Dashboards` collection alongside `Users`. The sidebar fetches `GET /api/dashboards` on mount. Admins see all dashboards; non-admin users see only their assigned dashboards (from their `user.dashboards` array).
+
+**Why this matters:** Hardcoding embed IDs means a code change and redeployment every time a dashboard is added or removed. A dynamic registry lets admins self-serve — add a new Domo embed, register it in the portal, and assign it to users, all without touching code.
+
+### Step 4: Read-Only Embeds (if read-only or both)
 
 > **Sub-skill handoff — required, even for focused questions.** The OAuth → embed token flow is owned entirely by `programmatic-filters`. Implementing it here would duplicate a maintained skill and create a second source of truth that drifts over time. The sub-skill has the complete implementation including edge cases, token size limits, SQL filters, and dataset switching that are easy to miss. Users who skip it and follow an inline version often hit production issues. Your response must explicitly name `programmatic-filters` and provide only the portal wiring below.
 
@@ -199,8 +237,11 @@ export async function POST(req: NextRequest) {
   const { embedID } = await req.json()
 
   // 2. Portal authorization: user must have this dashboard assigned (Step 2 data model)
+  //    Admins can access any dashboard in the registry (Step 3)
   const dashboard = user.dashboards?.find((d: any) => d.embedID === embedID)
-  if (!dashboard) return NextResponse.json({ message: 'Dashboard not assigned' }, { status: 403 })
+  if (!dashboard && user.role !== 'admin') {
+    return NextResponse.json({ message: 'Dashboard not assigned' }, { status: 403 })
+  }
 
   // 3. Hand off to programmatic-filters with these portal values:
   //    embedID         → authorization[].token
@@ -210,7 +251,7 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-### Step 4: Edit Embeds (if edit or both)
+### Step 5: Edit Embeds (if edit or both)
 
 > **Sub-skill handoff — required, even when the user is asking specifically about edit embeds.** The Identity Broker JWT flow is owned entirely by `edit-embed`. This is non-negotiable: do not write `jwt.sign()`, do not construct the IDP URL, do not write the iframe component inline. Here's why this matters — the sub-skill covers replay protection (jti uniqueness), multi-instance routing edge cases, Domo's HS256 requirement, and the session-persistence behaviour after the 5-minute JWT expires. An inline implementation will miss at least some of these. The user needs to follow that skill for a production-safe result. Your value here is providing the portal wiring that connects their user data to it — not reimplementing it.
 
@@ -243,7 +284,7 @@ export async function POST(req: NextRequest) {
 
 This step also has a critical distinction to flag to the user: **two secrets, two purposes** — `APP_JWT_SECRET` signs your portal login sessions (Step 1), `JWT_SECRET` signs Domo Identity Broker tokens (this step). They must never be swapped.
 
-### Step 5: Client-Side Interactivity (optional)
+### Step 6: Client-Side Interactivity (optional)
 
 > **Sub-skill handoff — required.** The MessagePort setup, filter API, and event handling are owned entirely by `jsapi-filters`. Implementing them here would duplicate that skill. Your job is only the portal mounting pattern.
 
@@ -276,7 +317,7 @@ Common portal patterns to mention (jsapi-filters implements all of these):
 - Drill in one embed → filters another via `applyFiltersToEmbed(referenceId, ...)`
 - iframe auto-resize → `onFrameSizeChange` event in the sub-skill
 
-### Step 6: Apply Branding
+### Step 7: Apply Branding
 
 With the functional pieces in place, apply the brand guidelines collected in Phase 1:
 
