@@ -37,7 +37,7 @@ Deck Build Progress:
 **Do not skip this step.** Copy the complete skeleton from the theme file, then build slides into it. Every content slide MUST have:
 
 - **Header**: `<div class="slide-header">` with `<h1>`, `.subtitle`, and **`.header-line`** (thin gray separator — required)
-- **Content**: `<div class="slide-content">` (use `has-bg` class for gray `#DDE5ED` background, omit for white)
+- **Content**: `<div class="slide-content has-bg">` — **always use `has-bg`** for the gray `#DDE5ED` background (this is the Domo look; content is vertically centered automatically)
 - **Footer**: `<div class="slide-footer">` with `.confidential` (left), `.footer-line` (center), and `.domo-badge` with **`<img src="LOGO_DATA_URI">`** (bottom-right — required)
 
 ### Dimensions
@@ -46,7 +46,7 @@ Standard 16:9 widescreen: `--slide-w: 1024px; --slide-h: 576px;`
 
 ### Content area positioning
 
-Use `position:absolute` with `top` (below header, typically `90-100px`) and `bottom:52px` (above footer). This prevents content-footer overlap.
+The `has-bg` class handles positioning automatically (`position:absolute; top:90px; bottom:52px`) with vertical centering (`display:flex; justify-content:center`). Do not override these with inline styles.
 
 ## Phase 2 — Content population
 

@@ -325,7 +325,7 @@ body {
 
 ## Complete Skeleton HTML
 
-Copy this entire HTML file as your starting point. It produces two slides matching the Domo Template exactly — one with gray background, one without. Replace every `LOGO_DATA_URI` with the contents of `assets/logo-data-uri.txt`.
+Copy this entire HTML file as your starting point. **Every content slide uses `has-bg` (gray background) by default.** This is the Domo slide look — do NOT use plain white slides unless specifically requested. Content is automatically vertically centered. Replace every `LOGO_DATA_URI` with the contents of `references/assets/logo-data-uri.txt`.
 
 ```html
 <!DOCTYPE html>
@@ -341,7 +341,7 @@ Copy this entire HTML file as your starting point. It produces two slides matchi
 </head>
 <body>
 
-<!-- SLIDE: Content slide WITH gray background (default for most slides) -->
+<!-- SLIDE: Standard content slide — USE THIS FOR EVERY CONTENT SLIDE -->
 <div class="slide">
   <div class="slide-header">
     <h1>Slide Title</h1>
@@ -349,26 +349,7 @@ Copy this entire HTML file as your starting point. It produces two slides matchi
     <div class="header-line"></div>
   </div>
   <div class="slide-content has-bg">
-    <!-- Content goes here — #DDE5ED gray background -->
-  </div>
-  <div class="slide-footer">
-    <span class="confidential">Confidential</span>
-    <span class="footer-line"></span>
-    <span class="domo-badge">
-      <img src="LOGO_DATA_URI" alt="Domo">
-    </span>
-  </div>
-</div>
-
-<!-- SLIDE: Content slide WITHOUT gray background (white) -->
-<div class="slide">
-  <div class="slide-header">
-    <h1>Slide Title</h1>
-    <div class="subtitle">SLIDE SUBTITLE OR DESCRIPTION</div>
-    <div class="header-line"></div>
-  </div>
-  <div class="slide-content" style="position:absolute; top:100px; left:0; right:0; bottom:52px; padding:24px 40px;">
-    <!-- Content goes here — white background -->
+    <!-- Content is vertically centered in the #DDE5ED gray area automatically -->
   </div>
   <div class="slide-footer">
     <span class="confidential">Confidential</span>
@@ -390,7 +371,7 @@ Every content slide MUST have all three layers. Missing any one breaks the layou
 | Layer | Element | Purpose |
 |-------|---------|---------|
 | **Header** | `<div class="slide-header">` with `<h1>`, `.subtitle`, and **`.header-line`** | Title + blue subtitle + thin gray separator |
-| **Content** | `<div class="slide-content">` (add `has-bg` class for gray background) | Main body between header and footer |
+| **Content** | `<div class="slide-content has-bg">` — **always use `has-bg`** | Gray background, vertically centered content |
 | **Footer** | `<div class="slide-footer">` with `.confidential`, `.footer-line`, `.domo-badge` + `<img>` | "CONFIDENTIAL" left, gray line center, **Domo logo bottom-right** |
 
 **The `.header-line` div is required** — it produces the thin gray separator visible in every slide.
@@ -446,10 +427,11 @@ To show a page number above the logo in the footer:
 </span>
 ```
 
-## When to Use `has-bg` vs Plain White
+## `has-bg` Is the Default — Always
 
-- **`has-bg`** (gray background `#DDE5ED`): Default for most content slides — tables, cards, diagrams, info boxes.
-- **Plain white**: Text-heavy slides, screenshot showcases, or when content needs maximum contrast.
+**Use `has-bg` on every content slide.** This is the Domo branded look — the gray `#DDE5ED` content area with vertically centered content. The `has-bg` class provides `position:absolute`, correct `top`/`bottom` bounds, `display:flex`, `flex-direction:column`, and `justify-content:center` automatically.
+
+Do NOT use plain white slides unless the user explicitly requests it. The wealth-deck and initiatives-deck examples both demonstrate that every content slide should have the gray background.
 
 ## Accent Color Reference
 
