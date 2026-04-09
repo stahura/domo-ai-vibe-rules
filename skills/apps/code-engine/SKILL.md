@@ -15,8 +15,6 @@ Package lifecycle operations are handled by CLI skills:
 
 Use this skill for runtime invocation patterns inside app code, not package create/update orchestration.
 
-> Legacy endpoint-first guidance has been archived to `archive/legacy-rules/domo-code-engine.md`.
-
 ## Working call pattern (`domo.post`)
 
 ```bash

@@ -1,7 +1,7 @@
 ---
-name: app-studio
+
+## name: app-studio
 description: Build and manage Domo App Studio apps via REST API. Covers app creation, view/page management, canvas layouts, card placement, and multi-page dashboard configuration.
----
 
 # Domo App Studio — Layouts, Pages & Card Management
 
@@ -134,17 +134,19 @@ Updates app-level settings (views, nav, theme). Does NOT update layouts.
 
 **Key fields that can be changed via PUT**:
 
-| Field | Values | Notes |
-|-------|--------|-------|
-| `navOrientation` | `TOP`, `LEFT`, `BOTTOM` | Controls nav bar position |
-| `showDomoNavigation` | `true`, `false` | **Must be `false` when `navOrientation` is `LEFT`** — the API rejects LEFT + showDomoNavigation=true |
-| `showNavigation` | `true`, `false` | Whether nav is visible at all |
-| `showTitle` | `true`, `false` | Show app title in nav bar. **Set to `false` for LEFT nav** — the title wastes vertical space and the page names in the left nav already identify the app. |
-| `showLogo` | `true`, `false` | Show Domo logo. **Set to `false` for LEFT nav** — keeps the nav clean. |
-| `title` | string | App title |
-| `description` | string | App description |
-| `iconDataFileId` | integer \| null | Custom app icon (tile/launcher). Set via Data File upload (see below). |
-| `navIconDataFileId` | integer \| null | Custom icon shown in the left-nav sidebar. Usually set to the same value as `iconDataFileId`. |
+
+| Field                | Values                  | Notes                                                                                                                                                     |
+| -------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `navOrientation`     | `TOP`, `LEFT`, `BOTTOM` | Controls nav bar position                                                                                                                                 |
+| `showDomoNavigation` | `true`, `false`         | **Must be `false` when `navOrientation` is `LEFT`** — the API rejects LEFT + showDomoNavigation=true                                                      |
+| `showNavigation`     | `true`, `false`         | Whether nav is visible at all                                                                                                                             |
+| `showTitle`          | `true`, `false`         | Show app title in nav bar. **Set to `false` for LEFT nav** — the title wastes vertical space and the page names in the left nav already identify the app. |
+| `showLogo`           | `true`, `false`         | Show Domo logo. **Set to `false` for LEFT nav** — keeps the nav clean.                                                                                    |
+| `title`              | string                  | App title                                                                                                                                                 |
+| `description`        | string                  | App description                                                                                                                                           |
+| `iconDataFileId`     | integer | null          | Custom app icon (tile/launcher). Set via Data File upload (see below).                                                                                    |
+| `navIconDataFileId`  | integer | null          | Custom icon shown in the left-nav sidebar. Usually set to the same value as `iconDataFileId`.                                                             |
+
 
 The PUT does NOT add or modify views/navigations — use the dedicated endpoints below for those.
 
@@ -207,6 +209,7 @@ PUT /api/content/v1/dataapps/{appId}  body=app
 ```
 
 **Gotchas:**
+
 - `Content-Type` must be `image/png` (not `application/octet-stream`) or the upload returns `415`.
 - The PUT must send the **full app object** — partial payloads cause `400 Bad Request`.
 - Icon should be 256×256 PNG with transparency for best rendering across Domo surfaces.
@@ -215,10 +218,12 @@ PUT /api/content/v1/dataapps/{appId}  body=app
 
 Creates a new page/view within an existing App Studio app.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `POST` |
-| **Path** | `/content/v1/dataapps/:dataAppId/views` |
+
+| Field      | Value                                   |
+| ---------- | --------------------------------------- |
+| **Method** | `POST`                                  |
+| **Path**   | `/content/v1/dataapps/:dataAppId/views` |
+
 
 **Body** — send the `view` sub-object directly (not wrapped):
 
@@ -245,10 +250,12 @@ The navigation is stored in the `navigations` array on the app object, but it is
 
 **READ navigation:**
 
-| Field | Value |
-|-------|-------|
-| **Method** | `GET` |
-| **Path** | `/content/v1/dataapps/:dataAppId/navigation` |
+
+| Field      | Value                                        |
+| ---------- | -------------------------------------------- |
+| **Method** | `GET`                                        |
+| **Path**   | `/content/v1/dataapps/:dataAppId/navigation` |
+
 
 Returns the full navigation array including system items (HOME, AI_ASSISTANT, CONTROLS, DISTRIBUTE, MORE).
 
@@ -605,14 +612,16 @@ Cards on App Studio pages can have visual styles applied. The style is set in th
 
 Styles range from `ca1` to `ca8`:
 
-| sourceId | Style | Recommended use |
-|----------|-------|----------------|
-| `ca1` | Default surface | **Primary default** — translucent white bg, floating shadow |
-| `ca2` | Alternate surface | Same as ca1, alternate slot for variation |
-| `ca3` | Light translucent | Lighter opacity — filter/control cards |
-| `ca4`–`ca6` | Accent styles | Colored/themed cards |
-| `ca7` | Near-opaque surface | Subtle shadow, higher opacity for emphasis |
-| `ca8` | Transparent/borderless | Banners, images, notebooks (no chrome) |
+
+| sourceId    | Style                  | Recommended use                                             |
+| ----------- | ---------------------- | ----------------------------------------------------------- |
+| `ca1`       | Default surface        | **Primary default** — translucent white bg, floating shadow |
+| `ca2`       | Alternate surface      | Same as ca1, alternate slot for variation                   |
+| `ca3`       | Light translucent      | Lighter opacity — filter/control cards                      |
+| `ca4`–`ca6` | Accent styles          | Colored/themed cards                                        |
+| `ca7`       | Near-opaque surface    | Subtle shadow, higher opacity for emphasis                  |
+| `ca8`       | Transparent/borderless | Banners, images, notebooks (no chrome)                      |
+
 
 Style is applied per-card per-page. The same card can have different styles on different pages. Omitting the `style` property uses the default/no style.
 
@@ -891,11 +900,13 @@ Custom app card instances (from published designs) are created via a two-step AP
 
 A context defines the dataset mappings, collections, and resource bindings for a card instance.
 
-| Field | Value |
-|-------|-------|
-| **Method** | `POST` |
-| **URL** | `https://{instance}.domo.com/domoapps/apps/v2/contexts` |
-| **Auth** | `X-DOMO-Developer-Token` or `X-Domo-Authentication` (SID) |
+
+| Field      | Value                                                     |
+| ---------- | --------------------------------------------------------- |
+| **Method** | `POST`                                                    |
+| **URL**    | `https://{instance}.domo.com/domoapps/apps/v2/contexts`   |
+| **Auth**   | `X-DOMO-Developer-Token` or `X-Domo-Authentication` (SID) |
+
 
 ```python
 DOMO = f"https://{instance}.domo.com"
@@ -916,10 +927,12 @@ For apps with no datasets (e.g., banners), use `"mapping": []`.
 
 ### Step 2: Create the Card from the Context
 
-| Field | Value |
-|-------|-------|
-| **Method** | `POST` |
-| **URL** | `https://{instance}.domo.com/domoapps/apps/v2?fullpage=false&pageId={pageId}&cardTitle={urlEncodedTitle}` |
+
+| Field      | Value                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------- |
+| **Method** | `POST`                                                                                                    |
+| **URL**    | `https://{instance}.domo.com/domoapps/apps/v2?fullpage=false&pageId={pageId}&cardTitle={urlEncodedTitle}` |
+
 
 ```python
 import urllib.parse
@@ -931,11 +944,13 @@ resp = requests.post(
 
 **Critical**: The `id` field must be the **context ID** from Step 1, NOT the design ID. Using the design ID causes 500 errors when datasets differ from the original.
 
-| Param | Description |
-|-------|-------------|
-| `fullpage` | `false` for standard card, `true` for full-page app |
-| `pageId` | Target page ID, or `-100000` for asset library only |
-| `cardTitle` | URL-encoded title for the card |
+
+| Param       | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `fullpage`  | `false` for standard card, `true` for full-page app |
+| `pageId`    | Target page ID, or `-100000` for asset library only |
+| `cardTitle` | URL-encoded title for the card                      |
+
 
 The card is created on the target page. Check the page's card list to get the numeric card ID for layout operations.
 
@@ -974,12 +989,14 @@ The **primary visualization** spans the full horizontal width of the page. **The
 
 #### Primary Viz Chart Type by Page
 
-| Page position | Recommended chart types | Why |
-|---------------|------------------------|-----|
-| **Overview** | Time-series line/area | Shows trends, forecasts, high-level trajectory |
-| **Sub-page 1** (e.g., Production, Revenue) | Vertical bar, grouped bar, stacked bar | Compares categories, shows composition |
-| **Sub-page 2** (e.g., Quality, Engagement) | Horizontal bar, lollipop, beeswarm | Rankings, distributions, part-to-whole |
-| **Sub-page 3** (e.g., Supply Chain, Support) | Scatter, bubble, treemap, heatmap | Correlations, density, multi-dimensional |
+
+| Page position                                | Recommended chart types                | Why                                            |
+| -------------------------------------------- | -------------------------------------- | ---------------------------------------------- |
+| **Overview**                                 | Time-series line/area                  | Shows trends, forecasts, high-level trajectory |
+| **Sub-page 1** (e.g., Production, Revenue)   | Vertical bar, grouped bar, stacked bar | Compares categories, shows composition         |
+| **Sub-page 2** (e.g., Quality, Engagement)   | Horizontal bar, lollipop, beeswarm     | Rankings, distributions, part-to-whole         |
+| **Sub-page 3** (e.g., Supply Chain, Support) | Scatter, bubble, treemap, heatmap      | Correlations, density, multi-dimensional       |
+
 
 The agent MUST select a **different primary chart type for each sub-page**. Repeating line charts across all pages makes dashboards feel monotonous and wastes the opportunity to match visualization type to data shape. When using pro-code charts, the `app-studio-pro-code` skill provides templates for line, bar, stacked bar, horizontal bar, and scatter patterns.
 
@@ -990,9 +1007,10 @@ The agent MUST select a **different primary chart type for each sub-page**. Repe
 Create each hero card with `PUT /content/v3/cards/kpi?pageId=:pageId`:
 
 **CRITICAL: PoP cards require THREE things to show comparison data:**
+
 1. **Date column in `main.columns`** with `mapping: "ITEM"` and `aggregation: "MAX"` (populates the "Time period" drop zone)
-2. **`dateRangeFilter`** on the `main` subscription (sets "Date range: This Month" + "Compare to: 1 month ago")
-3. **`time_period` subscription** with the same date column
+2. `**dateRangeFilter**` on the `main` subscription (sets "Date range: This Month" + "Compare to: 1 month ago")
+3. `**time_period` subscription** with the same date column
 
 Without all three, the PoP comparison shows "0" instead of actual prior period values.
 
@@ -1073,13 +1091,16 @@ card_body = {
 ```
 
 Key overrides for `badge_pop_multi_value`:
-| Override | Values | Purpose |
-|----------|--------|---------|
-| `gauge_layout` | `Center Vertical` | Layout of metric elements |
-| `comp_val_displayed` | `Percent Change` | Show % change vs prior period |
-| `addl_text` | `Prior Year` (ALWAYS use "Prior Year" — MONTH causes blank heroes) | Contextual subtitle |
-| `title_text` | e.g. `Total Production` | **Required.** Chart-level title displayed inside the card. Must always be set. |
-| `gauge_sizing` | `Default` | Auto-size values |
+
+
+| Override             | Values                                                             | Purpose                                                                        |
+| -------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `gauge_layout`       | `Center Vertical`                                                  | Layout of metric elements                                                      |
+| `comp_val_displayed` | `Percent Change`                                                   | Show % change vs prior period                                                  |
+| `addl_text`          | `Prior Year` (ALWAYS use "Prior Year" — MONTH causes blank heroes) | Contextual subtitle                                                            |
+| `title_text`         | e.g. `Total Production`                                            | **Required.** Chart-level title displayed inside the card. Must always be set. |
+| `gauge_sizing`       | `Default`                                                          | Auto-size values                                                               |
+
 
 Create **3-4** hero metric cards per page in a **SINGLE ROW** (never 2 rows). Each card uses the appropriate column, aggregation, and title for that page's domain. Choose the 3-4 most important KPIs. If you have more metrics, put them in the detail section below the primary viz.
 
@@ -1099,11 +1120,13 @@ Create **3-4** hero metric cards per page in a **SINGLE ROW** (never 2 rows). Ea
 **Hero card height** — use height **14** in the standard template (not 10). Height 10 is too short and makes the metric values hard to read. Compact (mobile) height: **8**.
 
 **Hero card date range — ALWAYS use YEAR interval.** PoP cards configured with MONTH interval frequently show blank values because:
+
 1. Current month may have no data yet (e.g., April 2nd has minimal April data)
 2. Synthetic/demo datasets may not have data in the exact current month
 3. MONTH comparisons are fragile and require precise date coverage
 
 **ALWAYS use YEAR interval** — this compares the current year to the prior year, which reliably captures data across all datasets:
+
 ```python
 "dateTimeRange": {
     "dateTimeRangeType": "INTERVAL_OFFSET",
@@ -1117,6 +1140,7 @@ Create **3-4** hero metric cards per page in a **SINGLE ROW** (never 2 rows). Ea
     "count": 0
 }
 ```
+
 Set `addl_text: "Prior Year"` in overrides. **NEVER use MONTH interval** — it is the #1 cause of blank hero cards.
 
 **Updating existing hero cards:** Use `PUT /content/v3/cards/kpi/definition` (with body `{"dynamicText": true, "variables": true, "urn": "CARD_ID"}`) to READ the current card definition, modify `dateRangeFilter` and `overrides.addl_text`, then `PUT /content/v3/cards/kpi/CARD_ID` with the full body (including `dataProvider.dataSourceId`, `variables: true`, `columns: false`). Format `formulas` as `{"dsUpdated":[], "dsDeleted":[], "card":[]}`, `annotations` as `{"new":[], "modified":[], "deleted":[]}`, `conditionalFormats` as `{"card":[], "datasource":[]}`, `segments` as `{"active":[], "create":[], "update":[], "delete":[]}`.
@@ -1124,6 +1148,7 @@ Set `addl_text: "Prior Year"` in overrides. **NEVER use MONTH interval** — it 
 ### Banner Card Placement
 
 Banners are pro-code custom apps (CSS gradient + branding text + **subheader context**) placed at y=0 spanning full width. Each banner should include:
+
 - Brand line (e.g., "MODOCORP MANUFACTURING") in accent color
 - Page title (e.g., "Overview") in white, 26px bold
 - Subheader describing the page's focus (e.g., "Real-time production metrics, quality, and supply chain performance") in muted light color
@@ -1157,7 +1182,7 @@ The primary visualization should span width 60 with height 25-30. On the Overvie
 
 ## Pro-Code Cards & App Studio Integration
 
-App Studio pages can contain **pro-code custom apps** alongside native cards. A pro-code card is a full JavaScript custom app (built via `initial-build`) published as a Domo card and placed on the canvas.
+App Studio pages can contain **pro-code custom apps** alongside native cards. A pro-code card is a full JavaScript custom app (built via `basic-app-build`) published as a Domo card and placed on the canvas.
 
 **When to use pro-code**: Custom visualizations (Gantt, heatmap, org chart), multi-step forms, cross-card interactivity, AppDB CRUD with custom UI, AI features, or any requirement that exceeds native card capabilities. Use `app-studio-pro-code` for the full decision table and build workflow.
 
@@ -1249,14 +1274,16 @@ card_body = {
 
 ### Available Selector Chart Types
 
-| Chart type | Purpose | Key override |
-|-----------|---------|-------------|
-| `badge_dropdown_selector` | Dropdown list filter | `allow_multi_select`, `dropdown_label_text` |
-| `badge_date_selector` | Date range picker | — |
-| `badge_checkbox_selector` | Checkbox filter (multi-select visible) | — |
-| `badge_radio_selector` | Radio button filter (single-select visible) | — |
-| `badge_range_selector` | Numeric range slider | — |
-| `badge_slicer` | Slicer-style filter | — |
+
+| Chart type                | Purpose                                     | Key override                                |
+| ------------------------- | ------------------------------------------- | ------------------------------------------- |
+| `badge_dropdown_selector` | Dropdown list filter                        | `allow_multi_select`, `dropdown_label_text` |
+| `badge_date_selector`     | Date range picker                           | —                                           |
+| `badge_checkbox_selector` | Checkbox filter (multi-select visible)      | —                                           |
+| `badge_radio_selector`    | Radio button filter (single-select visible) | —                                           |
+| `badge_range_selector`    | Numeric range slider                        | —                                           |
+| `badge_slicer`            | Slicer-style filter                         | —                                           |
+
 
 ### Filter Card Content Entry (CRITICAL)
 
@@ -1278,21 +1305,23 @@ card_body = {
 }
 ```
 
-- **`hideSummary: true`** — hides the summary number (e.g., "5K PlantName") that appears above the dropdown. Without this, filter cards display a distracting count.
-- **`hideMargins: true`** — removes internal padding for tighter fit.
-- **`fitToFrame: true`** — scales the dropdown to fill the card frame.
-- **`hideBorder: true`** — removes the card border for a seamless look.
-- **`style: null`** — NO style applied. Do NOT use `ca3` or any colored style on filter cards. They should have a transparent/default background that blends with the page. Colored or opaque backgrounds (green, blue, etc.) make filters visually polarizing and distracting.
-- **`hideTitle: true`** — hide the card-level title. The dropdown selector already renders its own field label (e.g., "Region", "Status"), so showing the card title creates redundant text. If the card title contains coded prefixes (e.g., "FS-Ov-Reg"), hiding it is essential.
+- `**hideSummary: true**` — hides the summary number (e.g., "5K PlantName") that appears above the dropdown. Without this, filter cards display a distracting count.
+- `**hideMargins: true**` — removes internal padding for tighter fit.
+- `**fitToFrame: true**` — scales the dropdown to fill the card frame.
+- `**hideBorder: true**` — removes the card border for a seamless look.
+- `**style: null**` — NO style applied. Do NOT use `ca3` or any colored style on filter cards. They should have a transparent/default background that blends with the page. Colored or opaque backgrounds (green, blue, etc.) make filters visually polarizing and distracting.
+- `**hideTitle: true**` — hide the card-level title. The dropdown selector already renders its own field label (e.g., "Region", "Status"), so showing the card title creates redundant text. If the card title contains coded prefixes (e.g., "FS-Ov-Reg"), hiding it is essential.
 
 ### Filter Card Layout Sizing
 
 Filter cards should be **compact** — they are controls, not content. Use minimal height.
 
-| Template | Width | Height | Notes |
-|----------|-------|--------|-------|
-| Standard (desktop) | 20 (3 across) or 15 (4 across) | **6** | Minimal height for low-profile appearance |
-| Compact (mobile) | 12 (full width, stacked) | **6–8** | Stacked vertically |
+
+| Template           | Width                          | Height  | Notes                                     |
+| ------------------ | ------------------------------ | ------- | ----------------------------------------- |
+| Standard (desktop) | 20 (3 across) or 15 (4 across) | **6**   | Minimal height for low-profile appearance |
+| Compact (mobile)   | 12 (full width, stacked)       | **6–8** | Stacked vertically                        |
+
 
 **Recommended page layout with filters (CANONICAL — matches basic-app-build Step 7):**
 
@@ -1356,14 +1385,17 @@ legacy_id = data["legacyId"]    # e.g., "calculation_abc123..." — for Beast Mo
 
 **Variable data types:**
 
-| dataType | expression example | Use case |
-|----------|-------------------|----------|
-| `STRING` | `"'All'"` | Dropdown selections, text filters |
-| `DECIMAL` | `"95"` | Thresholds, percentages, what-if values |
-| `LONG` | `"100"` | Integer counts, limits |
-| `DATE` | `"'2026-01-01'"` | Date selections |
+
+| dataType  | expression example | Use case                                |
+| --------- | ------------------ | --------------------------------------- |
+| `STRING`  | `"'All'"`          | Dropdown selections, text filters       |
+| `DECIMAL` | `"95"`             | Thresholds, percentages, what-if values |
+| `LONG`    | `"100"`            | Integer counts, limits                  |
+| `DATE`    | `"'2026-01-01'"`   | Date selections                         |
+
 
 The `function_id` (numeric, e.g., `115511`) is used by pro-code apps:
+
 - Read: `domo.onVariablesUpdated(vars => vars["115511"]?.parsedExpression?.value)`
 - Write: `domo.requestVariablesUpdate([{ functionId: 115511, value: "Plant A" }])`
 
@@ -1377,18 +1409,19 @@ After creating variables via the API, instruct the user to complete these steps 
 2. **Navigate to the target page** using the page tabs at the bottom
 3. **Open the left toolbar** and click the **Controls** icon (slider/knob icon)
 4. **Drag a control type** onto the canvas:
-   - **Dropdown** — for string variables with discrete choices
-   - **Range Selector** — for numeric variables (thresholds, targets)
-   - **Date Selector** — for date variables
-   - **Radio Button / Checkbox** — for small option sets
+  - **Dropdown** — for string variables with discrete choices
+  - **Range Selector** — for numeric variables (thresholds, targets)
+  - **Date Selector** — for date variables
+  - **Radio Button / Checkbox** — for small option sets
 5. **In the control configuration panel** (right side):
-   - Select the **Variable** to bind (e.g., "Selected Plant")
-   - Configure available values (from a dataset column or manual list)
-   - Set the default value
+  - Select the **Variable** to bind (e.g., "Selected Plant")
+  - Configure available values (from a dataset column or manual list)
+  - Set the default value
 6. **Position the control** on the canvas (recommended: in the filter row between heroes and charts)
 7. **Save the app**
 
 To persist variable values across pages, configure persistent filters:
+
 1. Go to **App Configuration** → **Filter Options** tab
 2. Check **"Persist Variable controls"**
 3. Note: Variable controls only apply to pages that contain that control. Add the control to each page where persistence is needed.
@@ -1397,14 +1430,16 @@ To persist variable values across pages, configure persistent filters:
 
 Both provide page-level interactivity, but they work differently:
 
-| Feature | Filter Cards | Variables |
-|---------|-------------|-----------|
-| Creation | Fully programmatic (API) | Programmatic creation + manual UI binding |
-| Mechanism | Interaction filter system | Beast Mode calculation system |
-| Cross-card | Automatic (same column name) | Requires Beast Mode on each card |
-| Pro-code API | `domo.onFiltersUpdated` | `domo.onVariablesUpdated` |
-| Use case | Column-based filtering | What-if analysis, metric switching, calculated parameters |
-| Persistence | Built-in page-level | Configurable via persistent filters |
+
+| Feature      | Filter Cards                 | Variables                                                 |
+| ------------ | ---------------------------- | --------------------------------------------------------- |
+| Creation     | Fully programmatic (API)     | Programmatic creation + manual UI binding                 |
+| Mechanism    | Interaction filter system    | Beast Mode calculation system                             |
+| Cross-card   | Automatic (same column name) | Requires Beast Mode on each card                          |
+| Pro-code API | `domo.onFiltersUpdated`      | `domo.onVariablesUpdated`                                 |
+| Use case     | Column-based filtering       | What-if analysis, metric switching, calculated parameters |
+| Persistence  | Built-in page-level          | Configurable via persistent filters                       |
+
 
 **Recommendation**: Use **filter cards** for straightforward column filtering (Plant, Status, Date Range). Use **variables** for calculated parameters (threshold %, metric selector, aggregation granularity) and when pro-code apps need to read/write shared state.
 
@@ -1418,14 +1453,16 @@ These rules make layouts feel intentional rather than mechanically packed. For d
 
 Insert SPACERs to create visual separation between card groups. Without intentional whitespace, layouts feel cramped.
 
-| Spacing purpose | Element | Height |
-|----------------|---------|--------|
-| Top of page (before first content) | SPACER | 3 |
-| Between cards in the same section | (none — cards touch) | 0 |
-| Between card rows within a section | (implicit from y positioning) | 0 |
-| Between sections (before a HEADER) | SPACER | 5 |
-| After a section header | (none — cards start at y + header height) | 0 |
-| After filter row (before main content) | SEPARATOR | 2 |
+
+| Spacing purpose                        | Element                                   | Height |
+| -------------------------------------- | ----------------------------------------- | ------ |
+| Top of page (before first content)     | SPACER                                    | 3      |
+| Between cards in the same section      | (none — cards touch)                      | 0      |
+| Between card rows within a section     | (implicit from y positioning)             | 0      |
+| Between sections (before a HEADER)     | SPACER                                    | 5      |
+| After a section header                 | (none — cards start at y + header height) | 0      |
+| After filter row (before main content) | SEPARATOR                                 | 2      |
+
 
 ### Row Harmony
 
@@ -1443,11 +1480,13 @@ HEADER content items should use concise, specific text. Avoid generic labels lik
 
 Choose a density tier based on the audience and page purpose:
 
-| Preset | Cards/page | Card widths | Spacer usage | Audience |
-|--------|-----------|-------------|--------------|----------|
-| **Executive** | 4–8 | 20–30 | Generous (height 5 spacers) | C-suite, board decks |
-| **Operational** | 8–16 | 15–20 | Moderate (height 3 spacers) | Managers, daily use |
-| **Detailed** | 16+ | 10–15 | Minimal (height 2 spacers) | Analysts, drill-down |
+
+| Preset          | Cards/page | Card widths | Spacer usage                | Audience             |
+| --------------- | ---------- | ----------- | --------------------------- | -------------------- |
+| **Executive**   | 4–8        | 20–30       | Generous (height 5 spacers) | C-suite, board decks |
+| **Operational** | 8–16       | 15–20       | Moderate (height 3 spacers) | Managers, daily use  |
+| **Detailed**    | 16+        | 10–15       | Minimal (height 2 spacers)  | Analysts, drill-down |
+
 
 ### Style ID Usage
 
@@ -1506,17 +1545,19 @@ The `theme` object inside the app controls all visual styling — colors, fonts,
 
 App Studio's theme has 60 color slots (`c1`–`c60`) organized by tag group. Map your custom palette following this structure:
 
-| Slot range | Tag | Purpose | Example mapping |
-|-----------|-----|---------|-----------------|
-| c1–c7 | TINTED_GRAY | Neutral grayscale dark→light | neutral-950, 900, 600, 300, 200, 100, white |
-| c8–c14 | PRIMARY (ORDER_SOURCE at c8) | Brand series base→tints | brand-500, 400, 300, 200, 100, 50, 50 |
-| c15–c21 | PRIMARY | Brand darker shades | brand-600→950 |
-| c22–c28 | SECONDARY (ORDER_SOURCE at c22) | 2nd series base→tints | teal-600→50 |
-| c29–c35 | TERTIARY (ORDER_SOURCE at c29) | 3rd series base→tints | amber-600→50 |
-| c36–c42 | QUATERNARY (ORDER_SOURCE at c36) | 4th series base→tints | red-600→50 |
-| c43–c57 | GRAYSCALE | Nav/sidebar/text/borders dark→light | neutral-950→white |
-| c58–c59 | FONT | Dark/light font | neutral-950, white |
-| c60 | AUTOMATIC_COLOR | Do NOT modify | Automatic dark/light switching |
+
+| Slot range | Tag                              | Purpose                             | Example mapping                             |
+| ---------- | -------------------------------- | ----------------------------------- | ------------------------------------------- |
+| c1–c7      | TINTED_GRAY                      | Neutral grayscale dark→light        | neutral-950, 900, 600, 300, 200, 100, white |
+| c8–c14     | PRIMARY (ORDER_SOURCE at c8)     | Brand series base→tints             | brand-500, 400, 300, 200, 100, 50, 50       |
+| c15–c21    | PRIMARY                          | Brand darker shades                 | brand-600→950                               |
+| c22–c28    | SECONDARY (ORDER_SOURCE at c22)  | 2nd series base→tints               | teal-600→50                                 |
+| c29–c35    | TERTIARY (ORDER_SOURCE at c29)   | 3rd series base→tints               | amber-600→50                                |
+| c36–c42    | QUATERNARY (ORDER_SOURCE at c36) | 4th series base→tints               | red-600→50                                  |
+| c43–c57    | GRAYSCALE                        | Nav/sidebar/text/borders dark→light | neutral-950→white                           |
+| c58–c59    | FONT                             | Dark/light font                     | neutral-950, white                          |
+| c60        | AUTOMATIC_COLOR                  | Do NOT modify                       | Automatic dark/light switching              |
+
 
 **Colors**: Update via `color_entry['value'] = {'value': '#HEX', 'type': 'RGB_HEX'}`. All hex values **MUST be uppercase**. Skip `c60`.
 
@@ -1524,38 +1565,35 @@ App Studio's theme has 60 color slots (`c1`–`c60`) organized by tag group. Map
 
 The theme's `c8-c42` color slots control UI chrome (nav, pills, buttons, backgrounds) but **NOT chart series colors**. Chart series colors are controlled exclusively by the `chartColorPalette` theme field.
 
-**`chartColorPalette`** accepts only `{"id": "<palette name>", "type": "DOMO"}` where the palette name references a Brand Kit chart color palette. The only built-in valid name is `"Domo Default Palette"`. Setting an unrecognized name results in `null` (charts fall back to theme color families c8/c15/c22/c29/c36 or hardcoded defaults).
+`**chartColorPalette`** accepts only `{"id": "<palette name>", "type": "DOMO"}` where the palette name references a Brand Kit chart color palette. The only built-in valid name is `"Domo Default Palette"`. Setting an unrecognized name results in `null` (charts fall back to theme color families c8/c15/c22/c29/c36 or hardcoded defaults).
 
 **To apply custom chart colors to native App Studio cards:**
 
 1. **Preferred: Create a Brand Kit palette** through the Domo Admin UI (Admin > Brand Kit > Chart Colors > New Palette). Use the same brand/teal/amber/red hex values from the custom palette. After creating and activating it, reference its name in the theme:
-   ```python
+  ```python
    theme['chartColorPalette'] = {'id': '<Brand Kit Palette Name>', 'type': 'DOMO'}
-   ```
-
+  ```
 2. **Fallback: Set chartColorPalette to null** by using an invalid name (`{'id': 'Custom', 'type': 'DOMO'}`). Charts may fall back to the theme's color families (c8, c15, c22, c29, c36).
 
 **Important:** The `chartColorPalette` field does NOT accept `type: "CUSTOM"` with inline colors — the API returns `400 Bad Request`. There is no public API for programmatic Brand Kit palette creation; it must be done through the Admin UI.
 
-3. **Most reliable: Set series colors per card via overrides.** Use `PUT /content/v3/cards/kpi/:cardId` to set `series_1_color` through `series_8_color` in the chart `overrides` object. This works for ALL chart types and guarantees the custom palette appears regardless of Brand Kit settings.
-
-   ```python
+1. **Most reliable: Set series colors per card via overrides.** Use `PUT /content/v3/cards/kpi/:cardId` to set `series_1_color` through `series_8_color` in the chart `overrides` object. This works for ALL chart types and guarantees the custom palette appears regardless of Brand Kit settings.
+  ```python
    SERIES_COLORS = ['#3B82C8', '#0D9488', '#D97706', '#DC2626',
                     '#2661A3', '#059669', '#7C3AED', '#DB2777']
-   
+
    # Read card → fix format mismatches → add overrides → update
    for i, color in enumerate(SERIES_COLORS, 1):
        overrides[f'series_{i}_color'] = color
-   ```
-
+  ```
    **Gotcha — Read/Write format mismatches:** The READ endpoint (`PUT /content/v3/cards/kpi/definition`) returns simplified formats that the WRITE endpoint rejects. You MUST fix these before updating:
-   - `formulas`: read returns `[]` → write needs `{"dsUpdated": [], "dsDeleted": [], "card": []}`
-   - `conditionalFormats`: read returns `[]` → write needs `{"card": [], "datasource": []}`
-   - `annotations`: read returns `[]` → write needs `{"new": [], "modified": [], "deleted": []}`
-   - `segments`: read has `{"active": [], "definitions": []}` → write needs `{"active": [], "create": [], "update": [], "delete": []}`
-   - Must add missing fields: `title`, `description`, `noDateRange`
-   - Must remove read-only fields: `modified`, `allowTableDrill`
-   - Must provide `dataProvider.dataSourceId` (read returns it as `None` in subscriptions)
+  - `formulas`: read returns `[]` → write needs `{"dsUpdated": [], "dsDeleted": [], "card": []}`
+  - `conditionalFormats`: read returns `[]` → write needs `{"card": [], "datasource": []}`
+  - `annotations`: read returns `[]` → write needs `{"new": [], "modified": [], "deleted": []}`
+  - `segments`: read has `{"active": [], "definitions": []}` → write needs `{"active": [], "create": [], "update": [], "delete": []}`
+  - Must add missing fields: `title`, `description`, `noDateRange`
+  - Must remove read-only fields: `modified`, `allowTableDrill`
+  - Must provide `dataProvider.dataSourceId` (read returns it as `None` in subscriptions)
 
 #### Decision Rules for Palette Selection
 
@@ -1611,16 +1649,19 @@ for section in ['forms', 'tables', 'notebooks', 'pills', 'tabs']:
 
 **Dark mode color slot mapping** (inverted from light mode):
 
-| Slot | Light mode | Dark mode |
-|------|-----------|-----------|
-| c1–c7 | dark→light grays | light→dark (c1=page bg dark, c5=text light, c7=white) |
-| c43–c54 | dark nav/sidebar grays | dark backgrounds matching page bg |
-| c55 | page bg (ultra-light gray) | page bg (**dark**, e.g., #1E1C1A) |
-| c56 | card surface (white) | card surface (**dark**, e.g., #302C28) |
-| c58 | dark font | **light font** (e.g., #F5F3F0) — primary text on dark bg |
-| c59 | light/white font | **dark font** (e.g., #1E1C1A) — inverse text |
+
+| Slot    | Light mode                 | Dark mode                                                |
+| ------- | -------------------------- | -------------------------------------------------------- |
+| c1–c7   | dark→light grays           | light→dark (c1=page bg dark, c5=text light, c7=white)    |
+| c43–c54 | dark nav/sidebar grays     | dark backgrounds matching page bg                        |
+| c55     | page bg (ultra-light gray) | page bg (**dark**, e.g., #1E1C1A)                        |
+| c56     | card surface (white)       | card surface (**dark**, e.g., #302C28)                   |
+| c58     | dark font                  | **light font** (e.g., #F5F3F0) — primary text on dark bg |
+| c59     | light/white font           | **dark font** (e.g., #1E1C1A) — inverse text             |
+
 
 **Dark mode sidebar colors** — match the banner gradient:
+
 ```python
 for c in theme['colors']:
     if c['id'] == 'c43': c['value'] = {'value': '#1E1C1A', 'type': 'RGB_HEX'}  # nav bg
@@ -1630,33 +1671,37 @@ for c in theme['colors']:
 
 **Font**: Use `Sans` family throughout (not `Slab`). Map to domo-app-theme typography:
 
-| Font ID | Role | Family | Weight | Size |
-|---------|------|--------|--------|------|
-| f1 | Page title | Sans | 700 | 22 |
-| f2 | Header h1 | Sans | 700 | 22 |
-| f3 | Section title | Sans | 600 | 16 |
-| f4 | Card title | Sans | 600 | 16 |
-| f5 | Body semibold | Sans | 600 | 13 |
-| f6 | Body text | Sans | 400 | 13 |
-| f7 | Captions | Sans | 400 | 12 |
-| f8 | Button text | Sans | 600 | 13 |
-| f9 | Small/badge | Sans | 600 | 11 |
+
+| Font ID | Role          | Family | Weight | Size |
+| ------- | ------------- | ------ | ------ | ---- |
+| f1      | Page title    | Sans   | 700    | 22   |
+| f2      | Header h1     | Sans   | 700    | 22   |
+| f3      | Section title | Sans   | 600    | 16   |
+| f4      | Card title    | Sans   | 600    | 16   |
+| f5      | Body semibold | Sans   | 600    | 13   |
+| f6      | Body text     | Sans   | 400    | 13   |
+| f7      | Captions      | Sans   | 400    | 12   |
+| f8      | Button text   | Sans   | 600    | 13   |
+| f9      | Small/badge   | Sans   | 600    | 11   |
+
 
 ### Border Radius — ZERO EVERYWHERE (MANDATORY)
 
 **All border-radius values MUST be 0.** No rounded corners on any element — cards, containers, buttons, inputs, filters, tables, notebooks, components, tabs, forms, or pills. This is a strict global rule.
 
-| Element | Radius | Notes |
-|---------|--------|-------|
-| Cards (`borderRadius`) | **0** | Zero rounding on all card styles |
-| Tables (`borderRadius`) | **0** | Zero rounding |
-| Notebooks (`borderRadius`) | **0** | Zero rounding |
-| Components outer (`borderRadius`) | **0** | Zero rounding |
-| Components inner (`itemBorderRadius`) | **0** | Zero rounding |
-| Buttons (`borderRadius`) | **0** | Zero rounding |
-| Tabs (`borderRadius`) | **0** | Zero rounding |
-| Forms (`borderRadius`) | **0** | Zero rounding |
-| Pills (`radius`) | **0** | Zero rounding |
+
+| Element                               | Radius | Notes                            |
+| ------------------------------------- | ------ | -------------------------------- |
+| Cards (`borderRadius`)                | **0**  | Zero rounding on all card styles |
+| Tables (`borderRadius`)               | **0**  | Zero rounding                    |
+| Notebooks (`borderRadius`)            | **0**  | Zero rounding                    |
+| Components outer (`borderRadius`)     | **0**  | Zero rounding                    |
+| Components inner (`itemBorderRadius`) | **0**  | Zero rounding                    |
+| Buttons (`borderRadius`)              | **0**  | Zero rounding                    |
+| Tabs (`borderRadius`)                 | **0**  | Zero rounding                    |
+| Forms (`borderRadius`)                | **0**  | Zero rounding                    |
+| Pills (`radius`)                      | **0**  | Zero rounding                    |
+
 
 ```python
 # Apply zero border-radius to ALL theme elements
@@ -1713,19 +1758,22 @@ card['padding'] = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
 
 **Reference card settings (from App Studio design panel):**
 
-| Setting | Value | API property |
-|---------|-------|-------------|
-| Rounded corners | **0 px** | `borderRadius: 0` |
-| Border weight | **0 px** | `borderWidth: 0` |
-| Drop shadow | **None** | `dropShadow: 'NONE'` |
-| Controls color | **#2563BE** | Theme color `c8` → `#2563BE` |
-| Card inner padding | **Custom, 0 px** | `padding: {left:0, right:0, top:0, bottom:0}` |
-| Card content spacing | **Nil** | `contentSpacing: None` (null) |
-| Space below header content | **0 px** | `headerBottomSpacing: 0` |
+
+| Setting                    | Value            | API property                                  |
+| -------------------------- | ---------------- | --------------------------------------------- |
+| Rounded corners            | **0 px**         | `borderRadius: 0`                             |
+| Border weight              | **0 px**         | `borderWidth: 0`                              |
+| Drop shadow                | **None**         | `dropShadow: 'NONE'`                          |
+| Controls color             | **#2563BE**      | Theme color `c8` → `#2563BE`                  |
+| Card inner padding         | **Custom, 0 px** | `padding: {left:0, right:0, top:0, bottom:0}` |
+| Card content spacing       | **Nil**          | `contentSpacing: None` (null)                 |
+| Space below header content | **0 px**         | `headerBottomSpacing: 0`                      |
+
 
 ### Controls Color
 
 Set the controls/accent color to `#2563BE`:
+
 ```python
 for c in theme.get('colors', []):
     if c['id'] == 'c8':
@@ -1777,25 +1825,27 @@ Icons are set via the `/navigation/reorder` endpoint. The body must be the **ful
 
 #### Recommended icons by page type
 
-| Page type | Recommended icons (pick one) |
-|-----------|------------------------------|
-| Overview / Dashboard | `analytics`, `pop-chart`, `chart-bar-vertical`, `select-chart`, `badge-layout-8` |
-| Production / Operations | `gauge`, `dataflow`, `cube-filled`, `completed-submissions` |
-| Quality / Compliance | `certified`, `checkbox-marked-outline`, `check-in-icon`, `approval-center` |
-| Supply Chain / Logistics | `globe`, `data-app`, `local_shipping`, `warehouse`, `shopping_cart` |
-| Retail / Store | `store`, `cube-filled`, `numbers`, `toolbox` |
-| Financial | `money-universal`, `money`, `benchmark`, `books`, `calculator` |
-| People / HR / Patients | `people`, `person`, `person-card`, `person-plus`, `people-plus`, `heart` |
-| Time / Scheduling | `clock`, `calendar-simple`, `calendar-time`, `alarm`, `interrupting-timer` |
-| Documents / Reports | `document`, `document-outline`, `books`, `newspaper`, `clipboard-copy` |
-| AI / ML / Intelligence | `ai-chat`, `magic`, `wand`, `lightbulb`, `lightning-bolt`, `sciency-data`, `analyzer` |
-| Marketing / Campaigns | `area-chart`, `funnel`, `bell-outline`, `video`, `image` |
-| Settings / Admin | `controls`, `pages-gear`, `code-tags`, `pencil-box`, `lock-closed` |
-| Geography / Location | `globe`, `map-marker`, `building` |
-| Forecasting / Goals | `forecast`, `goals`, `trophy`, `exclamation-triangle` |
-| Education | `graduation-cap`, `domo-university` |
-| Health / Safety | `heart`, `glasses`, `adc` |
-| Inventory / Products | `cube-filled`, `domobox`, `table`, `tag-multiple`, `badge-layout-small` |
+
+| Page type                | Recommended icons (pick one)                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| Overview / Dashboard     | `analytics`, `pop-chart`, `chart-bar-vertical`, `select-chart`, `badge-layout-8`      |
+| Production / Operations  | `gauge`, `dataflow`, `cube-filled`, `completed-submissions`                           |
+| Quality / Compliance     | `certified`, `checkbox-marked-outline`, `check-in-icon`, `approval-center`            |
+| Supply Chain / Logistics | `globe`, `data-app`, `local_shipping`, `warehouse`, `shopping_cart`                   |
+| Retail / Store           | `store`, `cube-filled`, `numbers`, `toolbox`                                          |
+| Financial                | `money-universal`, `money`, `benchmark`, `books`, `calculator`                        |
+| People / HR / Patients   | `people`, `person`, `person-card`, `person-plus`, `people-plus`, `heart`              |
+| Time / Scheduling        | `clock`, `calendar-simple`, `calendar-time`, `alarm`, `interrupting-timer`            |
+| Documents / Reports      | `document`, `document-outline`, `books`, `newspaper`, `clipboard-copy`                |
+| AI / ML / Intelligence   | `ai-chat`, `magic`, `wand`, `lightbulb`, `lightning-bolt`, `sciency-data`, `analyzer` |
+| Marketing / Campaigns    | `area-chart`, `funnel`, `bell-outline`, `video`, `image`                              |
+| Settings / Admin         | `controls`, `pages-gear`, `code-tags`, `pencil-box`, `lock-closed`                    |
+| Geography / Location     | `globe`, `map-marker`, `building`                                                     |
+| Forecasting / Goals      | `forecast`, `goals`, `trophy`, `exclamation-triangle`                                 |
+| Education                | `graduation-cap`, `domo-university`                                                   |
+| Health / Safety          | `heart`, `glasses`, `adc`                                                             |
+| Inventory / Products     | `cube-filled`, `domobox`, `table`, `tag-multiple`, `badge-layout-small`               |
+
 
 #### Complete Domo icon catalog (133 verified names)
 
@@ -1842,44 +1892,46 @@ your-submissions
 
 ## Gotchas and Known Issues
 
-| Issue | Detail |
-|-------|--------|
-| **Write lock required** | You must `PUT /content/v4/pages/layouts/{layoutId}/writelock` before updating a layout. Without it: `403 WL003: Cannot edit without valid writelock`. |
-| **Always release the lock** | `DELETE /content/v4/pages/layouts/{layoutId}/writelock` after editing. If you don't, no one else can edit the page until the lock times out. |
-| **Cards go to appendix by default** | When you add a card via `POST /content/v1/pages/{pageId}/cards/{cardId}` or `PUT /content/v3/cards/kpi?pageId=`, it goes to the appendix. You must update the layout to move it to the canvas. |
-| **layoutId ≠ pageId** | Each page has its own `layoutId` (a different numeric ID). Get it from `GET /content/v4/pages/{pageId}/layouts`. |
-| **viewId = pageId** | In App Studio, the `viewId` from the app structure IS the `pageId` for card and layout operations. |
-| **Template must account for ALL content keys** | Every `contentKey` present in the `content` array MUST have a corresponding entry in BOTH `standard.template` AND `compact.template`. If any key is missing from either template, the PUT returns `400 Bad Request` with no detail. This is the #1 cause of layout update failures. |
-| **Appendix artifacts MUST be preserved** | When Domo adds cards to the appendix, it auto-generates `PAGE_BREAK` and `SEPARATOR` entries in the template with `contentKey` values that do NOT exist in the `content` array. These template-only entries MUST be included in your updated template (keep them as `virtualAppendix: true, virtual: true`). Removing them causes `400 Bad Request`. Always diff `content` keys vs `template` keys before building your new layout. |
-| **Content keys may have gaps** | Domo assigns `contentKey` values incrementally, but gaps occur (e.g., 1,2,3,4,5,6,7,8,9,11,12 — key 10 is skipped). Never assume sequential keys. Always read the layout to get actual keys. |
-| **standard + compact both required** | The PUT body must include both `standard` (desktop) and `compact` (mobile) template arrays. Both must contain entries for all content keys. |
-| **Content array is managed by Domo** | When creating cards on a page, Domo auto-populates the `content` array with full card properties (`hideTitle`, `hideFooter`, `acceptFilters`, etc.). You can modify these entries (e.g., change header `text`) but should not add or remove `CARD` entries manually — only move them between canvas and appendix via the template. |
-| **LEFT nav requires `showDomoNavigation: false`** | Setting `navOrientation` to `LEFT` while `showDomoNavigation` is `true` causes `400 Bad Request`. All LEFT-nav apps in production have `showDomoNavigation: false`. Set both in the same PUT. |
-| **View creation body format** | `POST /content/v1/dataapps/:id/views` requires the `view` sub-object directly as the body — NOT wrapped in `{"view": {...}}` or `{"title": "..."}`. The body must include `type: "dataappview"`, `title`, `pageName`, and an `owners` array. |
-| **App PUT requires full body** | The `PUT /content/v1/dataapps/:id` endpoint rejects partial bodies with `400 Bad Request`. You must send the complete app object from GET. Read-only fields like `userAccess`, `isOwner`, `isFavorite`, `canEdit` are safely ignored by the server. |
-| **New apps have `isDynamic: false`** | Newly created App Studio apps have `isDynamic: false` in their layout (unlike apps created via the UI which may have `isDynamic: true`). This does not affect layout operations. |
-| **New apps have `enabled: true`** | Newly created apps include an `enabled` field in the layout response. Preserve this when PUTting updates. |
-| **Style is per-content-entry** | Card styles (`"style": {"sourceId": "ca8"}`) are set in the `content` array, not in the template. The same card can have different styles on different pages. |
-| **No card duplication** | Adding the same card to multiple pages doesn't duplicate it — it's the same card rendered on each page. Filter interactions are shared. |
-| **GET uses `/layouts` (plural)** | The GET endpoint is `/content/v4/pages/{pageId}/layouts` (plural), but the PUT endpoint is `/content/v4/pages/layouts/{layoutId}` (singular with layout ID in path). |
-| **DELETE removes card from page only** | `DELETE /content/v1/pages/{pageId}/cards/{cardId}` removes the card-page association, not the card itself. The card continues to exist in Domo and on other pages. |
-| **Overview page is `-100000`** | The Domo overview/home page has the special page ID `-100000`. Adding cards to it works with the same `POST /content/v1/pages/-100000/cards/{cardId}` endpoint. |
-| **Cards on overview != cards in App Studio** | Adding a card to page `-100000` puts it on the Domo overview page. It does NOT appear inside App Studio views. To have cards in App Studio, add them to the specific view `pageId`. These are independent assignments. |
-| **Cards from different datasets on same page** | An App Studio page can contain cards powered by different datasets. There is no restriction. This was verified with a page containing 23 cards across 2 datasets. |
-| **Hex values MUST be uppercase** | Color hex values in the theme (e.g., `#3F454D`) must use uppercase letters. Lowercase hex (e.g., `#3f454d`) causes `400 Bad Request` on PUT. |
-| **Card padding max is 16** | Card `padding` values (left/right/top/bottom) cannot exceed 16. Values like 20 cause `400 Bad Request`. Use 16 for maximum padding. |
-| **Nav reorder requires full array** | The `/navigation/reorder` endpoint requires the complete navigation array as returned by GET. Sending a subset or partial objects causes `400`. **CRITICAL: You MUST preserve all default system nav items** (HOME, AI_ASSISTANT, CONTROLS, DISTRIBUTE, MORE/Details) when reordering. First GET the app to read `navigations[]`, then modify only the `icon` and `navOrder` fields — never drop items. Missing system items makes the app uneditable from the UI. **If HOME is missing from the navigations array (some new apps don't include it by default), add it explicitly**: `{"entity": "HOME", "title": "Home", "icon": {"type": "NAME", "value": "home"}, "visible": true}`. Without HOME, users cannot navigate back to the Domo portal. |
-| **Theme pages[0].isDynamic controls fixed width** | Setting `theme.pages[0].isDynamic = false` with `density: {'compact': 8, 'standard': 8}` creates a fixed-width layout. This is independent of per-page layout `isDynamic`. |
-| **LEFT nav: hide title and logo** | For `navOrientation: 'LEFT'`, set `showTitle: false` and `showLogo: false`. The page names in the left nav already identify the app — the title wastes vertical space. |
-| **Sidebar color must match banner** | When using a dark gradient banner, update `c43`/`c44`/`c45` to match the banner's gradient palette. Mismatched sidebar and banner colors break visual continuity. |
-| **Pro-code cards: no own shadow** | Pro-code apps embedded in App Studio should set `background: transparent` and no `box-shadow`. The App Studio card style (ca1) provides the card chrome. Duplicate shadows create a double-border effect. |
-| **Daily tick density** | Time-series pro-code charts with >30 data points must thin ticks using an interval formula. Target ~18 visible labels. See `app-studio-pro-code` for the `calcTickInterval` function. |
-| **Banner height = 14** | Banners should use height 14 (not 7) in standard template to accommodate subheader text. Compact: height 8. |
-| **Dark mode: c60 invisible text** | `c60` (AUTOMATIC_COLOR) does NOT reliably detect dark card/page backgrounds. On dark themes, it defaults to dark text — making ALL native text invisible. **MANDATORY**: Replace every `c60` font color reference across cards, navigation, headers, and components with `c58` (your light text color). See "Dark Mode Theme" section. This is the #1 dark mode failure. |
-| **Dark mode: font property names** | Theme font properties use `family`, `weight`, `size`, `style` (not `fontFamily`/`fontWeight`/`fontSize`). Setting the wrong property names silently fails — fonts revert to theme defaults on next GET. |
-| **Pro-code colors are NOT inherited** | Pro-code components render in iframes and use their own CSS — they do NOT inherit the App Studio theme colors. When the theme palette changes, every pro-code component (banners, charts) must be manually updated with the new hex values AND republished via `domo publish`. Forgetting this creates jarring green-charts-on-copper-theme mismatches. |
-| **Font family must match across all surfaces** | The App Studio theme `fonts[].family` (Sans/Serif/Slab) must match all pro-code CSS `font-family` stacks. Mixing Serif native cards with Sans pro-code charts looks broken. When updating fonts, update BOTH the theme AND every pro-code `app.css`. |
-| **Nav icons: use only catalog names** | Domo uses its own internal icon set (133 verified names). Google Material icon names like `inventory_2`, `assignment_return`, `trending_up` render as blank/invisible. See the "Complete Domo icon catalog" section above. Always pick from the verified catalog. |
+
+| Issue                                             | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Write lock required**                           | You must `PUT /content/v4/pages/layouts/{layoutId}/writelock` before updating a layout. Without it: `403 WL003: Cannot edit without valid writelock`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Always release the lock**                       | `DELETE /content/v4/pages/layouts/{layoutId}/writelock` after editing. If you don't, no one else can edit the page until the lock times out.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Cards go to appendix by default**               | When you add a card via `POST /content/v1/pages/{pageId}/cards/{cardId}` or `PUT /content/v3/cards/kpi?pageId=`, it goes to the appendix. You must update the layout to move it to the canvas.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **layoutId ≠ pageId**                             | Each page has its own `layoutId` (a different numeric ID). Get it from `GET /content/v4/pages/{pageId}/layouts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **viewId = pageId**                               | In App Studio, the `viewId` from the app structure IS the `pageId` for card and layout operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Template must account for ALL content keys**    | Every `contentKey` present in the `content` array MUST have a corresponding entry in BOTH `standard.template` AND `compact.template`. If any key is missing from either template, the PUT returns `400 Bad Request` with no detail. This is the #1 cause of layout update failures.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Appendix artifacts MUST be preserved**          | When Domo adds cards to the appendix, it auto-generates `PAGE_BREAK` and `SEPARATOR` entries in the template with `contentKey` values that do NOT exist in the `content` array. These template-only entries MUST be included in your updated template (keep them as `virtualAppendix: true, virtual: true`). Removing them causes `400 Bad Request`. Always diff `content` keys vs `template` keys before building your new layout.                                                                                                                                                                                                                                                                                                                  |
+| **Content keys may have gaps**                    | Domo assigns `contentKey` values incrementally, but gaps occur (e.g., 1,2,3,4,5,6,7,8,9,11,12 — key 10 is skipped). Never assume sequential keys. Always read the layout to get actual keys.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **standard + compact both required**              | The PUT body must include both `standard` (desktop) and `compact` (mobile) template arrays. Both must contain entries for all content keys.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Content array is managed by Domo**              | When creating cards on a page, Domo auto-populates the `content` array with full card properties (`hideTitle`, `hideFooter`, `acceptFilters`, etc.). You can modify these entries (e.g., change header `text`) but should not add or remove `CARD` entries manually — only move them between canvas and appendix via the template.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **LEFT nav requires `showDomoNavigation: false`** | Setting `navOrientation` to `LEFT` while `showDomoNavigation` is `true` causes `400 Bad Request`. All LEFT-nav apps in production have `showDomoNavigation: false`. Set both in the same PUT.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **View creation body format**                     | `POST /content/v1/dataapps/:id/views` requires the `view` sub-object directly as the body — NOT wrapped in `{"view": {...}}` or `{"title": "..."}`. The body must include `type: "dataappview"`, `title`, `pageName`, and an `owners` array.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **App PUT requires full body**                    | The `PUT /content/v1/dataapps/:id` endpoint rejects partial bodies with `400 Bad Request`. You must send the complete app object from GET. Read-only fields like `userAccess`, `isOwner`, `isFavorite`, `canEdit` are safely ignored by the server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **New apps have `isDynamic: false`**              | Newly created App Studio apps have `isDynamic: false` in their layout (unlike apps created via the UI which may have `isDynamic: true`). This does not affect layout operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **New apps have `enabled: true`**                 | Newly created apps include an `enabled` field in the layout response. Preserve this when PUTting updates.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Style is per-content-entry**                    | Card styles (`"style": {"sourceId": "ca8"}`) are set in the `content` array, not in the template. The same card can have different styles on different pages.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **No card duplication**                           | Adding the same card to multiple pages doesn't duplicate it — it's the same card rendered on each page. Filter interactions are shared.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **GET uses `/layouts` (plural)**                  | The GET endpoint is `/content/v4/pages/{pageId}/layouts` (plural), but the PUT endpoint is `/content/v4/pages/layouts/{layoutId}` (singular with layout ID in path).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **DELETE removes card from page only**            | `DELETE /content/v1/pages/{pageId}/cards/{cardId}` removes the card-page association, not the card itself. The card continues to exist in Domo and on other pages.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Overview page is `-100000`**                    | The Domo overview/home page has the special page ID `-100000`. Adding cards to it works with the same `POST /content/v1/pages/-100000/cards/{cardId}` endpoint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Cards on overview != cards in App Studio**      | Adding a card to page `-100000` puts it on the Domo overview page. It does NOT appear inside App Studio views. To have cards in App Studio, add them to the specific view `pageId`. These are independent assignments.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Cards from different datasets on same page**    | An App Studio page can contain cards powered by different datasets. There is no restriction. This was verified with a page containing 23 cards across 2 datasets.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Hex values MUST be uppercase**                  | Color hex values in the theme (e.g., `#3F454D`) must use uppercase letters. Lowercase hex (e.g., `#3f454d`) causes `400 Bad Request` on PUT.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Card padding max is 16**                        | Card `padding` values (left/right/top/bottom) cannot exceed 16. Values like 20 cause `400 Bad Request`. Use 16 for maximum padding.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Nav reorder requires full array**               | The `/navigation/reorder` endpoint requires the complete navigation array as returned by GET. Sending a subset or partial objects causes `400`. **CRITICAL: You MUST preserve all default system nav items** (HOME, AI_ASSISTANT, CONTROLS, DISTRIBUTE, MORE/Details) when reordering. First GET the app to read `navigations[]`, then modify only the `icon` and `navOrder` fields — never drop items. Missing system items makes the app uneditable from the UI. **If HOME is missing from the navigations array (some new apps don't include it by default), add it explicitly**: `{"entity": "HOME", "title": "Home", "icon": {"type": "NAME", "value": "home"}, "visible": true}`. Without HOME, users cannot navigate back to the Domo portal. |
+| **Theme pages[0].isDynamic controls fixed width** | Setting `theme.pages[0].isDynamic = false` with `density: {'compact': 8, 'standard': 8}` creates a fixed-width layout. This is independent of per-page layout `isDynamic`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **LEFT nav: hide title and logo**                 | For `navOrientation: 'LEFT'`, set `showTitle: false` and `showLogo: false`. The page names in the left nav already identify the app — the title wastes vertical space.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Sidebar color must match banner**               | When using a dark gradient banner, update `c43`/`c44`/`c45` to match the banner's gradient palette. Mismatched sidebar and banner colors break visual continuity.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Pro-code cards: no own shadow**                 | Pro-code apps embedded in App Studio should set `background: transparent` and no `box-shadow`. The App Studio card style (ca1) provides the card chrome. Duplicate shadows create a double-border effect.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Daily tick density**                            | Time-series pro-code charts with >30 data points must thin ticks using an interval formula. Target ~18 visible labels. See `app-studio-pro-code` for the `calcTickInterval` function.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Banner height = 14**                            | Banners should use height 14 (not 7) in standard template to accommodate subheader text. Compact: height 8.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Dark mode: c60 invisible text**                 | `c60` (AUTOMATIC_COLOR) does NOT reliably detect dark card/page backgrounds. On dark themes, it defaults to dark text — making ALL native text invisible. **MANDATORY**: Replace every `c60` font color reference across cards, navigation, headers, and components with `c58` (your light text color). See "Dark Mode Theme" section. This is the #1 dark mode failure.                                                                                                                                                                                                                                                                                                                                                                             |
+| **Dark mode: font property names**                | Theme font properties use `family`, `weight`, `size`, `style` (not `fontFamily`/`fontWeight`/`fontSize`). Setting the wrong property names silently fails — fonts revert to theme defaults on next GET.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Pro-code colors are NOT inherited**             | Pro-code components render in iframes and use their own CSS — they do NOT inherit the App Studio theme colors. When the theme palette changes, every pro-code component (banners, charts) must be manually updated with the new hex values AND republished via `domo publish`. Forgetting this creates jarring green-charts-on-copper-theme mismatches.                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Font family must match across all surfaces**    | The App Studio theme `fonts[].family` (Sans/Serif/Slab) must match all pro-code CSS `font-family` stacks. Mixing Serif native cards with Sans pro-code charts looks broken. When updating fonts, update BOTH the theme AND every pro-code `app.css`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Nav icons: use only catalog names**             | Domo uses its own internal icon set (133 verified names). Google Material icon names like `inventory_2`, `assignment_return`, `trending_up` render as blank/invisible. See the "Complete Domo icon catalog" section above. Always pick from the verified catalog.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+
 
 ### Layout Update Debugging Checklist
 
