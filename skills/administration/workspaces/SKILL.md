@@ -16,15 +16,6 @@ Supported operations:
 - **List** all contents of a workspace
 - **Search** within a workspace for specific content
 
-### Default Workspace
-
-All Domo Marketing builds go into the team workspace:
-
-| Property | Value |
-|----------|-------|
-| GUID | `99bf62b4-21f8-474b-985b-9bb83c773998` |
-| URL | https://domo.domo.com/workspaces/99bf62b4-21f8-474b-985b-9bb83c773998 |
-
 ---
 
 ## Endpoints

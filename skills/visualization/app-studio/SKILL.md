@@ -3,7 +3,6 @@
 > **CLI vs API**: The Java CLI has no App Studio commands. All App Studio operations (creating apps, managing views, configuring layouts) require the REST API via curl. This is one area where you must go directly to the API.
 
 > **Status**: Reverse-engineered from live testing, March 2026
-> **Verified against**: `aeroateam-partner.domo.com` (app `453445400`), `csibas.domo.com` (apps `1400847176`, `2061524048`)
 
 ---
 
@@ -61,8 +60,6 @@ Creates a new App Studio app with a single default landing view.
 ```
 
 The app is created with one default view. The `landingViewId` is the `viewId` of the auto-created page, which doubles as the `pageId` for card and layout operations.
-
-**Verified**: Created 2 apps on `csibas.domo.com`. Both returned 200 with a single default view.
 
 ---
 
@@ -536,7 +533,7 @@ Standard template (6 cards, 10 units wide each):
 
 ## Complete Workflow: Build a Full Dashboard App Programmatically
 
-This workflow creates a multi-section App Studio app from scratch — no UI interaction needed. Verified on `csibas.domo.com` with 23 cards across 2 sections.
+This workflow creates a multi-section App Studio app from scratch — no UI interaction needed.
 
 ### Step 1: Create the App
 
