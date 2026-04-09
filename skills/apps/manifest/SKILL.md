@@ -145,3 +145,14 @@ Collection mapping gotchas:
 - Do not use ad-hoc keys like `alias` + `collectionId` in `collectionsMapping`; this can fail manifest parsing.
 - `name` is required for mapped collection objects.
 - For existing collection wiring, default `syncEnabled` to `false` unless app requirements explicitly call for synchronized dataset behavior.
+
+## FileSets — no manifest entry needed
+
+FileSets are the exception to the "declare everything in manifest" pattern. There is no `filesetsMapping` or equivalent key. Reference the fileset ID directly as a constant in your service code:
+
+```javascript
+// src/services/filesetApi.js
+const FILESET_ID = 'b6ebf7e9-64ae-4e6d-b8ca-b356fe62923f';
+```
+
+The fileset ID is a UUID you get from the Domo UI or via `community-domo-cli filesets search`. See the `fileset-api` skill for the full API pattern.
