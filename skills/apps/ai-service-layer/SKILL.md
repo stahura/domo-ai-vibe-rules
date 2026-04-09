@@ -7,8 +7,6 @@ description: Toolkit-first AIClient patterns for generation, text-to-sql, and re
 
 This rule is **toolkit-first**. Use `AIClient` from `@domoinc/toolkit`.
 
-> Legacy endpoint-first guidance has been archived to `archive/legacy-rules/domo-ai-endpoints.md`.
-
 ## Canonical Client
 
 ```bash

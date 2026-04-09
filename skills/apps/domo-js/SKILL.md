@@ -61,12 +61,22 @@ domo.onDataUpdated((alias) => {
 });
 ```
 
-#### Page Filter Changes (`onFiltersUpdated`)
+#### Page Filter Changes (`onFiltersUpdated` / `onFiltersUpdate`)
 
 Fires when native filter cards on the same App Studio page (or dashboard) change. Register at the top level — outside any React component or `useEffect`.
+Use `onFiltersUpdate` when available on newer `ryuu.js` versions, and fall back to `onFiltersUpdated` for compatibility.
 
 ```javascript
-domo.onFiltersUpdated((filters) => {
+const registerFilterListener = (handler) => {
+  try {
+    if (typeof domo.onFiltersUpdate === "function") return domo.onFiltersUpdate(handler);
+    if (typeof domo.onFiltersUpdated === "function") return domo.onFiltersUpdated(handler);
+  } catch (_) {
+    // Listener registry can be uninitialized in some runtimes.
+  }
+};
+
+registerFilterListener((filters) => {
   if (!Array.isArray(filters) || filters.length === 0) return;
 
   filters.forEach(({ column, operand, values, dataType }) => {

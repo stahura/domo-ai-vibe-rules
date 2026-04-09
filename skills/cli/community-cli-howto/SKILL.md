@@ -1,6 +1,6 @@
 ---
-name: community-domo-cli
-description: Uses the community-domo-cli project correctly for Domo Product API operations. Use when the user asks to run this CLI, test endpoints, configure ryuu-session auth, or troubleshoot command failures in this repository.
+name: community-cli-howto
+description: General instructions for using the community-domo-cli in this repository, including install/auth setup, endpoint testing, and troubleshooting.
 ---
 # Community Domo CLI
 

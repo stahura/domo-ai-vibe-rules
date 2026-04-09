@@ -70,7 +70,6 @@ More directories can be added as new skills are contributed.
 ### Orchestrator Skills (`skills/orchestrator-skills/`)
 
 - `basic-app-build` — Kickoff sequence for new Domo app builds; routes to the right rules and skills in order.
-- `initial-build` — Orchestration playbook (same intent as `basic-app-build`; separate folder name).
 - `basic-app-build-w-video` — `basic-app-build` plus Remotion-oriented styling, sample data, and a short demo video phase.
 
 ### Apps (`skills/apps/`)
@@ -106,6 +105,7 @@ More directories can be added as new skills are contributed.
 
 - `app-studio` — App Studio REST API: apps, views, layouts, cards, theming.
 - `app-studio-pro-code` — Pro-code custom apps embedded in App Studio (filters, variables, charts).
+- `app-studio-demo-capture` — Playwright-based capture workflow for polished walkthrough videos of deployed App Studio apps.
 - `card-creation` — Native KPI/card CRUD via Product API.
 - `beast-mode-creation` — Beast modes (calculated fields): formulas, validation, dataset vs card scope.
 - `variable-creation` — Card variables / interactive controls: templates, registration, save flow.
@@ -180,12 +180,12 @@ skills/
 │   └── programmatic-filters/SKILL.md
 ├── orchestrator-skills/
 │   ├── basic-app-build/SKILL.md
-│   ├── basic-app-build-w-video/SKILL.md
-│   └── initial-build/SKILL.md
+│   └── basic-app-build-w-video/SKILL.md
 ├── themes/domo-app-theme/SKILL.md
 ├── transformation/magic-etl/SKILL.md
 └── visualization/
     ├── app-studio/SKILL.md
+    ├── app-studio-demo-capture/SKILL.md
     ├── app-studio-pro-code/SKILL.md
     ├── beast-mode-creation/SKILL.md
     ├── card-creation/SKILL.md
@@ -249,4 +249,14 @@ Unlike older setups, it does not rely on Cursor/Claude preamble files in the roo
 ## If `npx skills add` is blocked
 
 Some corporate environments block `npx` or GitHub access.  
-If that happens, ask your agent to manually copy the specific `skills/<name>/SKILL.md` files into your local skills directory.
+If that happens, ask your agent to manually copy the specific `skills/<feature>/<skill-name>/SKILL.md` files into your local skills directory.
+
+## Maintenance Notes
+
+- Confirm with maintainers whether these were intentionally removed during past conflict resolution:
+  - legacy archive docs under `archive/legacy-rules/`
+  - `domo-card-crud.md`
+  - `chart_type_options_complete.json`
+  - `skills/documents/html-deck/references/assets/domologo.png`
+- Keep `basic-app-build` as the canonical orchestrator skill name across docs and skills.
+- `ryuu.js` filter listener naming changed across versions (`onFiltersUpdated` vs `onFiltersUpdate`); current docs include compatibility guidance, but this should be normalized in a later cleanup pass.

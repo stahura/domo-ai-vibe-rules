@@ -25,5 +25,6 @@ CLI skills currently available:
 - `cli/code-engine-create`
 - `cli/code-engine-update`
 - `cli/appdb-collection-create`
+- `cli/community-cli-howto`
 
 For installation/discovery and the full catalog, use the root `README.md`.

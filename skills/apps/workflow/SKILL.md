@@ -7,8 +7,6 @@ description: Start and monitor workflows via WorkflowClient with strict input va
 
 This rule is **toolkit-first**. Use `WorkflowClient` for workflow operations in apps.
 
-> Legacy endpoint-first guidance has been archived to `archive/legacy-rules/domo-workflow.md`.
-
 ## Canonical Client
 
 ```bash

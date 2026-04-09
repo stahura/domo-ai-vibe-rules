@@ -7,8 +7,6 @@ description: High-level entry skill for Domo data access. Routes detailed query 
 
 This rule is **toolkit/query-first**. Use `@domoinc/query` for dataset reads in apps.
 
-> Legacy endpoint-first guidance has been archived to `archive/legacy-rules/domo-data-api.md`.
-
 ## Canonical Query Approach
 
 ### 1) Use `@domoinc/query` for dataset queries

@@ -4,7 +4,7 @@ alwaysApply: true
 ---
 ## When to use this rule
 
-Apply when: debugging errors (e.g. [object Object], DA0057, “reading 'map' of undefined”), writing or reviewing Query/toolkit/manifest code, or before suggesting patterns that might hit known Domo limitations. Use as a checklist to avoid common mistakes; prefer specific rules (03, 04, 06) for implementation details.
+Apply when: debugging errors (e.g. [object Object], DA0057, “reading 'map' of undefined”), writing or reviewing Query/toolkit/manifest code, or before suggesting patterns that might hit known Domo limitations. Use as a checklist to avoid common mistakes.
 
 # Common Gotchas & Troubleshooting
 
@@ -24,7 +24,7 @@ Apply when: debugging errors (e.g. [object Object], DA0057, “reading 'map' of 
 2. **Query builder aggregation keys must be field names**
    - Aggregation keys in `groupBy()` and `dateGrain()` must match actual dataset field names
    - Using custom aliases causes `[object Object]` errors in results
-   ```typescripta
+   ```typescript
    // ✅ Correct - key matches dataset field
    .groupBy('region', { Sales_Amount: 'sum' })
    

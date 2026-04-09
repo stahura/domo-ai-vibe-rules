@@ -7,8 +7,6 @@ description: Toolkit-first AppDB document CRUD, query operators, and collection 
 
 This rule is **toolkit-first**. Use `AppDBClient` instead of raw `domo.get/post/put/delete` endpoints.
 
-> Legacy endpoint-first guidance has been archived to `archive/legacy-rules/domo-appdb.md`.
-
 ## Canonical Client
 
 ```bash
