@@ -10,24 +10,10 @@ Some groups use a parenthetical folder name (valid on disk), e.g. `skills/(demo-
 
 Current feature groups:
 
-- `(demo-skills)/` — end-to-end orchestration runbooks that pull in other skills in order (`basic-custom-app-build`, `basic-custom-app-build-w-video`, `app-studio-dataset-etl-gen-demo`)
-- `administration/`
-- `app-studio/` — App Studio (CLI + REST concepts): apps/views/layouts/cards, theme, native cards, beast modes, variables, pro-code embedding, Playwright demo capture; includes **`basic-app-studio`** (lean CLI ops) and **`advanced-app-studio`** (full reference)
+- `(demo-skills)/` — end-to-end orchestration runbooks (`basic-custom-app-build`, `basic-custom-app-build-w-video`)
 - `custom-apps/` — Domo App Platform custom-app runtime: `domo.js`, `@domoinc/query`, toolkit, AppDB, AI, Code Engine, workflows, manifest, publish, migrations, filesets API, performance
-- `cli/`
-- `connectors/`
-- `datagen/`
-- `documents/`
-- `domo-everywhere/`
-- `themes/`
-- `transformation/` — `magic-etl` (API-first), `magic-etl-cli` (community-domo-cli dataflows)
-
-CLI skills currently available:
-
-- `cli/code-engine-create`
-- `cli/code-engine-update`
-- `cli/appdb-collection-create`
-- `cli/community-cli-howto`
-- `cli/filesets`
+- `documents/` — document and slide deck generation (`html-deck`)
+- `domo-everywhere/` — embedding Domo content in external applications
+- `themes/` — UI theme reference, design tokens, and color palettes
 
 For installation/discovery and the full catalog, use the root `README.md`.
