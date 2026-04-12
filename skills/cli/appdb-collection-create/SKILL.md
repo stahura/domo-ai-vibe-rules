@@ -16,7 +16,7 @@ This skill covers storage initialization lifecycle:
 - capture resulting identifiers
 - prepare follow-up manifest mapping and document-write usage
 
-For document CRUD operations after collection exists, use `skills/apps/appdb/SKILL.md`.
+For document CRUD operations after collection exists, use `skills/custom-apps/appdb/SKILL.md`.
 
 ## Assumed CLI Behavior
 
@@ -85,4 +85,4 @@ After successful creation, ensure app manifest contains collection wiring expect
 - [ ] CLI collection-create path used first
 - [ ] Datastore+collection identifiers captured
 - [ ] Manifest collection mapping follow-up performed
-- [ ] Hand-off to document CRUD flow (`skills/apps/appdb/SKILL.md`) is clear
+- [ ] Hand-off to document CRUD flow (`skills/custom-apps/appdb/SKILL.md`) is clear

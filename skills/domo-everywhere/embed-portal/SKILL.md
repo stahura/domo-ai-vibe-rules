@@ -5,7 +5,7 @@ description: "Use for any project where external users need a login to view or i
 
 # Build a Domo Embed Portal
 
-This is an orchestrator skill. It gathers requirements, then delegates to existing capability skills for the Domo-specific implementation details. Do not duplicate content from those skills — read them at the appropriate step.
+This skill runs an end-to-end workflow: it gathers requirements, then delegates to existing capability skills for the Domo-specific implementation details. Do not duplicate content from those skills — read them at the appropriate step.
 
 **Sub-skills used:**
 - `programmatic-filters` — Read-only embed token flow, server-side filters, dataset switching

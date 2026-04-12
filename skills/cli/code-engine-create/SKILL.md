@@ -16,7 +16,7 @@ This skill covers lifecycle operations that are out of scope for app-runtime inv
 - infer and normalize function input/output datatypes
 - update app `manifest.json` `packagesMapping` entries after create
 
-For in-app function invocation patterns, use `skills/apps/code-engine/SKILL.md`.
+For in-app function invocation patterns, use `skills/custom-apps/code-engine/SKILL.md`.
 
 ## Primary Execution Path
 

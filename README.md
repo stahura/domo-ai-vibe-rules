@@ -47,11 +47,11 @@ Domo is a broad platform — "data query" means something completely different w
 
 | Directory | Scope |
 |-----------|-------|
-| `apps/` | Domo App Platform custom apps |
-| `visualization/` | App Studio, pro-code visualizations, and native card creation |
+| `custom-apps/` | Domo App Platform custom apps (`domo.js`, Query, toolkit, AppDB, publish, migrations, filesets, …) |
+| `app-studio/` | App Studio: CLI + layouts, native cards, beast modes, variables, pro-code, demo capture (`basic-app-studio` vs `advanced-app-studio`) |
 | `domo-everywhere/` | Embedding Domo content in external applications |
 | `connectors/` | Custom Connector IDE and data upload tools |
-| `orchestrator-skills/` | End-to-end orchestration runbooks that reference other skills in order |
+| `(demo-skills)/` | End-to-end orchestration runbooks that reference other skills in order |
 | `documents/` | Document and slide deck generation |
 | `cli/` | Command-line tooling and lifecycle workflows |
 | `themes/` | UI theme reference, design tokens, and color palettes |
@@ -61,18 +61,19 @@ Domo is a broad platform — "data query" means something completely different w
 
 More directories can be added as new skills are contributed.
 
-### Orchestrator skills vs. skills
+### Demo skills vs. other skills
 
-**Orchestrator skills** are end-to-end orchestration skills that reference sub-skills to perform many Domo operations in sequence (e.g. building an app from scratch). Regular skills are atomic — one API, one tool, one concept. Orchestrator skills compose them.
+**Demo skills** (`skills/(demo-skills)/`) are end-to-end orchestration runbooks that reference sub-skills to perform many Domo operations in sequence (e.g. building an app from scratch). Regular skills are atomic — one API, one tool, one concept. Demo skills compose them.
 
 ## Available Skills
 
-### Orchestrator Skills (`skills/orchestrator-skills/`)
+### Demo skills (`skills/(demo-skills)/`)
 
 - `basic-app-build` — Kickoff sequence for new Domo app builds; routes to the right rules and skills in order.
 - `basic-app-build-w-video` — `basic-app-build` plus Remotion-oriented styling, sample data, and a short demo video phase.
+- `app-studio-demo` — Micro-demo App Studio app (pages, theme, heroes, native cards, layout) using `advanced-app-studio` + `domo-app-theme`.
 
-### Apps (`skills/apps/`)
+### Custom apps (`skills/custom-apps/`)
 
 - `da-cli` — Recommended for advanced users using DA CLI; ask your agent to use this skill for advanced scaffolding, generation, and manifest instance workflows.
 - `publish` — Build and publish flow (`npm run build`, `cd dist`, `domo publish`).
@@ -87,6 +88,7 @@ More directories can be added as new skills are contributed.
 - `manifest` — `manifest.json` mapping requirements and gotchas.
 - `sql-query` — SqlClient raw SQL query patterns and response parsing.
 - `performance` — Data query performance rules.
+- `fileset-api` — Filesets API usage from custom apps.
 - `migrate-lovable` — Convert SSR-heavy generated apps to Domo-compatible client apps.
 - `migrate-googleai` — Convert AI Studio-origin projects to Domo static deploy contract.
 
@@ -101,9 +103,10 @@ More directories can be added as new skills are contributed.
 
 - `html-deck` — Build HTML slide decks from source content and convert to pixel-perfect PDF via Puppeteer.
 
-### Visualization (`skills/visualization/`)
+### App Studio (`skills/app-studio/`)
 
-- `app-studio` — App Studio REST API: apps, views, layouts, cards, theming.
+- `basic-app-studio` — Lean `community-domo-cli` command surface for App Studio CRUD (no deep reference tables).
+- `advanced-app-studio` — Full App Studio reference: CLI examples, layouts, card styles, themes, variables, gotchas.
 - `app-studio-pro-code` — Pro-code custom apps embedded in App Studio (filters, variables, charts).
 - `app-studio-demo-capture` — Playwright-based capture workflow for polished walkthrough videos of deployed App Studio apps.
 - `card-creation` — Native KPI/card CRUD via Product API.
@@ -122,6 +125,7 @@ More directories can be added as new skills are contributed.
 - `code-engine-update` — CLI-first Code Engine package update/version workflows and drift synchronization.
 - `appdb-collection-create` — CLI-first AppDB collection creation workflow that includes required datastore provisioning.
 - `community-cli-howto` — Community Domo CLI usage, endpoint testing, and ryuu-session auth configuration.
+- `filesets` — Filesets CLI patterns and workflows.
 
 ### Themes (`skills/themes/`)
 
@@ -145,8 +149,30 @@ Each skill is a folder with a single entrypoint `SKILL.md` (supporting files liv
 
 ```text
 skills/
+├── (demo-skills)/
+│   ├── app-studio-demo/SKILL.md
+│   ├── basic-app-build/SKILL.md
+│   └── basic-app-build-w-video/SKILL.md
 ├── administration/workspaces/SKILL.md
-├── apps/
+├── app-studio/
+│   ├── advanced-app-studio/SKILL.md
+│   ├── app-studio-demo-capture/SKILL.md
+│   ├── app-studio-pro-code/SKILL.md
+│   ├── basic-app-studio/SKILL.md
+│   ├── beast-mode-creation/SKILL.md
+│   ├── card-creation/SKILL.md
+│   └── variable-creation/SKILL.md
+├── cli/
+│   ├── appdb-collection-create/SKILL.md
+│   ├── code-engine-create/SKILL.md
+│   ├── code-engine-update/SKILL.md
+│   ├── community-cli-howto/SKILL.md
+│   └── filesets/SKILL.md
+├── connectors/
+│   ├── connector-dev/SKILL.md
+│   ├── data-upload-java-cli/SKILL.md
+│   └── json-no-code-connector/SKILL.md
+├── custom-apps/
 │   ├── ai-service-layer/SKILL.md
 │   ├── appdb/SKILL.md
 │   ├── code-engine/SKILL.md
@@ -154,6 +180,7 @@ skills/
 │   ├── data-api/SKILL.md
 │   ├── dataset-query/SKILL.md
 │   ├── domo-js/SKILL.md
+│   ├── fileset-api/SKILL.md
 │   ├── manifest/SKILL.md
 │   ├── migrate-googleai/SKILL.md
 │   ├── migrate-lovable/SKILL.md
@@ -162,15 +189,6 @@ skills/
 │   ├── sql-query/SKILL.md
 │   ├── toolkit/SKILL.md
 │   └── workflow/SKILL.md
-├── cli/
-│   ├── appdb-collection-create/SKILL.md
-│   ├── code-engine-create/SKILL.md
-│   ├── code-engine-update/SKILL.md
-│   └── community-cli-howto/SKILL.md
-├── connectors/
-│   ├── connector-dev/SKILL.md
-│   ├── data-upload-java-cli/SKILL.md
-│   └── json-no-code-connector/SKILL.md
 ├── datagen/domo-data-generator/SKILL.md
 ├── documents/html-deck/SKILL.md
 ├── domo-everywhere/
@@ -178,18 +196,8 @@ skills/
 │   ├── embed-portal/SKILL.md
 │   ├── jsapi-filters/SKILL.md
 │   └── programmatic-filters/SKILL.md
-├── orchestrator-skills/
-│   ├── basic-app-build/SKILL.md
-│   └── basic-app-build-w-video/SKILL.md
 ├── themes/domo-app-theme/SKILL.md
-├── transformation/magic-etl/SKILL.md
-└── visualization/
-    ├── app-studio/SKILL.md
-    ├── app-studio-demo-capture/SKILL.md
-    ├── app-studio-pro-code/SKILL.md
-    ├── beast-mode-creation/SKILL.md
-    ├── card-creation/SKILL.md
-    └── variable-creation/SKILL.md
+└── transformation/magic-etl/SKILL.md
 
 rules/
 ├── core-custom-apps-rule.md
@@ -258,5 +266,5 @@ If that happens, ask your agent to manually copy the specific `skills/<feature>/
   - `domo-card-crud.md`
   - `chart_type_options_complete.json`
   - `skills/documents/html-deck/references/assets/domologo.png`
-- Keep `basic-app-build` as the canonical orchestrator skill name across docs and skills.
+- Keep `basic-app-build` as the canonical demo skill name across docs and skills.
 - `ryuu.js` filter listener naming changed across versions (`onFiltersUpdated` vs `onFiltersUpdate`); current docs include compatibility guidance, but this should be normalized in a later cleanup pass.

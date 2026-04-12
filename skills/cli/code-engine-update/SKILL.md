@@ -16,7 +16,7 @@ This skill covers:
 - detect and handle mapping drift between package and app manifest
 - validate datatype contract stability
 
-For app-runtime invocation code, use `skills/apps/code-engine/SKILL.md`.
+For app-runtime invocation code, use `skills/custom-apps/code-engine/SKILL.md`.
 
 ## Primary Execution Path
 

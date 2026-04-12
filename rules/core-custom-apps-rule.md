@@ -27,6 +27,10 @@ alwaysApply: true
 - These skills are **strictly optional helpers**. If the community CLI is not installed or the user does not want to use it, **skip those skills gracefully** and fall back to asking the user to provide the needed IDs/resources manually or perform the step in the Domo UI.
 - Other skills (e.g. `code-engine`, `appdb`) may suggest using a `cli/` skill first. That suggestion is a convenience, not a requirement — it must **never block the build**.
 
+## App Studio vs custom apps
+- **`skills/custom-apps/`** — code that runs *inside* a Domo custom app card (data, AppDB, toolkit, manifest, publish).
+- **`skills/app-studio/`** — building and operating *App Studio* apps (pages, layouts, native KPI cards, variables, beast modes, pro-code iframes). Start with `basic-app-studio` for copy-paste CLI operations; use `advanced-app-studio` for the full layout/theme/reference material.
+
 ## API index
 - Data API
 - AppDB
@@ -37,26 +41,35 @@ alwaysApply: true
 - Files / Filesets / Groups / User / Task Center
 
 ## Skill routing
-- New app build playbook -> `skills/orchestrator-skills/basic-app-build/SKILL.md`
-- Dataset querying -> `skills/apps/dataset-query/SKILL.md`
-- Data API overview -> `skills/apps/data-api/SKILL.md`
-- domo.js usage -> `skills/apps/domo-js/SKILL.md`
-- Toolkit usage -> `skills/apps/toolkit/SKILL.md`
-- AppDB -> `skills/apps/appdb/SKILL.md`
+- New app build playbook -> `skills/(demo-skills)/basic-app-build/SKILL.md`
+- App Studio micro-demo orchestration (pages, theme, heroes) -> `skills/(demo-skills)/app-studio-demo/SKILL.md`
+- Dataset querying -> `skills/custom-apps/dataset-query/SKILL.md`
+- Data API overview -> `skills/custom-apps/data-api/SKILL.md`
+- domo.js usage -> `skills/custom-apps/domo-js/SKILL.md`
+- Toolkit usage -> `skills/custom-apps/toolkit/SKILL.md`
+- AppDB -> `skills/custom-apps/appdb/SKILL.md`
 - Community CLI howto (start here for any CLI skill) -> `skills/cli/community-cli-howto/SKILL.md`
 - AppDB collection create (datastore + collection lifecycle) -> `skills/cli/appdb-collection-create/SKILL.md`
-- AI services -> `skills/apps/ai-service-layer/SKILL.md`
-- Code Engine -> `skills/apps/code-engine/SKILL.md`
+- AI services -> `skills/custom-apps/ai-service-layer/SKILL.md`
+- Code Engine -> `skills/custom-apps/code-engine/SKILL.md`
 - Code Engine package create -> `skills/cli/code-engine-create/SKILL.md`
 - Code Engine package update -> `skills/cli/code-engine-update/SKILL.md`
-- Workflows -> `skills/apps/workflow/SKILL.md`
-- SQL queries -> `skills/apps/sql-query/SKILL.md`
-- Manifest wiring -> `skills/apps/manifest/SKILL.md`
-- Build/publish -> `skills/apps/publish/SKILL.md`
-- DA CLI -> `skills/apps/da-cli/SKILL.md`
-- Performance -> `skills/apps/performance/SKILL.md`
-- Migration from Lovable/v0 -> `skills/apps/migrate-lovable/SKILL.md`
-- Migration from Google AI Studio -> `skills/apps/migrate-googleai/SKILL.md`
+- Workflows -> `skills/custom-apps/workflow/SKILL.md`
+- SQL queries -> `skills/custom-apps/sql-query/SKILL.md`
+- Manifest wiring -> `skills/custom-apps/manifest/SKILL.md`
+- Build/publish -> `skills/custom-apps/publish/SKILL.md`
+- DA CLI -> `skills/custom-apps/da-cli/SKILL.md`
+- Performance -> `skills/custom-apps/performance/SKILL.md`
+- Filesets API -> `skills/custom-apps/fileset-api/SKILL.md`
+- Migration from Lovable/v0 -> `skills/custom-apps/migrate-lovable/SKILL.md`
+- Migration from Google AI Studio -> `skills/custom-apps/migrate-googleai/SKILL.md`
+- App Studio (CLI operations only) -> `skills/app-studio/basic-app-studio/SKILL.md`
+- App Studio (full CLI + reference) -> `skills/app-studio/advanced-app-studio/SKILL.md`
+- App Studio pro-code embedded custom apps -> `skills/app-studio/app-studio-pro-code/SKILL.md`
+- App Studio walkthrough video capture (Playwright) -> `skills/app-studio/app-studio-demo-capture/SKILL.md`
+- Native KPI/card CRUD (Product API) -> `skills/app-studio/card-creation/SKILL.md`
+- Beast modes -> `skills/app-studio/beast-mode-creation/SKILL.md`
+- Card variables / controls -> `skills/app-studio/variable-creation/SKILL.md`
 - Connector IDE -> `skills/connectors/connector-dev/SKILL.md`
 - Programmatic embed filters / dataset switching -> `skills/domo-everywhere/programmatic-filters/SKILL.md`
 - JS API filters -> `skills/domo-everywhere/jsapi-filters/SKILL.md`
