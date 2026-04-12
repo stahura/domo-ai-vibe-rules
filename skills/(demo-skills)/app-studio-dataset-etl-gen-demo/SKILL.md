@@ -33,6 +33,18 @@ Needs dataset id's to power cards. Sources:
 
 ## Procedure
 
+0. **If user provides dataset IDs, detect vertical before pack selection**:
+   - Fetch schema/columns for the provided datasets first.
+   - Match columns to a reference vertical using this map:
+
+| Key columns | Vertical |
+|---|---|
+| `work_order_id`, `cycle_time_hours`, `completed_quantity` | manufacturing |
+| `transaction_id`, `unit_price`, `discount_pct`, `channel` | retail-ecommerce |
+| `patient_id`, `los_days`, `readmission` | healthcare |
+| `shipment_id`, `freight_cost`, `on_time_delivery` | logistics |
+| `loan_id`, `aum`, `portfolio_value` | financial-services |
+
 1. (ONLY if user does not provide) Create Datasets with the `domo-data-generator` skill
 2. (ONLY If user does not provide) Create ETL with the `magic-etl-cli` skill (or `magic-etl` for API-oriented dataflow work)
 3. **Create app** `advanced-app-studio`:
@@ -42,7 +54,7 @@ Needs dataset id's to power cards. Sources:
 7. **Native charts**: 1 full-width (width 60) per page + 2–6 detail cards, different chart types per page
 8. **Filter cards**: low-profile (height 6, style null, hideBorder, hideTitle, hideMargins, fitToFrame)
 9. **Assemble layout** per vertical structure: banner y=0 → filters y=14 → heroes y=20 → header y=34 → primary viz y=38 → header y=68 → detail cards y=72
-10. **Navigation**: LEFT orientation, custom icon on EVERY page, HOME first, showTitle false
+10. **Navigation**: LEFT orientation, reorder pages, HOME first, showTitle false. INFORM USER icons must be set manually in App Studio UI (e.g., Overview → `home`, Production → `gauge`).
 
 ## Adding Pages Only
 
@@ -51,7 +63,7 @@ If user asks to "add pages" to an existing app:
 1. Get appId from context or ask
 2. Create views, heroes, native cards, filters for each new page
 3. Assemble layout for new pages
-4. Update navigation with new page icons
+4. Update navigation order; inform user to set new page icons manually in the App Studio UI
 
 ## Output Contract
 
@@ -64,7 +76,7 @@ After completion, tell the user:
 ## Mandatory UI/UX Standards
 
 - All `borderRadius: 0` everywhere (cards, tables, notebooks, components, buttons, tabs, forms, pills)
-- All cards: `borderWidth: 0`, `dropShadow: 'NONE'`, `padding: 0`
+- All cards: `borderWidth: 0`, `dropShadow: null`, `padding: {"left": 0, "right": 0, "top": 0, "bottom": 0}`
 - Fixed-width layout: `isDynamic: false`, `density: {compact: 8, standard: 8}`
 - Controls color c8: `#2563BE`
 - Filter cards: height 6, style null, hideTitle true

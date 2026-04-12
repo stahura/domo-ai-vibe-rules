@@ -59,6 +59,25 @@ For the 50 light chart palettes (which share the Corporate Light structural base
 
 The content below defines the **default light theme** — structural colors, typography rules, component recipes, spacing, shadows, transitions, and design principles. These are theme-agnostic patterns that apply regardless of which DESIGN.md is active. The DESIGN.md files override the color system and component color values but inherit the layout, spacing, typography philosophy, shadow structure, transition timing, and micro-interaction patterns documented here.
 
+## App Studio Theme API Format (Critical)
+
+DESIGN.md import blocks and App Studio API payloads are **not the same schema**.
+
+- DESIGN/import style (index-based): `{"index": 1, "value": "#F0F4F8", "tag": "PRIMARY"}`
+- API PUT style (id + wrapped value): `{"id": "c1", "value": {"value": "#F0F4F8", "type": "RGB_HEX"}, "tags": ["THEME", "PRIMARY"]}`
+
+Use `references/theme_transform.py` to convert DESIGN-style color/font arrays into API-compatible updates.
+
+### API-side gotchas (validated)
+
+- `dropShadow` valid values: `null`, `"FLOATING"`, `"STANDARD"` (**not** `"NONE"`).
+- Fonts: `style` must be `"Regular"` (string), and `size` must be an integer (not `"22px"`).
+- Card `padding` must be an object: `{"left": 0, "right": 0, "top": 0, "bottom": 0}` (not a single int).
+- Large mixed updates can 400 with no detail. Safer order:
+  1. colors PUT
+  2. fonts PUT
+  3. cards/navigation/components PUT
+
 ## CSS Custom Properties
 
 ```css
