@@ -1,17 +1,54 @@
----
+# Domo App Studio — Advanced (CLI Edition)
 
-## name: app-studio
-description: Build and manage Domo App Studio apps via REST API. Covers app creation, view/page management, canvas layouts, card placement, and multi-page dashboard configuration.
+This is the full App Studio reference converted to use `community-domo-cli` commands instead of
+raw `curl`/`requests` API calls. All operational examples use CLI. Reference material (layout
+structure, card styles, theme management, design patterns, gotchas) is preserved in full.
 
-# Domo App Studio — Layouts, Pages & Card Management
+For the lightweight operational-only version, see `basic-app-studio`.
 
-> **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always select a curated palette from `domo-app-theme/references/color-palettes.md` (50 OKLCH palettes across 9 harmony types). Pick a palette suited to the use case or ask the user. Use OKLCH values in pro-code CSS; convert to hex for native card `series_N_color` overrides. All App Studio theme colors, pro-code chart colors, banner colors, and card styling must use the chosen palette. See "Custom Color Palette" section under Theme Management.
-
-> **CLI vs API**: The Java CLI has no App Studio commands. All App Studio operations (creating apps, managing views, configuring layouts) require the REST API via curl. This is one area where you must go directly to the API.
-
-> **Authentication**: Use `X-Domo-Authentication: {SID}` for all App Studio API calls. Obtain a SID via `get_sid(instance)` from `upload_bridge.py` (if available in workspace) or via the ryuu token exchange flow (`domo login` → refresh token → SID). Developer tokens (`X-DOMO-Developer-Token`) work for some endpoints but fail on others — SID is universally reliable.
+> **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always select a curated palette from `domo-app-theme/color-palettes.md` (50 OKLCH palettes across 9 harmony types). Pick a palette suited to the use case or ask the user. Use OKLCH values in pro-code CSS; convert to hex for native card `series_N_color` overrides. All App Studio theme colors, pro-code chart colors, banner colors, and card styling must use the chosen palette. See "Custom Color Palette" section under Theme Management.
 
 > **Status**: Reverse-engineered from live testing, March 2026
+> **Verified against**: `aeroateam-partner.domo.com` (app `453445400`), `csibas.domo.com` (apps `1400847176`, `2061524048`), `modocorp.domo.com`
+
+---
+
+## Authentication
+
+Run once per instance. No manual token or header management needed after this.
+
+```bash
+domo login -i myinstance.domo.com
+```
+
+The CLI reads the saved session automatically on every command. Set a default instance so you
+don't have to pass `--instance` every time:
+
+```bash
+community-domo-cli config set-profile --name default --instance myinstance --make-default
+```
+
+All examples below assume a default profile is set. If not, prepend
+`--instance myinstance.domo.com` to every command.
+
+---
+
+## CLI Conventions
+
+```bash
+# Global flags come BEFORE the subcommand group
+community-domo-cli --output json --instance myco app-studio get 12345
+
+# Mutating commands require --yes (-y) to skip confirmation
+community-domo-cli -y app-studio create --body-file app.json
+
+# Dry-run shows the exact HTTP request without executing
+community-domo-cli --dry-run app-studio layout-set $APP_ID $VIEW_ID --body-file layout.json
+
+# Capture JSON output for scripting
+APP_ID=$(community-domo-cli --output json app-studio create --body '{"title":"My App"}' -y \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['dataAppId'])")
+```
 
 ---
 
@@ -31,24 +68,15 @@ Key concepts:
 
 ## Creating an App Studio App
 
-### 13. Create App
-
 Creates a new App Studio app with a single default landing view.
 
+```bash
+community-domo-cli --output json -y app-studio create \
+  --body '{"title": "My Dashboard App", "description": "Description of the app"}' \
+  > app_response.json
 
-| Field      | Value                  |
-| ---------- | ---------------------- |
-| **Method** | `POST`                 |
-| **Path**   | `/content/v1/dataapps` |
-
-
-**Body**:
-
-```json
-{
-  "title": "My Dashboard App",
-  "description": "Description of the app"
-}
+APP_ID=$(python3 -c "import json; print(json.load(open('app_response.json'))['dataAppId'])")
+PAGE_ID=$(python3 -c "import json; print(json.load(open('app_response.json'))['landingViewId'])")
 ```
 
 **Response** (key fields):
@@ -75,61 +103,47 @@ The app is created with one default view. The `landingViewId` is the `viewId` of
 
 ---
 
-## API Endpoints
+## App Operations
 
-### 1. Get App Structure
+### Get App Structure
 
 Returns all views, navigation, theme, and app-level settings.
 
-
-| Field      | Value                             |
-| ---------- | --------------------------------- |
-| **Method** | `GET`                             |
-| **Path**   | `/content/v1/dataapps/:dataAppId` |
-
-
-**Optional query params**: `?includeHiddenViews=true`
-
-**Response** (key fields):
-
-```json
-{
-  "dataAppId": 453445400,
-  "title": "AeroWISE",
-  "landingViewId": 1400409776,
-  "views": [
-    {
-      "viewId": 993651024,
-      "title": "Vendor Performance",
-      "parentViewId": 0,
-      "viewOrder": 4,
-      "visible": true,
-      "view": null,
-      "layout": null,
-      "children": []
-    }
-  ],
-  "navigations": [...],
-  "theme": {...}
-}
+```bash
+community-domo-cli --output json app-studio get $APP_ID > app.json
 ```
 
-Note: The `layout` field in views is always `null` here — layouts are fetched separately.
+Views are embedded in the response under `views[]`. Each view has `viewId`, `title`,
+`visible`, `viewOrder`. The `viewId` == `pageId` for all card and layout operations.
 
-### 2. Update App Configuration
+**Note**: `GET /content/v1/dataapps/:id/views` is a dead endpoint (405). Always use
+`app-studio get` and read the `views[]` array from the response.
 
-Updates app-level settings (views, nav, theme). Does NOT update layouts.
+### Update App Configuration
 
+The full GET → modify → PUT flow using the CLI:
 
-| Field      | Value                                                     |
-| ---------- | --------------------------------------------------------- |
-| **Method** | `PUT`                                                     |
-| **Path**   | `/content/v1/dataapps/:dataAppId?includeHiddenViews=true` |
+```bash
+# 1. GET current state
+community-domo-cli --output json app-studio get $APP_ID > app.json
 
+# 2. Modify in place (Python example — change nav orientation)
+python3 -c "
+import json
+app = json.load(open('app.json'))
+app['navOrientation'] = 'LEFT'
+app['showDomoNavigation'] = False   # REQUIRED when navOrientation=LEFT
+app['showTitle'] = False            # Recommended for LEFT nav
+app['showLogo'] = False             # Recommended for LEFT nav
+json.dump(app, open('app_updated.json', 'w'))
+"
 
-**Body**: The full app object as returned by GET. You MUST send the complete object — partial updates cause `400 Bad Request`. Read-only fields (`userAccess`, `isOwner`, `isFavorite`, `canEdit`) can be included (they are ignored) or omitted.
+# 3. PUT updated app (CLI automatically sends ?includeHiddenViews=true)
+community-domo-cli --output json -y app-studio update $APP_ID \
+  --body-file app_updated.json > app_updated_response.json
+```
 
-**Key fields that can be changed via PUT**:
+**Key fields changeable via update**:
 
 
 | Field                | Values                  | Notes                                                                                                                                                     |
@@ -147,11 +161,11 @@ Updates app-level settings (views, nav, theme). Does NOT update layouts.
 
 The PUT does NOT add or modify views/navigations — use the dedicated endpoints below for those.
 
-### 2a-bis. Custom App Icon
+### Custom App Icon
 
 Every App Studio app **must** have a custom icon. Never leave the default placeholder.
 
-**Step 1 — Generate a 256×256 PNG icon** using Pillow (or accept a user-provided image). The icon should visually represent the app's domain using the app's custom brand color palette.
+**Step 1 — Generate a 256x256 PNG icon** using Pillow (or accept a user-provided image). The icon should visually represent the app's domain using the app's custom brand color palette.
 
 ```python
 from PIL import Image, ImageDraw
@@ -187,112 +201,112 @@ def generate_app_icon(brand_hex='#3B82C8', dark_hex='#23272E', size=256):
     return buf.getvalue()
 ```
 
-**Step 2 — Upload to Domo Data File Service**
+**Step 2 — Upload via CLI**
 
-```
-POST /api/data/v1/data-files?name={app-slug}-icon.png&description={App+Title+Icon}&public=true
-Content-Type: image/png          ← MUST be image/png, not application/octet-stream
-Body: raw PNG bytes
-→ Response: {"dataFileId": 12345}
+```bash
+community-domo-cli --output json -y files upload --file-path icon.png > icon_response.json
+DATA_FILE_ID=$(python3 -c "import json; print(json.load(open('icon_response.json'))['dataFileId'])")
 ```
 
-**Step 3 — Set on the app** via the standard app PUT (include in the full GET→modify→PUT flow):
+**Step 3 — Set on the app** (include in the GET->modify->PUT flow):
 
 ```python
-app = GET /api/content/v1/dataapps/{appId}
 app['iconDataFileId']    = data_file_id
-app['navIconDataFileId'] = data_file_id   # same file for both
-PUT /api/content/v1/dataapps/{appId}  body=app
+app['navIconDataFileId'] = data_file_id  # same file for both
 ```
+
+**Note**: The CLI uses `mimetypes.guess_type()` for content type. PNG files are correctly
+detected as `image/png`. The CLI does not send `?name=&public=true` query params — the
+`dataFileId` is still returned and works for icon assignment.
 
 **Gotchas:**
 
 - `Content-Type` must be `image/png` (not `application/octet-stream`) or the upload returns `415`.
 - The PUT must send the **full app object** — partial payloads cause `400 Bad Request`.
-- Icon should be 256×256 PNG with transparency for best rendering across Domo surfaces.
+- Icon should be 256x256 PNG with transparency for best rendering across Domo surfaces.
 
-### 2b. Create a New View (Page)
+### Create a New View (Page)
 
-Creates a new page/view within an existing App Studio app.
-
-
-| Field      | Value                                   |
-| ---------- | --------------------------------------- |
-| **Method** | `POST`                                  |
-| **Path**   | `/content/v1/dataapps/:dataAppId/views` |
-
-
-**Body** — send the `view` sub-object directly (not wrapped):
-
-```json
-{
-  "owners": [{"id": 723132419, "type": "USER", "displayName": null}],
-  "type": "dataappview",
-  "title": "Production",
-  "pageName": "Production",
-  "locked": false,
-  "mobileEnabled": true,
-  "sharedViewPage": true,
-  "virtualPage": false
+```bash
+# Write the view body to a file first
+python3 -c "
+import json
+# Get current user ID from the app's owners list
+app = json.load(open('app.json'))
+owner_id = app['owners'][0]['id']
+body = {
+    'owners': [{'id': owner_id, 'type': 'USER', 'displayName': None}],
+    'type': 'dataappview',
+    'title': 'Production',
+    'pageName': 'Production',
+    'locked': False,
+    'mobileEnabled': True,
+    'sharedViewPage': True,
+    'virtualPage': False
 }
+json.dump(body, open('new_view.json', 'w'))
+"
+
+community-domo-cli --output json -y app-studio create-view $APP_ID \
+  --body-file new_view.json > view_response.json
+
+VIEW_ID=$(python3 -c "import json; d=json.load(open('view_response.json')); print(d['view']['pageId'])")
+LAYOUT_ID=$(python3 -c "import json; d=json.load(open('view_response.json')); print(d['layout']['layoutId'])")
 ```
 
 **Response** includes both the `view` (with assigned `pageId`) and `layout` (with assigned `layoutId`) objects. The new view automatically gets a navigation entry with icon `pages`.
 
 **Important**: The `owners` array must include at least the current user. The `type` must be `dataappview`. The `title` and `pageName` should match.
 
-### 3. Read and Update Navigation
+---
 
-The navigation is stored in the `navigations` array on the app object, but it is **NOT updated via the app PUT** — changes to `navigations` in the app PUT body are silently ignored.
+## Navigation
 
-**READ navigation:**
+Navigation cannot be updated via `app-studio update` — changes to `navigations[]` in the PUT
+body are silently ignored. Use the `pages` CLI commands below.
 
+> **Endpoint note**: The CLI `pages` commands use global Domo page navigation endpoints, which
+> differ from the App Studio-specific navigation endpoints. For App Studio apps, these commands
+> work for reading nav state and reordering pages. Icon and label updates for App Studio nav
+> items are not supported by the current CLI commands.
 
-| Field      | Value                                        |
-| ---------- | -------------------------------------------- |
-| **Method** | `GET`                                        |
-| **Path**   | `/content/v1/dataapps/:dataAppId/navigation` |
+### Read Navigation
 
-
-Returns the full navigation array including system items (HOME, AI_ASSISTANT, CONTROLS, DISTRIBUTE, MORE).
-
-**UPDATE navigation (reorder, rename, set icons):**
-
-
-| Field      | Value                                                |
-| ---------- | ---------------------------------------------------- |
-| **Method** | `PUT`                                                |
-| **Path**   | `/content/v1/dataapps/:dataAppId/navigation/reorder` |
-
-
-**Body**: The full navigation array as returned by GET, with modifications. You can change `title`, `icon`, `navOrder`, and `visible` fields.
-
-```json
-[
-  {"dataAppId": 453445400, "entity": "HOME", "entityId": "home", "title": "Home", "navOrder": 1, "visible": true, "icon": {"value": "home", "size": "DEFAULT"}, "iconPosition": "LEFT"},
-  {"dataAppId": 453445400, "entity": "VIEW", "entityId": "993651024", "title": "Vendor Performance", "navOrder": 2, "visible": true, "icon": {"value": "dashboard", "size": "DEFAULT"}, "iconPosition": "LEFT"},
-  ...
-]
+```bash
+community-domo-cli --output json pages nav-get > nav.json
 ```
+
+Returns all navigation entries across the instance. Filter to your app's views by matching
+`entityId` values against your `views[]` from `app-studio get`.
 
 Entity types: `HOME`, `VIEW`, `AI_ASSISTANT`, `CONTROLS`, `DISTRIBUTE`, `MORE`
 
-**CRITICAL**: The `navigations` array is separate from the `views` array. Renaming a view title via the app PUT does NOT rename the nav label. You must use the `/navigation/reorder` endpoint to update nav labels and icons. Always GET the full navigation first, modify only the fields you need, and PUT the complete array back — missing system items causes `400`.
+**CRITICAL**: The `navigations` array is separate from the `views` array. Renaming a view title via the app PUT does NOT rename the nav label. Always GET the full navigation first, modify only the fields you need, and PUT the complete array back — missing system items causes `400`.
+
+### Reorder Pages
+
+```bash
+# Build ordered comma-separated page ID string, then:
+community-domo-cli --output json -y pages nav-reorder \
+  --body '{"pageOrderMap": {"0": "VIEW_ID_1,VIEW_ID_2,VIEW_ID_3"}}'
+```
+
+The `pageOrderMap` key `"0"` is the root level. Value is a comma-separated string of page/view
+IDs in the desired order. Send only the IDs you want reordered.
 
 ---
 
 ## Page Layout API
 
-### 4. Get Page Layout
+### Get Page Layout
 
 Returns the full layout definition for a view, including all content items and their positions.
 
+```bash
+community-domo-cli --output json app-studio layout-get $APP_ID $VIEW_ID > layout.json
 
-| Field      | Value                               |
-| ---------- | ----------------------------------- |
-| **Method** | `GET`                               |
-| **Path**   | `/content/v4/pages/:pageId/layouts` |
-
+LAYOUT_ID=$(python3 -c "import json; print(json.load(open('layout.json'))['layoutId'])")
+```
 
 **Response**:
 
@@ -324,126 +338,146 @@ Returns the full layout definition for a view, including all content items and t
 }
 ```
 
-### 5. Acquire Write Lock (REQUIRED before editing)
+Response fields: `layoutId`, `pageUrn`, `content[]`, `standard.template[]`,
+`compact.template[]`, `isDynamic`, `hasPageBreaks`, `printFriendly`, `enabled`.
 
-You **must** acquire a write lock before updating a layout. Without it, you get `403 WL003: Cannot edit without valid writelock`.
+### Update Page Layout
 
+The CLI handles write lock acquisition and release automatically — no manual lock calls needed.
 
-| Field      | Value                                           |
-| ---------- | ----------------------------------------------- |
-| **Method** | `PUT`                                           |
-| **Path**   | `/content/v4/pages/layouts/:layoutId/writelock` |
-| **Body**   | `{}`                                            |
-
-
-**Response**:
-
-```json
-{
-  "layoutId": 895068205,
-  "userId": 1176270794,
-  "lockTimestamp": 1772753728868,
-  "lockHeartbeat": 1772753728868
-}
+```bash
+# Modify the layout object in Python, then:
+community-domo-cli --output json -y app-studio layout-set $APP_ID $VIEW_ID \
+  --body-file layout_modified.json
 ```
 
-### 6. Update Page Layout
+The CLI executes three steps internally:
+1. `PUT /content/v4/pages/layouts/{layoutId}/writelock`
+2. `PUT /content/v4/pages/layouts/{layoutId}` with the body
+3. `DELETE /content/v4/pages/layouts/{layoutId}/writelock` (always runs, even on failure)
 
-Updates the layout (card positions, styles, canvas vs appendix). Must hold write lock.
+The body **must contain `layoutId`** — the CLI extracts it to build the lock/PUT/unlock URLs.
+If `layoutId` is missing, the CLI raises: `Body must include layoutId. Run layout-get first.`
 
+**Verify dry-run before executing**:
 
-| Field            | Value                                 |
-| ---------------- | ------------------------------------- |
-| **Method**       | `PUT`                                 |
-| **Path**         | `/content/v4/pages/layouts/:layoutId` |
-| **Content-Type** | `application/json;charset=utf-8`      |
-
-
-**Body**: The full layout object (same structure as GET response). See "Layout Structure" below.
-
-### 7. Release Write Lock
-
-Always release the lock when done editing.
-
-
-| Field      | Value                                           |
-| ---------- | ----------------------------------------------- |
-| **Method** | `DELETE`                                        |
-| **Path**   | `/content/v4/pages/layouts/:layoutId/writelock` |
-
+```bash
+community-domo-cli --dry-run app-studio layout-set $APP_ID $VIEW_ID --body-file layout_modified.json
+# Shows all 3 steps with full request bodies — inspect before committing
+```
 
 ---
 
 ## Adding Cards to App Studio Pages
 
-### 8. Add Card to a Page
+### Add an Existing Card to a Page
 
-Adds an existing card to an App Studio view. The card goes to the **appendix** by default.
+Cards added this way go to the **appendix**. Use `layout-set` to move them to the canvas.
 
+```bash
+community-domo-cli -y pages add-card $VIEW_ID $CARD_ID
+# Returns empty body on success
+```
 
-| Field      | Value                                     |
-| ---------- | ----------------------------------------- |
-| **Method** | `POST`                                    |
-| **Path**   | `/content/v1/pages/:pageId/cards/:cardId` |
-| **Body**   | `{}`                                      |
+### List Cards on a Page
 
+```bash
+community-domo-cli --output json pages list-cards $VIEW_ID > page_cards.json
+```
 
-This is the same as standard Domo page card assignment. The `pageId` is the `viewId` from the app structure.
+Returns array of card objects with `id`, `title`, `type`, `urn`.
 
-### 9. List Cards on a Page
+> **Endpoint note**: CLI uses `GET /content/v3/stacks/{pageId}/cards` (v3 stacks endpoint).
+> Response shape may differ slightly from the v1 cards endpoint — same cards, different wrapper.
 
-
-| Field      | Value                             |
-| ---------- | --------------------------------- |
-| **Method** | `GET`                             |
-| **Path**   | `/content/v1/pages/:pageId/cards` |
-
-
-Returns an array of card objects with `id` and `title`.
-
-### 10. Create a Card Directly on a Page
+### Create a Card Directly on a Page
 
 Creates a new KPI card and adds it to the page in one step.
 
+```bash
+community-domo-cli --output json -y cards create \
+  --body-file card_definition.json \
+  --page-id $VIEW_ID > card_response.json
 
-| Field      | Value                                  |
-| ---------- | -------------------------------------- |
-| **Method** | `PUT`                                  |
-| **Path**   | `/content/v3/cards/kpi?pageId=:pageId` |
+CARD_ID=$(python3 -c "import json; print(json.load(open('card_response.json'))['id'])")
+```
 
+Cards created this way go to the **appendix** automatically. Use `layout-set` to place them on
+the canvas. See `card-creation/SKILL.md` for the full card body schema.
 
-See `domo-card-crud.md` for the full card body schema.
+**CRITICAL — chart type names**: All native chart types require the `badge_` prefix. Use
+`badge_vert_bar` (not `bar`), `badge_horiz_bar` (not `horizontal_bar`), etc. Omitting the
+prefix causes `400 Bad Request` with no detail. See `card-creation/SKILL.md` for the complete
+chart type catalog (207 types).
 
-### 11. Remove a Card from a Page
+**CRITICAL — `badge_line` is broken**: `badge_line` always returns HTTP 400 on creation. It is
+the only known broken chart type. Use `badge_two_trendline` (full-featured, 203 overrides) or
+`badge_spark_line` (compact, 40 overrides) instead. `badge_area` is also not a valid type — use
+`badge_vert_area_overlay` for area charts.
 
-Removes a card from an App Studio page without deleting the card itself. The card remains in Domo and on any other pages it's assigned to.
+#### Common Chart Types Quick Reference
 
+| Use case | `badge_*` chart type | Notes |
+|---|---|---|
+| **Line / trend** | `badge_two_trendline` | NOT `badge_line` (broken). Full-featured line chart |
+| **Compact sparkline** | `badge_spark_line` | Minimal line chart, 40 overrides |
+| **Vertical bar** | `badge_vert_bar` | Standard bar chart |
+| **Horizontal bar** | `badge_horiz_bar` | Rankings, comparisons |
+| **Stacked bar** | `badge_vert_stackedbar` | Composition / part-to-whole |
+| **Horizontal stacked** | `badge_horiz_stackedbar` | Horizontal composition |
+| **Pie** | `badge_pie` | Simple part-to-whole |
+| **Donut** | `badge_donut` | Pie with center hole |
+| **Area** | `badge_vert_area_overlay` | NOT `badge_area` (invalid) |
+| **Curved area** | `badge_vert_curved_area_overlay` | Smooth area chart |
+| **Stacked area** | `badge_stackedtrend` | Stacked area / stream |
+| **Combo (bar+line)** | `badge_vert_bar_line` | Dual-axis bar and line |
+| **Scatter / bubble** | `badge_xybubble` | XY plot with optional size |
+| **Treemap** | `badge_treemap` | Hierarchical area |
+| **Funnel** | `badge_funnel` | Conversion funnels |
+| **Heatmap** | `badge_heatmap` | Density / matrix |
+| **Waterfall** | `badge_vert_waterfall` | Running totals |
+| **Gauge** | `badge_gauge` | Radial gauge |
+| **Filled gauge** | `badge_filledgauge` | Linear filled gauge |
+| **KPI (PoP)** | `badge_pop_multi_value` | Period-over-period hero metric |
+| **Dropdown filter** | `badge_dropdown_selector` | Page-level filter control |
+| **Date filter** | `badge_date_selector` | Date range picker |
 
-| Field      | Value                                     |
-| ---------- | ----------------------------------------- |
-| **Method** | `DELETE`                                  |
-| **Path**   | `/content/v1/pages/:pageId/cards/:cardId` |
+### Read a Card Definition
 
+```bash
+community-domo-cli --output json cards definition $CARD_ID > card_def.json
+```
 
-No request body needed. Returns empty response on success.
+Returns `definition`, `dataSourceWrite`, `drillpath`, `embedded`, `id`, `urn`, `columns`.
 
-**Verified**: Used to remove 34 cards from 7 App Studio pages in a single session. All 34 removals succeeded per page.
+**Read/write format mismatches** — when reading via `cards definition` then writing via
+`cards update`, fix these fields before updating:
 
-### 12. Add Cards to the Domo Overview Page
+| Field | Read returns | Write requires |
+|---|---|---|
+| `formulas` | `[]` | `{"dsUpdated": [], "dsDeleted": [], "card": []}` |
+| `conditionalFormats` | `[]` | `{"card": [], "datasource": []}` |
+| `annotations` | `[]` | `{"new": [], "modified": [], "deleted": []}` |
+| `segments` | `{"active": [], "definitions": []}` | `{"active": [], "create": [], "update": [], "delete": []}` |
 
-The Domo overview/home page uses the special page ID `-100000`. Cards can be added to it using the same endpoint as any other page.
+Also: add `title`, `description`, `noDateRange` if missing; remove `modified`, `allowTableDrill`.
 
+### Update a Card
 
-| Field      | Value                                     |
-| ---------- | ----------------------------------------- |
-| **Method** | `POST`                                    |
-| **Path**   | `/content/v1/pages/-100000/cards/:cardId` |
-| **Body**   | `{}`                                      |
+```bash
+community-domo-cli --output json -y cards update $CARD_ID \
+  --body-file card_updated.json
+```
 
+### Add Card to the Domo Overview Page
 
-**Verified**: Added 34 cards to page `-100000` in a single batch. All succeeded.
+The Domo overview/home page uses the special page ID `-100000`:
 
-This is useful when you want cards visible on the main Domo overview but NOT inside the App Studio app views.
+```bash
+community-domo-cli -y pages add-card -- -100000 $CARD_ID
+```
+
+Note the `--` separator before the negative page ID to prevent it being parsed as a flag.
 
 ---
 
@@ -615,18 +649,18 @@ Styles range from `ca1` to `ca8`:
 | `ca1`       | Default surface        | **Primary default** — translucent white bg, floating shadow |
 | `ca2`       | Alternate surface      | Same as ca1, alternate slot for variation                   |
 | `ca3`       | Light translucent      | Lighter opacity — filter/control cards                      |
-| `ca4`–`ca6` | Accent styles          | Colored/themed cards                                        |
+| `ca4`-`ca6` | Accent styles          | Colored/themed cards                                        |
 | `ca7`       | Near-opaque surface    | Subtle shadow, higher opacity for emphasis                  |
 | `ca8`       | Transparent/borderless | Banners, images, notebooks (no chrome)                      |
 
 
 Style is applied per-card per-page. The same card can have different styles on different pages. Omitting the `style` property uses the default/no style.
 
-To apply a style, add the `style` object to the content entry and PUT the layout.
+To apply a style, add the `style` object to the content entry and update the layout via `layout-set`.
 
 ### Default Card Style
 
-Cards should use **zero border-radius, zero border weight, zero padding, no drop shadow** per the mandatory reference configuration. See "Card Styles (ca1–ca8)" under Theme Management for the full spec.
+Cards should use **zero border-radius, zero border weight, zero padding, no drop shadow** per the mandatory reference configuration. See "Card Styles (ca1-ca8)" under Theme Management for the full spec.
 
 ```python
 # ca1/ca2 — clean surface, zero chrome
@@ -660,50 +694,43 @@ for c in theme['colors']:
 
 ## Complete Workflow: Add Filter Cards to All Pages
 
-This workflow adds 6 dropdown filter cards to all views in an App Studio app, positioned identically on each page.
+This workflow adds dropdown filter cards to all views in an App Studio app, positioned identically on each page.
 
 ### Step 1: Create the cards on one page
 
 ```bash
-curl -X PUT "https://instance.domo.com/api/content/v3/cards/kpi?pageId=993651024" \
-  -H "Content-Type: application/json" \
-  -H "X-DOMO-Developer-Token: $TOKEN" \
-  -d '{ ... card body ... }'
+community-domo-cli --output json -y cards create \
+  --body-file filter_card.json --page-id $PAGE_ID > filter1.json
+FILTER1=$(python3 -c "import json; print(json.load(open('filter1.json'))['id'])")
 ```
 
-### Step 2: Configure the layout on the first page via the UI
-
-Use the App Studio editor to position the cards, set styles, etc. This becomes the reference layout.
-
-### Step 3: Add the same cards to other pages (goes to appendix)
+### Step 2: Add the same cards to other pages (goes to appendix)
 
 ```bash
-curl -X POST "https://instance.domo.com/api/content/v1/pages/{pageId}/cards/{cardId}" \
-  -H "X-DOMO-Developer-Token: $TOKEN" \
-  -d '{}'
+for PAGE in $PAGE2 $PAGE3 $PAGE4; do
+  community-domo-cli -y pages add-card $PAGE $FILTER1
+done
 ```
 
-### Step 4: Move cards from appendix to canvas on each page
+### Step 3: Move cards from appendix to canvas on each page
 
-For each target page:
+```bash
+for PAGE in $PAGE2 $PAGE3 $PAGE4; do
+  # Get layout
+  community-domo-cli --output json app-studio layout-get $APP_ID $PAGE > layout_p.json
 
-```python
-# 1. GET the layout
-layout = GET /content/v4/pages/{pageId}/layouts
+  # Modify layout (set virtualAppendix=false, virtual=false, set x/y/width/height)
+  python3 - <<'PYEOF'
+import json
+layout = json.load(open('layout_p.json'))
+# ... position your filter cards ...
+json.dump(layout, open('layout_p_updated.json', 'w'))
+PYEOF
 
-# 2. Acquire write lock
-PUT /content/v4/pages/layouts/{layoutId}/writelock  body: {}
-
-# 3. Modify the layout:
-#    - Add content entries for each card (with style)
-#    - Add template entries with virtualAppendix=false, virtual=false
-#    - Position cards in the grid (x, y, width, height)
-
-# 4. PUT the updated layout
-PUT /content/v4/pages/layouts/{layoutId}  body: { modified layout }
-
-# 5. Release write lock
-DELETE /content/v4/pages/layouts/{layoutId}/writelock
+  # Apply — write lock handled by CLI
+  community-domo-cli --output json -y app-studio layout-set $APP_ID $PAGE \
+    --body-file layout_p_updated.json
+done
 ```
 
 ### Example: 6 filter cards in a row
@@ -744,64 +771,72 @@ This workflow creates a multi-section App Studio app from scratch — no UI inte
 
 ### Step 1: Create the App
 
-```python
-resp = requests.post(f"{BASE}/content/v1/dataapps", headers=HEADERS, json={
-    "title": "Sales Metrics Dashboard",
-    "description": "Sales performance metrics"
-})
-app = resp.json()
-app_id = app["dataAppId"]       # e.g., 1400847176
-page_id = app["landingViewId"]  # e.g., 1219076757 — this IS the pageId
+```bash
+community-domo-cli --output json -y app-studio create \
+  --body '{"title": "Sales Metrics Dashboard", "description": "Sales performance metrics"}' \
+  > app.json
+APP_ID=$(python3 -c "import json; print(json.load(open('app.json'))['dataAppId'])")
+PAGE_ID=$(python3 -c "import json; print(json.load(open('app.json'))['landingViewId'])")
+echo "App: $APP_ID  Page: $PAGE_ID"
 ```
 
 ### Step 1b: Discover Dataset Schemas
 
 Before creating any cards, query each dataset's schema to get exact column names and types:
 
-```python
-resp = requests.get(f"{BASE}/query/v1/datasources/{dataset_guid}/schema/indexed", headers=HEADERS)
-schema = resp.json()
-columns = schema["tables"][0]["columns"]  # [{"name": "OrderDate", "type": "DATE"}, ...]
+```bash
+community-domo-cli --output json datasets schema $DATASET_ID > schema.json
+
+python3 -c "
+import json
+cols = json.load(open('schema.json'))['tables'][0]['columns']
+for col in cols:
+    print(f\"{col['name']:40s} {col['type']}\")
+"
 ```
 
 Store column names per dataset — you'll need them for card `columns` arrays (VALUE, ITEM, SERIES mappings).
 
 ### Step 2: Create Cards on the Page
 
-Use `PUT /content/v3/cards/kpi?pageId={page_id}` to create each card. Cards are automatically added to the page and placed in the **appendix**. See `domo-card-crud.md` for the full card body schema.
-
-```python
+```bash
 # Create as many cards as needed — they all go to the appendix
-for card_def in card_definitions:
-    resp = requests.put(f"{BASE}/content/v3/cards/kpi?pageId={page_id}",
-        headers=HEADERS, json=card_def)
-    card_id = resp.json()["id"]
+community-domo-cli --output json -y cards create \
+  --body-file card_kpi.json --page-id $PAGE_ID > card1.json
+CARD1=$(python3 -c "import json; print(json.load(open('card1.json'))['id'])")
 ```
+
+See `card-creation/SKILL.md` for the full card body schema. **All chart types require the `badge_` prefix** (e.g., `badge_vert_bar`, `badge_two_trendline`, `badge_pie`) — see the Quick Reference table above or that skill for the complete catalog. **Never use `badge_line`** (always 400) or `badge_area` (invalid).
+
+**Important**: Domo auto-assigns `contentKey` values when cards are added to the appendix. Keys may not be sequential — gaps occur (e.g., 1,2,3,4,5,6,7,8,9,11,12 — skipping 10). Always read the actual layout to get the real keys.
 
 ### Step 3: Get the Layout and Inspect Content Keys
 
-```python
-resp = requests.get(f"{BASE}/content/v4/pages/{page_id}/layouts", headers=HEADERS)
-layout = resp.json()
-layout_id = layout["layoutId"]
+```bash
+community-domo-cli --output json app-studio layout-get $APP_ID $PAGE_ID > layout.json
 
-# Print all content items to see their contentKeys
-for c in layout["content"]:
-    print(f"key={c['contentKey']} type={c['type']} card={c.get('cardId','')}")
+python3 -c "
+import json
+layout = json.load(open('layout.json'))
+print('layoutId:', layout['layoutId'])
+for c in layout['content']:
+    print(f\"  key={c['contentKey']} type={c['type']} card={c.get('cardId','')}\")
+"
 ```
-
-**Important**: Domo auto-assigns `contentKey` values when cards are added to the appendix. Keys may not be sequential — gaps occur (e.g., 1,2,3,4,5,6,7,8,9,11,12 — skipping 10). Always read the actual layout to get the real keys.
 
 ### Step 4: Build the Template and Update Layout
 
 ```python
-# Acquire write lock
-requests.put(f"{BASE}/content/v4/pages/layouts/{layout_id}/writelock", headers=HEADERS, json={})
+# layout.json was fetched via CLI in Step 3
+import json
+
+layout = json.load(open('layout.json'))
+layout_id = layout['layoutId']
 
 # Build standard + compact templates
 std_template = []
 compact_template = []
-y = 0  # Track vertical position for standard
+y = 0   # Track vertical position for standard
 cy = 0  # Track vertical position for compact
 
 # Header row
@@ -829,29 +864,29 @@ for i, key in enumerate([12, 21]):
     cy += 8
 y += 22
 
-# CRITICAL: Include appendix artifacts (PAGE_BREAK, SEPARATOR) that Domo auto-generated
-# These MUST be in the template or you get 400 errors
-for artifact_key, artifact_type in appendix_artifacts:
-    std_template.append({"type": artifact_type, "contentKey": artifact_key, "x": 0, "y": y, "width": 60,
-        "height": 0 if artifact_type == "PAGE_BREAK" else 3,
-        "virtualAppendix": True, "virtual": True, "children": None})
-    compact_template.append({"type": artifact_type, "contentKey": artifact_key, "x": 0, "y": cy, "width": 12,
-        "height": 0 if artifact_type == "PAGE_BREAK" else 1,
-        "virtualAppendix": True, "virtual": True, "children": None})
+# CRITICAL: preserve appendix artifacts (PAGE_BREAK, SEPARATOR template-only entries)
+content_keys = {c['contentKey'] for c in layout['content']}
+for entry in layout['standard']['template']:
+    if entry['contentKey'] not in content_keys:
+        std_template.append({**entry, 'virtual': True, 'virtualAppendix': True})
+for entry in layout['compact']['template']:
+    if entry['contentKey'] not in content_keys:
+        compact_template.append({**entry, 'virtual': True, 'virtualAppendix': True})
 
 # Update header text
-for c in layout["content"]:
-    if c["type"] == "HEADER" and c["contentKey"] == 1:
-        c["text"] = "Sales Overview"
+for c in layout['content']:
+    if c['type'] == 'HEADER' and c['contentKey'] == 1:
+        c['text'] = 'Sales Overview'
 
-layout["standard"]["template"] = std_template
-layout["compact"]["template"] = compact_template
+layout['standard']['template'] = std_template
+layout['compact']['template'] = compact_template
+json.dump(layout, open('layout_updated.json', 'w'))
+```
 
-# PUT the updated layout
-requests.put(f"{BASE}/content/v4/pages/layouts/{layout_id}", headers=HEADERS, json=layout)
-
-# Release write lock
-requests.delete(f"{BASE}/content/v4/pages/layouts/{layout_id}/writelock", headers=HEADERS)
+```bash
+# Apply layout — CLI handles write lock automatically
+community-domo-cli --output json -y app-studio layout-set $APP_ID $PAGE_ID \
+  --body-file layout_updated.json
 ```
 
 ### Recommended Card Sizes
@@ -889,33 +924,29 @@ y=96: Table (height 25, width 60)
 
 ## Creating Custom App Card Instances (Pro-Code)
 
-Custom app card instances (from published designs) are created via a two-step API: create a context, then create the card from that context.
-
-**CRITICAL PATH NOTE**: The context and card creation endpoints use the **root domain** path (`https://{instance}.domo.com/domoapps/apps/v2/...`), NOT the `/api/` prefix. Using `{BASE}/domoapps/apps/v2/contexts` (where BASE includes `/api/`) returns `404 "No static resource"`. The correct base for these calls is `https://{instance}.domo.com`.
+Custom app card instances (from published designs) are created via a two-step CLI flow: create a context, then create the card from that context.
 
 ### Step 1: Create a Context
 
 A context defines the dataset mappings, collections, and resource bindings for a card instance.
 
-
-| Field      | Value                                                     |
-| ---------- | --------------------------------------------------------- |
-| **Method** | `POST`                                                    |
-| **URL**    | `https://{instance}.domo.com/domoapps/apps/v2/contexts`   |
-| **Auth**   | `X-DOMO-Developer-Token` or `X-Domo-Authentication` (SID) |
-
-
-```python
-DOMO = f"https://{instance}.domo.com"
-ctx_body = {
-    "designId": design_id,
-    "mapping": [{"alias": alias, "dataSetId": ds_guid, "fields": [], "dql": None}],
-    "collections": [], "accountMapping": [], "actionMapping": [],
-    "workflowMapping": [], "packageMapping": [],
-    "isDisabled": False
+```bash
+python3 -c "
+import json
+body = {
+    'designId': '$DESIGN_ID',
+    'mapping': [{'alias': 'sales', 'dataSetId': '$DATASET_ID', 'fields': [], 'dql': None}],
+    'collections': [], 'accountMapping': [], 'actionMapping': [],
+    'workflowMapping': [], 'packageMapping': [],
+    'isDisabled': False
 }
-resp = requests.post(f"{DOMO}/domoapps/apps/v2/contexts", headers=H, json=ctx_body)
-context_id = resp.json()[0]["id"]
+json.dump(body, open('context.json', 'w'))
+"
+
+community-domo-cli --output json -y domoapps context-create \
+  --body-file context.json > context_response.json
+
+CONTEXT_ID=$(python3 -c "import json; d=json.load(open('context_response.json')); print(d[0]['id'])")
 ```
 
 Response: `[context, []]` — the context object contains the generated `id`.
@@ -924,23 +955,14 @@ For apps with no datasets (e.g., banners), use `"mapping": []`.
 
 ### Step 2: Create the Card from the Context
 
-
-| Field      | Value                                                                                                     |
-| ---------- | --------------------------------------------------------------------------------------------------------- |
-| **Method** | `POST`                                                                                                    |
-| **URL**    | `https://{instance}.domo.com/domoapps/apps/v2?fullpage=false&pageId={pageId}&cardTitle={urlEncodedTitle}` |
-
-
-```python
-import urllib.parse
-title = urllib.parse.quote("My Chart Card")
-resp = requests.post(
-    f"{DOMO}/domoapps/apps/v2?fullpage=false&pageId={page_id}&cardTitle={title}",
-    headers=H, json={"contextId": context_id, "id": context_id})
+```bash
+community-domo-cli --output json -y domoapps card-create \
+  --page-id $VIEW_ID \
+  --body "{\"contextId\": \"$CONTEXT_ID\", \"id\": \"$CONTEXT_ID\"}" \
+  > domoapps_card_response.json
 ```
 
 **Critical**: The `id` field must be the **context ID** from Step 1, NOT the design ID. Using the design ID causes 500 errors when datasets differ from the original.
-
 
 | Param       | Description                                         |
 | ----------- | --------------------------------------------------- |
@@ -948,14 +970,9 @@ resp = requests.post(
 | `pageId`    | Target page ID, or `-100000` for asset library only |
 | `cardTitle` | URL-encoded title for the card                      |
 
-
-The card is created on the target page. Check the page's card list to get the numeric card ID for layout operations.
-
 ### Updating a Context (Rewire Dataset)
 
-`PUT https://{instance}.domo.com/domoapps/apps/v2/contexts/{contextId}` — send the full context object with updated `mapping`.
-
-**Verified**: Used to create banner cards (no datasets) and chart cards (with dataset mapping) across multiple App Studio pages.
+Use the CLI's context update command with the full context object and updated `mapping`.
 
 ### Design Caching Gotcha
 
@@ -980,19 +997,19 @@ y=72:  DETAIL CARDS — 2-3 native charts per row (width 20 or 30), height 22
 y=94+: Additional HEADER + DETAIL SECTIONS as needed
 ```
 
-The **hero metrics** are **native `badge_pop_multi_value` (Period over Period Multi-Value) cards** — NEVER pro-code. They automatically provide: big number, percent change vs prior period, direction indicator, and additional text. Create via `PUT /content/v3/cards/kpi?pageId=:pageId` with `chartType: "badge_pop_multi_value"`. See `card-creation/SKILL.md` for the full body schema.
+The **hero metrics** are **native `badge_pop_multi_value` (Period over Period Multi-Value) cards** — NEVER pro-code. They automatically provide: big number, percent change vs prior period, direction indicator, and additional text. Create via `cards create --page-id` with `chartType: "badge_pop_multi_value"`. See `card-creation/SKILL.md` for the full body schema.
 
 The **primary visualization** spans the full horizontal width of the page. **The Overview page** typically uses a time-series line/area chart showing trends. **Sub-pages MUST vary chart types** — use bar charts, stacked bars, horizontal bars, scatter plots, heatmaps, or other types suited to the page's data story. Never use the same chart type on every page. See the chart type selection table below.
 
 #### Primary Viz Chart Type by Page
 
 
-| Page position                                | Recommended chart types                | Why                                            |
-| -------------------------------------------- | -------------------------------------- | ---------------------------------------------- |
-| **Overview**                                 | Time-series line/area                  | Shows trends, forecasts, high-level trajectory |
-| **Sub-page 1** (e.g., Production, Revenue)   | Vertical bar, grouped bar, stacked bar | Compares categories, shows composition         |
-| **Sub-page 2** (e.g., Quality, Engagement)   | Horizontal bar, lollipop, beeswarm     | Rankings, distributions, part-to-whole         |
-| **Sub-page 3** (e.g., Supply Chain, Support) | Scatter, bubble, treemap, heatmap      | Correlations, density, multi-dimensional       |
+| Page position                                | Recommended chart types                | `badge_*` name                                                           | Why                                            |
+| -------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------- |
+| **Overview**                                 | Time-series line/area                  | `badge_two_trendline`, `badge_vert_area_overlay`                         | Shows trends, forecasts, high-level trajectory |
+| **Sub-page 1** (e.g., Production, Revenue)   | Vertical bar, grouped bar, stacked bar | `badge_vert_bar`, `badge_vert_bar_overlay`, `badge_vert_stackedbar`      | Compares categories, shows composition         |
+| **Sub-page 2** (e.g., Quality, Engagement)   | Horizontal bar, lollipop, beeswarm     | `badge_horiz_bar`, `badge_horiz_bar_overlay`, `badge_horiz_stackedbar`   | Rankings, distributions, part-to-whole         |
+| **Sub-page 3** (e.g., Supply Chain, Support) | Scatter, bubble, treemap, heatmap      | `badge_xybubble`, `badge_treemap`, `badge_heatmap`                       | Correlations, density, multi-dimensional       |
 
 
 The agent MUST select a **different primary chart type for each sub-page**. Repeating line charts across all pages makes dashboards feel monotonous and wastes the opportunity to match visualization type to data shape. When using pro-code charts, the `app-studio-pro-code` skill provides templates for line, bar, stacked bar, horizontal bar, and scatter patterns.
@@ -1001,12 +1018,12 @@ The agent MUST select a **different primary chart type for each sub-page**. Repe
 
 **CRITICAL: Never use pro-code apps for hero/summary metric cards.** Always use native `badge_pop_multi_value` cards. They are purpose-built for this use case and provide automatic period-over-period comparison.
 
-Create each hero card with `PUT /content/v3/cards/kpi?pageId=:pageId`:
+Create each hero card with `cards create --page-id`:
 
 **CRITICAL: PoP cards require THREE things to show comparison data:**
 
 1. **Date column in `main.columns`** with `mapping: "ITEM"` and `aggregation: "MAX"` (populates the "Time period" drop zone)
-2. `**dateRangeFilter**` on the `main` subscription (sets "Date range: This Month" + "Compare to: 1 month ago")
+2. `**dateRangeFilter**` on the `main` subscription (sets "Date range: This Year" + "Compare to: 1 year ago")
 3. `**time_period` subscription** with the same date column
 
 Without all three, the PoP comparison shows "0" instead of actual prior period values.
@@ -1140,7 +1157,18 @@ Create **3-4** hero metric cards per page in a **SINGLE ROW** (never 2 rows). Ea
 
 Set `addl_text: "Prior Year"` in overrides. **NEVER use MONTH interval** — it is the #1 cause of blank hero cards.
 
-**Updating existing hero cards:** Use `PUT /content/v3/cards/kpi/definition` (with body `{"dynamicText": true, "variables": true, "urn": "CARD_ID"}`) to READ the current card definition, modify `dateRangeFilter` and `overrides.addl_text`, then `PUT /content/v3/cards/kpi/CARD_ID` with the full body (including `dataProvider.dataSourceId`, `variables: true`, `columns: false`). Format `formulas` as `{"dsUpdated":[], "dsDeleted":[], "card":[]}`, `annotations` as `{"new":[], "modified":[], "deleted":[]}`, `conditionalFormats` as `{"card":[], "datasource":[]}`, `segments` as `{"active":[], "create":[], "update":[], "delete":[]}`.
+**Updating existing hero cards:**
+
+```bash
+# Read current definition
+community-domo-cli --output json cards definition $CARD_ID > card_def.json
+
+# Modify in Python (fix format mismatches, update dateRangeFilter, overrides, etc.)
+# Then update:
+community-domo-cli --output json -y cards update $CARD_ID --body-file card_updated.json
+```
+
+Format `formulas` as `{"dsUpdated":[], "dsDeleted":[], "card":[]}`, `annotations` as `{"new":[], "modified":[], "deleted":[]}`, `conditionalFormats` as `{"card":[], "datasource":[]}`, `segments` as `{"active":[], "create":[], "update":[], "delete":[]}`.
 
 ### Banner Card Placement
 
@@ -1179,7 +1207,7 @@ The primary visualization should span width 60 with height 25-30. On the Overvie
 
 ## Pro-Code Cards & App Studio Integration
 
-App Studio pages can contain **pro-code custom apps** alongside native cards. A pro-code card is a full JavaScript custom app (built via `basic-app-build`) published as a Domo card and placed on the canvas.
+App Studio pages can contain **pro-code custom apps** alongside native cards. A pro-code card is a full JavaScript custom app (built via `initial-build`) published as a Domo card and placed on the canvas.
 
 **When to use pro-code**: Custom visualizations (Gantt, heatmap, org chart), multi-step forms, cross-card interactivity, AppDB CRUD with custom UI, AI features, or any requirement that exceeds native card capabilities. Use `app-studio-pro-code` for the full decision table and build workflow.
 
@@ -1210,7 +1238,7 @@ Native filter cards (dropdown selectors, date selectors, etc.) provide page-leve
 
 ### Creating Filter Cards
 
-Create filter cards with `PUT /content/v3/cards/kpi?pageId=:pageId`, using the appropriate selector chart type.
+Create filter cards with `cards create --page-id`, using the appropriate selector chart type.
 
 **Dropdown selector** (filters by a categorical column):
 
@@ -1275,11 +1303,11 @@ card_body = {
 | Chart type                | Purpose                                     | Key override                                |
 | ------------------------- | ------------------------------------------- | ------------------------------------------- |
 | `badge_dropdown_selector` | Dropdown list filter                        | `allow_multi_select`, `dropdown_label_text` |
-| `badge_date_selector`     | Date range picker                           | —                                           |
-| `badge_checkbox_selector` | Checkbox filter (multi-select visible)      | —                                           |
-| `badge_radio_selector`    | Radio button filter (single-select visible) | —                                           |
-| `badge_range_selector`    | Numeric range slider                        | —                                           |
-| `badge_slicer`            | Slicer-style filter                         | —                                           |
+| `badge_date_selector`     | Date range picker                           | -                                           |
+| `badge_checkbox_selector` | Checkbox filter (multi-select visible)      | -                                           |
+| `badge_radio_selector`    | Radio button filter (single-select visible) | -                                           |
+| `badge_range_selector`    | Numeric range slider                        | -                                           |
+| `badge_slicer`            | Slicer-style filter                         | -                                           |
 
 
 ### Filter Card Content Entry (CRITICAL)
@@ -1317,10 +1345,10 @@ Filter cards should be **compact** — they are controls, not content. Use minim
 | Template           | Width                          | Height  | Notes                                     |
 | ------------------ | ------------------------------ | ------- | ----------------------------------------- |
 | Standard (desktop) | 20 (3 across) or 15 (4 across) | **6**   | Minimal height for low-profile appearance |
-| Compact (mobile)   | 12 (full width, stacked)       | **6–8** | Stacked vertically                        |
+| Compact (mobile)   | 12 (full width, stacked)       | **6-8** | Stacked vertically                        |
 
 
-**Recommended page layout with filters (CANONICAL — matches basic-app-build Step 7):**
+**Recommended page layout with filters (CANONICAL):**
 
 ```
 y=0:   Banner (h=14)
@@ -1346,38 +1374,36 @@ Variables are global values in the Domo instance that function inside Beast Mode
 
 ### Creating Variables Programmatically
 
-Variables are created via the same function template API as Beast Modes, with `variable: true` and `global: true`.
-
-**Endpoint**: `POST /query/v1/functions/template?strict=false`
-
-```python
-variable_payload = {
-    "name": "Selected Plant",
-    "locked": False,
-    "global": True,
-    "expression": "'All'",          # Default value as SQL literal
-    "links": [],                     # Empty — variables are not tied to a dataset
-    "aggregated": False,
-    "analytic": False,
-    "nonAggregatedColumns": [],
-    "dataType": "STRING",            # STRING, DECIMAL, LONG, DATE
-    "status": "VALID",
-    "cacheWindow": "non_dynamic",
-    "columnPositions": [],
-    "functions": [],
-    "functionTemplateDependencies": [],
-    "archived": False,
-    "hidden": False,
-    "variable": True,                # CRITICAL — makes this a Variable, not a Beast Mode
+```bash
+python3 -c "
+import json
+body = {
+    'name': 'Selected Plant',
+    'locked': False,
+    'global': True,
+    'expression': \"'All'\",
+    'links': [],
+    'aggregated': False,
+    'analytic': False,
+    'nonAggregatedColumns': [],
+    'dataType': 'STRING',
+    'status': 'VALID',
+    'cacheWindow': 'non_dynamic',
+    'columnPositions': [],
+    'functions': [],
+    'functionTemplateDependencies': [],
+    'archived': False,
+    'hidden': False,
+    'variable': True   # CRITICAL — makes this a Variable, not a Beast Mode
 }
+json.dump(body, open('variable.json', 'w'))
+"
 
-resp = requests.post(
-    f"{BASE}/query/v1/functions/template?strict=false",
-    headers=HEADERS, json=variable_payload, timeout=15)
+community-domo-cli --output json -y beast-modes create \
+  --body-file variable.json > variable_response.json
 
-data = resp.json()
-function_id = data["id"]        # e.g., 115511 — numeric ID for pro-code integration
-legacy_id = data["legacyId"]    # e.g., "calculation_abc123..." — for Beast Mode references
+FUNCTION_ID=$(python3 -c "import json; print(json.load(open('variable_response.json'))['id'])")
+LEGACY_ID=$(python3 -c "import json; print(json.load(open('variable_response.json'))['legacyId'])")
 ```
 
 **Variable data types:**
@@ -1400,9 +1426,9 @@ The `function_id` (numeric, e.g., `115511`) is used by pro-code apps:
 
 **Variable Controls cannot be added programmatically.** The layout API only supports `CARD`, `HEADER`, `SPACER`, `SEPARATOR`, and `PAGE_BREAK` content types. Variable Controls must be configured through the App Studio editor UI.
 
-After creating variables via the API, instruct the user to complete these steps in the App Studio editor:
+After creating variables via the CLI, instruct the user to complete these steps in the App Studio editor:
 
-1. **Open the app** in App Studio editor (Apps Home → hover app → More → Edit)
+1. **Open the app** in App Studio editor (Apps Home -> hover app -> More -> Edit)
 2. **Navigate to the target page** using the page tabs at the bottom
 3. **Open the left toolbar** and click the **Controls** icon (slider/knob icon)
 4. **Drag a control type** onto the canvas:
@@ -1419,7 +1445,7 @@ After creating variables via the API, instruct the user to complete these steps 
 
 To persist variable values across pages, configure persistent filters:
 
-1. Go to **App Configuration** → **Filter Options** tab
+1. Go to **App Configuration** -> **Filter Options** tab
 2. Check **"Persist Variable controls"**
 3. Note: Variable controls only apply to pages that contain that control. Add the control to each page where persistence is needed.
 
@@ -1430,7 +1456,7 @@ Both provide page-level interactivity, but they work differently:
 
 | Feature      | Filter Cards                 | Variables                                                 |
 | ------------ | ---------------------------- | --------------------------------------------------------- |
-| Creation     | Fully programmatic (API)     | Programmatic creation + manual UI binding                 |
+| Creation     | Fully programmatic (CLI)     | Programmatic creation + manual UI binding                 |
 | Mechanism    | Interaction filter system    | Beast Mode calculation system                             |
 | Cross-card   | Automatic (same column name) | Requires Beast Mode on each card                          |
 | Pro-code API | `domo.onFiltersUpdated`      | `domo.onVariablesUpdated`                                 |
@@ -1444,7 +1470,7 @@ Both provide page-level interactivity, but they work differently:
 
 ## Design-Aware Layout
 
-These rules make layouts feel intentional rather than mechanically packed. For detailed layout density presets and spacing examples, see [layout-design.md](references/layout-design.md).
+These rules make layouts feel intentional rather than mechanically packed. For detailed layout density presets and spacing examples, see [layout-design.md](layout-design.md).
 
 ### Breathing Room
 
@@ -1480,9 +1506,9 @@ Choose a density tier based on the audience and page purpose:
 
 | Preset          | Cards/page | Card widths | Spacer usage                | Audience             |
 | --------------- | ---------- | ----------- | --------------------------- | -------------------- |
-| **Executive**   | 4–8        | 20–30       | Generous (height 5 spacers) | C-suite, board decks |
-| **Operational** | 8–16       | 15–20       | Moderate (height 3 spacers) | Managers, daily use  |
-| **Detailed**    | 16+        | 10–15       | Minimal (height 2 spacers)  | Analysts, drill-down |
+| **Executive**   | 4-8        | 20-30       | Generous (height 5 spacers) | C-suite, board decks |
+| **Operational** | 8-16       | 15-20       | Moderate (height 3 spacers) | Managers, daily use  |
+| **Detailed**    | 16+        | 10-15       | Minimal (height 2 spacers)  | Analysts, drill-down |
 
 
 ### Style ID Usage
@@ -1499,7 +1525,24 @@ Apply the same style mapping on every page in the app for visual consistency. Th
 
 ## Theme Management
 
-The `theme` object inside the app controls all visual styling — colors, fonts, card styles, navigation appearance, page background, and layout density. It is updated via the full-body `PUT /content/v1/dataapps/:dataAppId?includeHiddenViews=true` endpoint.
+The `theme` object inside the app controls all visual styling — colors, fonts, card styles, navigation appearance, page background, and layout density. It is updated via the full-body `app-studio update` command.
+
+```bash
+# Read current app (includes theme)
+community-domo-cli --output json app-studio get $APP_ID > app.json
+
+# Modify theme in Python
+python3 - <<'PYEOF'
+import json
+app = json.load(open('app.json'))
+theme = app['theme']
+# ... modify theme ...
+json.dump(app, open('app_updated.json', 'w'))
+PYEOF
+
+# Apply
+community-domo-cli --output json -y app-studio update $APP_ID --body-file app_updated.json
+```
 
 ### Theme Structure
 
@@ -1527,11 +1570,11 @@ The `theme` object inside the app controls all visual styling — colors, fonts,
 
 ### Custom Color Palette (NEVER use Domo native colors)
 
-**CRITICAL: Never use Domo's native/default color palette.** Always select a curated palette from `domo-app-theme/references/color-palettes.md`. This file contains 50 perceptually-uniform OKLCH palettes across 9 harmony types (Analogous, Monochromatic, Triad, Complementary, Split Complementary, Square, Compound, Shades, Signature). Pick the palette that best suits the use case and data domain, or ask the user for preference.
+**CRITICAL: Never use Domo's native/default color palette.** Always select a curated palette from `domo-app-theme/color-palettes.md`. This file contains 50 perceptually-uniform OKLCH palettes across 9 harmony types (Analogous, Monochromatic, Triad, Complementary, Split Complementary, Square, Compound, Shades, Signature). Pick the palette that best suits the use case and data domain, or ask the user for preference.
 
 #### Palette Selection Workflow
 
-1. Read `domo-app-theme/references/color-palettes.md` and review the harmony type table to identify the best fit for the dashboard's data story
+1. Read `domo-app-theme/color-palettes.md` and review the harmony type table to identify the best fit for the dashboard's data story
 2. Select a specific palette (e.g., "Pacific Drift" for corporate analytics, "Mineral" for manufacturing/industrial)
 3. The palette provides 6 OKLCH series colors (`--c1` through `--c6`)
 4. **For pro-code CSS**: use the OKLCH values directly
@@ -1540,19 +1583,19 @@ The `theme` object inside the app controls all visual styling — colors, fonts,
 
 #### Palette Structure for App Studio
 
-App Studio's theme has 60 color slots (`c1`–`c60`) organized by tag group. Map your custom palette following this structure:
+App Studio's theme has 60 color slots (`c1`-`c60`) organized by tag group. Map your custom palette following this structure:
 
 
 | Slot range | Tag                              | Purpose                             | Example mapping                             |
 | ---------- | -------------------------------- | ----------------------------------- | ------------------------------------------- |
-| c1–c7      | TINTED_GRAY                      | Neutral grayscale dark→light        | neutral-950, 900, 600, 300, 200, 100, white |
-| c8–c14     | PRIMARY (ORDER_SOURCE at c8)     | Brand series base→tints             | brand-500, 400, 300, 200, 100, 50, 50       |
-| c15–c21    | PRIMARY                          | Brand darker shades                 | brand-600→950                               |
-| c22–c28    | SECONDARY (ORDER_SOURCE at c22)  | 2nd series base→tints               | teal-600→50                                 |
-| c29–c35    | TERTIARY (ORDER_SOURCE at c29)   | 3rd series base→tints               | amber-600→50                                |
-| c36–c42    | QUATERNARY (ORDER_SOURCE at c36) | 4th series base→tints               | red-600→50                                  |
-| c43–c57    | GRAYSCALE                        | Nav/sidebar/text/borders dark→light | neutral-950→white                           |
-| c58–c59    | FONT                             | Dark/light font                     | neutral-950, white                          |
+| c1-c7      | TINTED_GRAY                      | Neutral grayscale dark->light       | neutral-950, 900, 600, 300, 200, 100, white |
+| c8-c14     | PRIMARY (ORDER_SOURCE at c8)     | Brand series base->tints            | brand-500, 400, 300, 200, 100, 50, 50       |
+| c15-c21    | PRIMARY                          | Brand darker shades                 | brand-600->950                              |
+| c22-c28    | SECONDARY (ORDER_SOURCE at c22)  | 2nd series base->tints              | teal-600->50                                |
+| c29-c35    | TERTIARY (ORDER_SOURCE at c29)   | 3rd series base->tints              | amber-600->50                               |
+| c36-c42    | QUATERNARY (ORDER_SOURCE at c36) | 4th series base->tints              | red-600->50                                 |
+| c43-c57    | GRAYSCALE                        | Nav/sidebar/text/borders dark->light| neutral-950->white                          |
+| c58-c59    | FONT                             | Dark/light font                     | neutral-950, white                          |
 | c60        | AUTOMATIC_COLOR                  | Do NOT modify                       | Automatic dark/light switching              |
 
 
@@ -1574,20 +1617,27 @@ The theme's `c8-c42` color slots control UI chrome (nav, pills, buttons, backgro
 
 **Important:** The `chartColorPalette` field does NOT accept `type: "CUSTOM"` with inline colors — the API returns `400 Bad Request`. There is no public API for programmatic Brand Kit palette creation; it must be done through the Admin UI.
 
-1. **Most reliable: Set series colors per card via overrides.** Use `PUT /content/v3/cards/kpi/:cardId` to set `series_1_color` through `series_8_color` in the chart `overrides` object. This works for ALL chart types and guarantees the custom palette appears regardless of Brand Kit settings.
-  ```python
-   SERIES_COLORS = ['#3B82C8', '#0D9488', '#D97706', '#DC2626',
-                    '#2661A3', '#059669', '#7C3AED', '#DB2777']
-
-   # Read card → fix format mismatches → add overrides → update
-   for i, color in enumerate(SERIES_COLORS, 1):
-       overrides[f'series_{i}_color'] = color
+1. **Most reliable: Set series colors per card via overrides.** Read the card, fix format mismatches, add overrides, then update:
+  ```bash
+  # Read card definition
+  community-domo-cli --output json cards definition $CARD_ID > card_def.json
+  
+  # Modify in Python — add series colors and fix format mismatches
+  python3 - <<'PYEOF'
+  import json
+  SERIES_COLORS = ['#3B82C8', '#0D9488', '#D97706', '#DC2626',
+                   '#2661A3', '#059669', '#7C3AED', '#DB2777']
+  # ... fix format mismatches, add overrides ...
+  PYEOF
+  
+  # Update
+  community-domo-cli --output json -y cards update $CARD_ID --body-file card_updated.json
   ```
-   **Gotcha — Read/Write format mismatches:** The READ endpoint (`PUT /content/v3/cards/kpi/definition`) returns simplified formats that the WRITE endpoint rejects. You MUST fix these before updating:
-  - `formulas`: read returns `[]` → write needs `{"dsUpdated": [], "dsDeleted": [], "card": []}`
-  - `conditionalFormats`: read returns `[]` → write needs `{"card": [], "datasource": []}`
-  - `annotations`: read returns `[]` → write needs `{"new": [], "modified": [], "deleted": []}`
-  - `segments`: read has `{"active": [], "definitions": []}` → write needs `{"active": [], "create": [], "update": [], "delete": []}`
+   **Gotcha — Read/Write format mismatches:** The READ endpoint returns simplified formats that the WRITE endpoint rejects. You MUST fix these before updating:
+  - `formulas`: read returns `[]` -> write needs `{"dsUpdated": [], "dsDeleted": [], "card": []}`
+  - `conditionalFormats`: read returns `[]` -> write needs `{"card": [], "datasource": []}`
+  - `annotations`: read returns `[]` -> write needs `{"new": [], "modified": [], "deleted": []}`
+  - `segments`: read has `{"active": [], "definitions": []}` -> write needs `{"active": [], "create": [], "update": [], "delete": []}`
   - Must add missing fields: `title`, `description`, `noDateRange`
   - Must remove read-only fields: `modified`, `allowTableDrill`
   - Must provide `dataProvider.dataSourceId` (read returns it as `None` in subscriptions)
@@ -1599,13 +1649,13 @@ The theme's `c8-c42` color slots control UI chrome (nav, pills, buttons, backgro
 - Choose brand hue that works across multiple shades
 - Reject palettes that look good as swatches but fail in cards/buttons/headings
 - For light mode: default to light backgrounds; chart series ORDER_SOURCE colors (c8, c22, c29, c36) must have sufficient contrast on white backgrounds
-- For dark mode: use the dark mode palettes from `domo-app-theme/references/color-palettes.md` and follow the dark mode theme rules below
+- For dark mode: use the dark mode palettes from `domo-app-theme/color-palettes.md` and follow the dark mode theme rules below
 
 #### Dark Mode Theme (CRITICAL — `c60` Font Color Override)
 
 When building an App Studio app with a **dark background** (dark page bg, dark card surfaces), Domo's `c60` AUTOMATIC_COLOR **does not reliably detect dark backgrounds** and defaults to dark text — making ALL native element text invisible. This is the #1 dark mode failure.
 
-**Root cause**: `c60` is an `AUTOMATIC_COLOR` with `dark` → `c58` and `light` → `c59` variants. The Clarion theme treats itself as "light mode" regardless of actual background colors, so it always picks `c59` (dark text). On dark backgrounds, this produces invisible text on cards, navigation, headers, filters, and components.
+**Root cause**: `c60` is an `AUTOMATIC_COLOR` with `dark` -> `c58` and `light` -> `c59` variants. The Clarion theme treats itself as "light mode" regardless of actual background colors, so it always picks `c59` (dark text). On dark backgrounds, this produces invisible text on cards, navigation, headers, filters, and components.
 
 **MANDATORY fix — replace ALL `c60` font color references with `c58`:**
 
@@ -1649,8 +1699,8 @@ for section in ['forms', 'tables', 'notebooks', 'pills', 'tabs']:
 
 | Slot    | Light mode                 | Dark mode                                                |
 | ------- | -------------------------- | -------------------------------------------------------- |
-| c1–c7   | dark→light grays           | light→dark (c1=page bg dark, c5=text light, c7=white)    |
-| c43–c54 | dark nav/sidebar grays     | dark backgrounds matching page bg                        |
+| c1-c7   | dark->light grays          | light->dark (c1=page bg dark, c5=text light, c7=white)  |
+| c43-c54 | dark nav/sidebar grays     | dark backgrounds matching page bg                        |
 | c55     | page bg (ultra-light gray) | page bg (**dark**, e.g., #1E1C1A)                        |
 | c56     | card surface (white)       | card surface (**dark**, e.g., #302C28)                   |
 | c58     | dark font                  | **light font** (e.g., #F5F3F0) — primary text on dark bg |
@@ -1726,12 +1776,12 @@ for pill in theme.get('pills', []):
         pill['radius'] = 0
 ```
 
-### Card Styles (ca1–ca8) — Reference Configuration (MANDATORY)
+### Card Styles (ca1-ca8) — Reference Configuration (MANDATORY)
 
 All card styles MUST follow this reference configuration. Zero border-radius, zero border weight, zero padding, no drop shadow, no content spacing:
 
 ```python
-# ca1–ca7 — clean surface, zero chrome (default for all content cards)
+# ca1-ca7 — clean surface, zero chrome (default for all content cards)
 for card in theme.get('cards', []):
     card['borderRadius'] = 0
     card['borderWidth'] = 0
@@ -1761,7 +1811,7 @@ card['padding'] = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
 | Rounded corners            | **0 px**         | `borderRadius: 0`                             |
 | Border weight              | **0 px**         | `borderWidth: 0`                              |
 | Drop shadow                | **None**         | `dropShadow: 'NONE'`                          |
-| Controls color             | **#2563BE**      | Theme color `c8` → `#2563BE`                  |
+| Controls color             | **#2563BE**      | Theme color `c8` -> `#2563BE`                 |
 | Card inner padding         | **Custom, 0 px** | `padding: {left:0, right:0, top:0, bottom:0}` |
 | Card content spacing       | **Nil**          | `contentSpacing: None` (null)                 |
 | Space below header content | **0 px**         | `headerBottomSpacing: 0`                      |
@@ -1786,7 +1836,7 @@ Card padding values have a **maximum of 16**. Setting `padding` values above 16 
 **All App Studio apps MUST use fixed-width layout.** Auto-width is never acceptable. Set **both**:
 
 1. **Theme-level**: `theme.pages[0].isDynamic = false` and `theme.pages[0].density = {'compact': 8, 'standard': 8}`
-2. **Page-level**: Each page layout's `isDynamic` (via layout PUT) should also be `false`
+2. **Page-level**: Each page layout's `isDynamic` (via layout-set) should also be `false`
 
 ```python
 # Fixed-width — ALWAYS apply this
@@ -1797,13 +1847,12 @@ for page in theme.get('pages', []):
 
 The theme-level setting controls the default; page-level can override.
 
-### Sidebar–Banner Color Tie
+### Sidebar-Banner Color Tie
 
 When using a dark gradient banner, tie the sidebar/navigation background to the same color palette. The nav theme uses color references `c43` (background), `c44` (hover), `c45` (active). Set these to match the banner's gradient endpoints:
 
 ```python
-# Banner gradient: oklch(0.280 0.020 256) → oklch(0.374 0.014 256)
-# ≈ #2A2E35 → #3F454D
+# Banner gradient: oklch(0.280 0.020 256) -> oklch(0.374 0.014 256)
 for c in theme['colors']:
     if c['id'] == 'c43': c['value'] = {'value': '#2A2E35', 'type': 'RGB_HEX'}  # nav bg
     if c['id'] == 'c44': c['value'] = {'value': '#353A42', 'type': 'RGB_HEX'}  # nav hover
@@ -1814,7 +1863,7 @@ This creates visual continuity between the sidebar and page banners. Always do t
 
 ### Navigation Icons
 
-Icons are set via the `/navigation/reorder` endpoint. The body must be the **full navigation array** as returned by GET — partial payloads cause `400 Bad Request`.
+Icons are set via the navigation reorder endpoint. The body must be the **full navigation array** as returned by GET — partial payloads cause `400 Bad Request`.
 
 **HOME icon**: Always set `icon.value = "home"` for the HOME navigation item.
 
@@ -1892,31 +1941,28 @@ your-submissions
 
 | Issue                                             | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Write lock required**                           | You must `PUT /content/v4/pages/layouts/{layoutId}/writelock` before updating a layout. Without it: `403 WL003: Cannot edit without valid writelock`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **Always release the lock**                       | `DELETE /content/v4/pages/layouts/{layoutId}/writelock` after editing. If you don't, no one else can edit the page until the lock times out.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **Cards go to appendix by default**               | When you add a card via `POST /content/v1/pages/{pageId}/cards/{cardId}` or `PUT /content/v3/cards/kpi?pageId=`, it goes to the appendix. You must update the layout to move it to the canvas.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **layoutId ≠ pageId**                             | Each page has its own `layoutId` (a different numeric ID). Get it from `GET /content/v4/pages/{pageId}/layouts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Write lock handled by CLI**                     | The CLI's `layout-set` command automatically acquires and releases write locks. No manual lock management needed. If using raw API calls, you must `PUT /content/v4/pages/layouts/{layoutId}/writelock` before and `DELETE` after.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Cards go to appendix by default**               | When you add a card via `pages add-card` or `cards create --page-id`, it goes to the appendix. You must update the layout via `layout-set` to move it to the canvas.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **layoutId != pageId**                            | Each page has its own `layoutId` (a different numeric ID). Get it from `layout-get`. The `layout-set` body **must contain `layoutId`** or the CLI raises an error.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **viewId = pageId**                               | In App Studio, the `viewId` from the app structure IS the `pageId` for card and layout operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Template must account for ALL content keys**    | Every `contentKey` present in the `content` array MUST have a corresponding entry in BOTH `standard.template` AND `compact.template`. If any key is missing from either template, the PUT returns `400 Bad Request` with no detail. This is the #1 cause of layout update failures.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **Appendix artifacts MUST be preserved**          | When Domo adds cards to the appendix, it auto-generates `PAGE_BREAK` and `SEPARATOR` entries in the template with `contentKey` values that do NOT exist in the `content` array. These template-only entries MUST be included in your updated template (keep them as `virtualAppendix: true, virtual: true`). Removing them causes `400 Bad Request`. Always diff `content` keys vs `template` keys before building your new layout.                                                                                                                                                                                                                                                                                                                  |
 | **Content keys may have gaps**                    | Domo assigns `contentKey` values incrementally, but gaps occur (e.g., 1,2,3,4,5,6,7,8,9,11,12 — key 10 is skipped). Never assume sequential keys. Always read the layout to get actual keys.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **standard + compact both required**              | The PUT body must include both `standard` (desktop) and `compact` (mobile) template arrays. Both must contain entries for all content keys.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **standard + compact both required**              | The layout body must include both `standard` (desktop) and `compact` (mobile) template arrays. Both must contain entries for all content keys.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | **Content array is managed by Domo**              | When creating cards on a page, Domo auto-populates the `content` array with full card properties (`hideTitle`, `hideFooter`, `acceptFilters`, etc.). You can modify these entries (e.g., change header `text`) but should not add or remove `CARD` entries manually — only move them between canvas and appendix via the template.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **LEFT nav requires `showDomoNavigation: false`** | Setting `navOrientation` to `LEFT` while `showDomoNavigation` is `true` causes `400 Bad Request`. All LEFT-nav apps in production have `showDomoNavigation: false`. Set both in the same PUT.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **View creation body format**                     | `POST /content/v1/dataapps/:id/views` requires the `view` sub-object directly as the body — NOT wrapped in `{"view": {...}}` or `{"title": "..."}`. The body must include `type: "dataappview"`, `title`, `pageName`, and an `owners` array.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **App PUT requires full body**                    | The `PUT /content/v1/dataapps/:id` endpoint rejects partial bodies with `400 Bad Request`. You must send the complete app object from GET. Read-only fields like `userAccess`, `isOwner`, `isFavorite`, `canEdit` are safely ignored by the server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **LEFT nav requires `showDomoNavigation: false`** | Setting `navOrientation` to `LEFT` while `showDomoNavigation` is `true` causes `400 Bad Request`. All LEFT-nav apps in production have `showDomoNavigation: false`. Set both in the same update.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **View creation body format**                     | `create-view` requires the `view` sub-object directly as the body — NOT wrapped in `{"view": {...}}` or `{"title": "..."}`. The body must include `type: "dataappview"`, `title`, `pageName`, and an `owners` array.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **App update requires full body**                 | The `app-studio update` command rejects partial bodies with `400 Bad Request`. You must send the complete app object from `app-studio get`. Read-only fields like `userAccess`, `isOwner`, `isFavorite`, `canEdit` are safely ignored by the server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **New apps have `isDynamic: false`**              | Newly created App Studio apps have `isDynamic: false` in their layout (unlike apps created via the UI which may have `isDynamic: true`). This does not affect layout operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **New apps have `enabled: true`**                 | Newly created apps include an `enabled` field in the layout response. Preserve this when PUTting updates.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **New apps have `enabled: true`**                 | Newly created apps include an `enabled` field in the layout response. Preserve this when updating layouts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **Style is per-content-entry**                    | Card styles (`"style": {"sourceId": "ca8"}`) are set in the `content` array, not in the template. The same card can have different styles on different pages.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | **No card duplication**                           | Adding the same card to multiple pages doesn't duplicate it — it's the same card rendered on each page. Filter interactions are shared.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **GET uses `/layouts` (plural)**                  | The GET endpoint is `/content/v4/pages/{pageId}/layouts` (plural), but the PUT endpoint is `/content/v4/pages/layouts/{layoutId}` (singular with layout ID in path).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **DELETE removes card from page only**            | `DELETE /content/v1/pages/{pageId}/cards/{cardId}` removes the card-page association, not the card itself. The card continues to exist in Domo and on other pages.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **Overview page is `-100000`**                    | The Domo overview/home page has the special page ID `-100000`. Adding cards to it works with the same `POST /content/v1/pages/-100000/cards/{cardId}` endpoint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Overview page is `-100000`**                    | The Domo overview/home page has the special page ID `-100000`. Use `pages add-card -- -100000 $CARD_ID` (note `--` before the negative ID).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | **Cards on overview != cards in App Studio**      | Adding a card to page `-100000` puts it on the Domo overview page. It does NOT appear inside App Studio views. To have cards in App Studio, add them to the specific view `pageId`. These are independent assignments.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Cards from different datasets on same page**    | An App Studio page can contain cards powered by different datasets. There is no restriction. This was verified with a page containing 23 cards across 2 datasets.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Hex values MUST be uppercase**                  | Color hex values in the theme (e.g., `#3F454D`) must use uppercase letters. Lowercase hex (e.g., `#3f454d`) causes `400 Bad Request` on PUT.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Hex values MUST be uppercase**                  | Color hex values in the theme (e.g., `#3F454D`) must use uppercase letters. Lowercase hex (e.g., `#3f454d`) causes `400 Bad Request` on update.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **Card padding max is 16**                        | Card `padding` values (left/right/top/bottom) cannot exceed 16. Values like 20 cause `400 Bad Request`. Use 16 for maximum padding.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **Nav reorder requires full array**               | The `/navigation/reorder` endpoint requires the complete navigation array as returned by GET. Sending a subset or partial objects causes `400`. **CRITICAL: You MUST preserve all default system nav items** (HOME, AI_ASSISTANT, CONTROLS, DISTRIBUTE, MORE/Details) when reordering. First GET the app to read `navigations[]`, then modify only the `icon` and `navOrder` fields — never drop items. Missing system items makes the app uneditable from the UI. **If HOME is missing from the navigations array (some new apps don't include it by default), add it explicitly**: `{"entity": "HOME", "title": "Home", "icon": {"type": "NAME", "value": "home"}, "visible": true}`. Without HOME, users cannot navigate back to the Domo portal. |
+| **Nav reorder requires full array**               | The navigation reorder endpoint requires the complete navigation array. Sending a subset causes `400`. **CRITICAL: Preserve all default system nav items** (HOME, AI_ASSISTANT, CONTROLS, DISTRIBUTE, MORE/Details). **If HOME is missing (some new apps don't include it), add it explicitly**: `{"entity": "HOME", "title": "Home", "icon": {"type": "NAME", "value": "home"}, "visible": true}`. Without HOME, users cannot navigate back to the Domo portal.                                                                                                                                                                                                                                                                                     |
 | **Theme pages[0].isDynamic controls fixed width** | Setting `theme.pages[0].isDynamic = false` with `density: {'compact': 8, 'standard': 8}` creates a fixed-width layout. This is independent of per-page layout `isDynamic`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **LEFT nav: hide title and logo**                 | For `navOrientation: 'LEFT'`, set `showTitle: false` and `showLogo: false`. The page names in the left nav already identify the app — the title wastes vertical space.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Sidebar color must match banner**               | When using a dark gradient banner, update `c43`/`c44`/`c45` to match the banner's gradient palette. Mismatched sidebar and banner colors break visual continuity.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -1928,20 +1974,23 @@ your-submissions
 | **Pro-code colors are NOT inherited**             | Pro-code components render in iframes and use their own CSS — they do NOT inherit the App Studio theme colors. When the theme palette changes, every pro-code component (banners, charts) must be manually updated with the new hex values AND republished via `domo publish`. Forgetting this creates jarring green-charts-on-copper-theme mismatches.                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Font family must match across all surfaces**    | The App Studio theme `fonts[].family` (Sans/Serif/Slab) must match all pro-code CSS `font-family` stacks. Mixing Serif native cards with Sans pro-code charts looks broken. When updating fonts, update BOTH the theme AND every pro-code `app.css`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | **Nav icons: use only catalog names**             | Domo uses its own internal icon set (133 verified names). Google Material icon names like `inventory_2`, `assignment_return`, `trending_up` render as blank/invisible. See the "Complete Domo icon catalog" section above. Always pick from the verified catalog.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Chart types require `badge_` prefix**           | All native chart type names use the `badge_` prefix: `badge_vert_bar` (not `bar`), `badge_two_trendline` (not `line`), `badge_pie` (not `pie`), etc. Using short names like `"chartType": "bar"` causes `400 Bad Request` with no detail. See the Quick Reference table above or `card-creation/SKILL.md` for the full catalog of 207 chart type names.                                                                                                                                                                                                                                                                                                                                                                                              |
+| **`badge_line` always returns 400**               | `badge_line` is the only known broken chart type — always returns HTTP 400 on creation regardless of body structure. Use `badge_two_trendline` (full-featured, 203 overrides) or `badge_spark_line` (compact, 40 overrides) instead. Verified broken as of February 2026.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **`badge_area` is not a valid type**              | There is no `badge_area` chart type. Use `badge_vert_area_overlay` for standard area charts, `badge_vert_curved_area_overlay` for curved area, or `badge_stackedtrend` for stacked area. All area types use the `badge_vert_*` or `badge_horiz_*` prefix pattern.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 
 ### Layout Update Debugging Checklist
 
-If a layout PUT returns `400 Bad Request`, check these in order:
+If a layout update returns `400 Bad Request`, check these in order:
 
 1. **Missing template entries**: Compare content keys (from `content` array) with template keys (from `standard.template`). Every content key must appear in both `standard` and `compact` templates.
 2. **Missing appendix artifacts**: Check for `PAGE_BREAK` and `SEPARATOR` entries in the existing template that have `contentKey` values NOT in the `content` array. These must be preserved.
 3. **Template key mismatch**: Ensure the same set of `contentKey` values appears in `standard.template` and `compact.template`.
 4. **Children field**: Every template entry must include `"children": null` (or be omitted). Observed in all working layouts.
-5. **Missing write lock**: Ensure you acquired the write lock before PUTting.
+5. **Missing layoutId in body**: The CLI requires `layoutId` in the body JSON to build the lock/PUT/unlock URLs.
 
 ```python
-# Debugging helper — run this before any layout PUT
+# Debugging helper — run this before any layout update
 content_keys = {c["contentKey"] for c in layout["content"]}
 std_keys = {t["contentKey"] for t in layout["standard"]["template"]}
 cmp_keys = {t["contentKey"] for t in layout["compact"]["template"]}
@@ -1957,3 +2006,29 @@ if in_std_not_cmp:
 # in_std_not_content is OK — these are SEPARATOR/PAGE_BREAK appendix artifacts
 ```
 
+---
+
+## Endpoint Reference
+
+| Operation | CLI command | Notes |
+|---|---|---|
+| List apps | `app-studio list` | |
+| Get app | `app-studio get APP_ID` | Includes views, nav, theme |
+| Create app | `app-studio create --body-file` | Returns dataAppId + landingViewId |
+| Update app | `app-studio update APP_ID --body-file` | Full body required |
+| Create view | `app-studio create-view APP_ID --body-file` | Returns view + layout |
+| **List views** | *(use `app-studio get`, read `views[]`)* | Dedicated endpoint is dead (405) |
+| Get layout | `app-studio layout-get APP_ID VIEW_ID` | |
+| Update layout | `app-studio layout-set APP_ID VIEW_ID --body-file` | Auto write lock |
+| Get navigation | `pages nav-get` | Instance-wide |
+| Reorder pages | `pages nav-reorder --body` | |
+| List page cards | `pages list-cards PAGE_ID` | |
+| Add card to page | `pages add-card PAGE_ID CARD_ID` | Goes to appendix |
+| Create card | `cards create --page-id PAGE_ID --body-file` | Goes to appendix |
+| Update card | `cards update CARD_ID --body-file` | |
+| Read card definition | `cards definition CARD_ID` | Fix format mismatches before write |
+| Dataset schema | `datasets schema DATASET_ID` | |
+| Upload file/icon | `files upload --file-path FILE` | |
+| DomoApps context | `domoapps context-create --body-file` | |
+| DomoApps card | `domoapps card-create --page-id PAGE_ID --body` | |
+| Create variable | `beast-modes create --body-file` | Set `variable: true` |

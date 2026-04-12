@@ -1388,7 +1388,7 @@ Conditional formats allow color-coding values based on rules. The structure **mu
 import json
 import urllib.request
 
-INSTANCE = "your-instance.domo.com"
+INSTANCE = "domo.domo.com"
 API_KEY = "your-developer-token"
 PAGE_ID = "1227718422"
 DATASET_ID = "d118d4fb-474a-487d-9e88-2b721a1b8a7f"
@@ -1520,7 +1520,7 @@ with urllib.request.urlopen(req) as resp:
 ### curl: Create a Card
 
 ```bash
-curl -X PUT "https://your-instance.domo.com/api/content/v3/cards/kpi?pageId=1227718422" \
+curl -X PUT "https://domo.domo.com/api/content/v3/cards/kpi?pageId=1227718422" \
   -H "X-DOMO-Developer-Token: YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1561,7 +1561,7 @@ curl -X PUT "https://your-instance.domo.com/api/content/v3/cards/kpi?pageId=1227
 ### curl: Read a Card
 
 ```bash
-curl -X PUT "https://your-instance.domo.com/api/content/v3/cards/kpi/definition" \
+curl -X PUT "https://domo.domo.com/api/content/v3/cards/kpi/definition" \
   -H "X-DOMO-Developer-Token: YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"dynamicText":true,"variables":true,"urn":"CARD_ID"}'
@@ -1570,7 +1570,7 @@ curl -X PUT "https://your-instance.domo.com/api/content/v3/cards/kpi/definition"
 ### curl: Copy a Card
 
 ```bash
-curl -X POST "https://your-instance.domo.com/api/content/v1/cards/CARD_ID/copy" \
+curl -X POST "https://domo.domo.com/api/content/v1/cards/CARD_ID/copy" \
   -H "X-DOMO-Developer-Token: YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -1579,7 +1579,7 @@ curl -X POST "https://your-instance.domo.com/api/content/v1/cards/CARD_ID/copy" 
 ### curl: Delete a Card
 
 ```bash
-curl -X DELETE "https://your-instance.domo.com/api/content/v1/cards/CARD_ID" \
+curl -X DELETE "https://domo.domo.com/api/content/v1/cards/CARD_ID" \
   -H "X-DOMO-Developer-Token: YOUR_TOKEN"
 ```
 
