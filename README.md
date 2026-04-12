@@ -37,7 +37,7 @@ description: One line describing when to use this skill.
 
 Use `name:` and `description:` as real YAML keys (not Markdown headings like `## name:`). No blank lines inside the block, and the closing `---` is required. If you add or edit skills in a fork, follow this format or `npx skills add … --all` will silently omit them.
 
-For new Domo app builds, ask your agent to start with the `basic-app-build` skill first — it sequences the other skills for you.
+For new Domo app builds, ask your agent to start with the `basic-custom-app-build` skill first — it sequences the other skills for you.
 
 ## Why This Organization
 
@@ -69,9 +69,9 @@ More directories can be added as new skills are contributed.
 
 ### Demo skills (`skills/(demo-skills)/`)
 
-- `basic-app-build` — Kickoff sequence for new Domo app builds; routes to the right rules and skills in order.
-- `basic-app-build-w-video` — `basic-app-build` plus Remotion-oriented styling, sample data, and a short demo video phase.
-- `app-studio-demo` — Micro-demo App Studio app (pages, theme, heroes, native cards, layout) using `advanced-app-studio` + `domo-app-theme`.
+- `basic-custom-app-build` — Kickoff sequence for new Domo app builds; routes to the right rules and skills in order.
+- `basic-custom-app-build-w-video` — `basic-custom-app-build` plus Remotion-oriented styling, sample data, and a short demo video phase.
+- `app-studio-dataset-etl-gen-demo` — Vertical App Studio micro-demo: optional datasets + ETL, then themed pages using `advanced-app-studio` + `domo-app-theme` and `references/*.md` packs.
 
 ### Custom apps (`skills/custom-apps/`)
 
@@ -133,7 +133,8 @@ More directories can be added as new skills are contributed.
 
 ### Transformation (`skills/transformation/`)
 
-- `magic-etl` — Create, update, and execute Magic ETL dataflows programmatically via API and CLI. Covers DAG-based JSON dataflow definitions, input/transform/output node wiring, and execution lifecycle.
+- `magic-etl` — Magic ETL via Domo REST API (and Java CLI for some read/run paths); DAG JSON, mixed API patterns.
+- `magic-etl-cli` — Same domain with **community-domo-cli** as the primary interface (`dataflows` list/get/create/update/run).
 
 ### Data Generation (`skills/datagen/`)
 
@@ -150,9 +151,9 @@ Each skill is a folder with a single entrypoint `SKILL.md` (supporting files liv
 ```text
 skills/
 ├── (demo-skills)/
-│   ├── app-studio-demo/SKILL.md
-│   ├── basic-app-build/SKILL.md
-│   └── basic-app-build-w-video/SKILL.md
+│   ├── app-studio-dataset-etl-gen-demo/SKILL.md
+│   ├── basic-custom-app-build/SKILL.md
+│   └── basic-custom-app-build-w-video/SKILL.md
 ├── administration/workspaces/SKILL.md
 ├── app-studio/
 │   ├── advanced-app-studio/SKILL.md
@@ -197,7 +198,9 @@ skills/
 │   ├── jsapi-filters/SKILL.md
 │   └── programmatic-filters/SKILL.md
 ├── themes/domo-app-theme/SKILL.md
-└── transformation/magic-etl/SKILL.md
+└── transformation/
+    ├── magic-etl-cli/SKILL.md
+    └── magic-etl/SKILL.md
 
 rules/
 ├── core-custom-apps-rule.md
@@ -266,5 +269,5 @@ If that happens, ask your agent to manually copy the specific `skills/<feature>/
   - `domo-card-crud.md`
   - `chart_type_options_complete.json`
   - `skills/documents/html-deck/references/assets/domologo.png`
-- Keep `basic-app-build` as the canonical demo skill name across docs and skills.
+- Keep `basic-custom-app-build` as the canonical demo skill name for new custom-app kickoffs across docs and skills.
 - `ryuu.js` filter listener naming changed across versions (`onFiltersUpdated` vs `onFiltersUpdate`); current docs include compatibility guidance, but this should be normalized in a later cleanup pass.

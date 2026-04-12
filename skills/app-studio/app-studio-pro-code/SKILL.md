@@ -1,13 +1,13 @@
 ---
 name: app-studio-pro-code
-description: Build and embed pro-code JavaScript custom apps inside Domo App Studio pages. Bridges the custom app build pipeline (basic-app-build, domo-app-theme) with App Studio card placement (app-studio). Covers decision routing between native cards and pro-code apps, build orchestration with design skills, canvas integration, page-level filter propagation (domo.onFiltersUpdated), App Studio variable integration (domo.onVariablesUpdated, domo.requestVariablesUpdate), and the pending/commit pattern for variable state management. Use when a visualization or interaction exceeds native card capabilities, when the user mentions pro-code editor, or when embedding custom apps in App Studio.
+description: Build and embed pro-code JavaScript custom apps inside Domo App Studio pages. Bridges the custom app build pipeline (basic-custom-app-build, domo-app-theme) with App Studio layout (basic-app-studio, advanced-app-studio). Covers decision routing between native cards and pro-code apps, build coordination with design skills, canvas integration, page-level filter propagation (domo.onFiltersUpdated), App Studio variable integration (domo.onVariablesUpdated, domo.requestVariablesUpdate), and the pending/commit pattern for variable state management. Use when a visualization or interaction exceeds native card capabilities, when the user mentions pro-code editor, or when embedding custom apps in App Studio.
 ---
 
 # Pro-Code Custom Apps in App Studio
 
 > **CUSTOM PALETTE REQUIRED**: Never use Domo's native/default color palette. Always use the project's curated palette selected from `domo-app-theme/references/color-palettes.md`. Use OKLCH values directly in pro-code CSS; convert to hex for native card overrides. All chart series, text, grid, and status colors must use the chosen palette.
 
-App Studio's Pro Code Editor allows embedding full JavaScript custom apps as cards on the App Studio canvas. This skill bridges two existing workflows: building custom apps (`basic-app-build`) and placing cards on App Studio pages (`app-studio`).
+App Studio's Pro Code Editor allows embedding full JavaScript custom apps as cards on the App Studio canvas. This skill bridges two existing workflows: building custom apps (`basic-custom-app-build`) and placing cards on App Studio pages (`basic-app-studio` / `advanced-app-studio`).
 
 ## When to Use
 
@@ -64,7 +64,7 @@ Use `app-studio` to create and place native cards (items 1–6 above). Follow th
 
 ### Step 3 — Build pro-code apps
 
-For each pro-code component, run through the `basic-app-build` playbook with the following skill stack pre-loaded:
+For each pro-code component, run through the `basic-custom-app-build` playbook with the following skill stack pre-loaded:
 
 **Always load:**
 - Custom palette from `domo-app-theme/references/color-palettes.md` — select a curated OKLCH palette suited to the use case
@@ -73,7 +73,7 @@ For each pro-code component, run through the `basic-app-build` playbook with the
 **Load when applicable:**
 - `writing-better` — when the app has significant user-facing text (labels, tooltips, error messages, empty states, help text).
 
-The `basic-app-build` phases apply in full: manifest, app shell, data access, storage, toolkit, feature skills, performance review, build, publish.
+The `basic-custom-app-build` phases apply in full: manifest, app shell, data access, storage, toolkit, feature skills, performance review, build, publish.
 
 ### Step 4 — Create card instances and place on the App Studio page
 
@@ -394,7 +394,7 @@ for card_def in kpi_definitions:
         headers=HEADERS, json=card_def)
     kpi_ids.append(resp.json()["id"])
 
-# 3. Build and publish the Gantt custom app (via basic-app-build skill)
+# 3. Build and publish the Gantt custom app (via basic-custom-app-build skill)
 # ... scaffold, code, npm run build, cd dist, domo publish ...
 gantt_design_id = "abc12345-..."  # from manifest.json id field
 

@@ -7,7 +7,7 @@ description: Capture animated demo videos of deployed Domo App Studio apps using
 
 > **What this is**: A Playwright-based pipeline that opens a real Domo App Studio app in an authenticated headless browser, navigates through pages, scrolls, and records a polished demo video. Captures the full production experience — left-nav, native cards, pro-code iframes, applied theme, live data.
 >
-> **What this is NOT**: This is not Remotion. It does not render React components in Node.js or use sample data. If you need component-level rendering with synthetic data and animated cursors, use `basic-app-build-w-video` instead.
+> **What this is NOT**: This is not Remotion. It does not render React components in Node.js or use sample data. If you need component-level rendering with synthetic data and animated cursors, use `basic-custom-app-build-w-video` instead.
 
 ## When to Use
 
@@ -463,9 +463,9 @@ subprocess.run([
 
 ---
 
-## Comparison with basic-app-build-w-video
+## Comparison with basic-custom-app-build-w-video
 
-| Aspect | app-studio-demo-capture (this skill) | basic-app-build-w-video |
+| Aspect | app-studio-demo-capture (this skill) | basic-custom-app-build-w-video |
 |--------|--------------------------------------|------------------|
 | Captures | Real deployed App Studio app in browser | React components in Remotion |
 | Data | Live Domo data | Synthetic TypeScript arrays |
@@ -476,7 +476,7 @@ subprocess.run([
 | Cursor animation | Not included (real browser cursor) | AnimatedCursor component |
 | Best for | App Studio apps, eval screenshots, stakeholder demos | Standalone custom apps, product marketing |
 
-**Use both together**: `basic-app-build-w-video` for component-level hero shots with animated cursor, `app-studio-demo-capture` for the full-chrome production walkthrough. Stitch both into a final video with ffmpeg.
+**Use both together**: `basic-custom-app-build-w-video` for component-level hero shots with animated cursor, `app-studio-demo-capture` for the full-chrome production walkthrough. Stitch both into a final video with ffmpeg.
 
 ---
 

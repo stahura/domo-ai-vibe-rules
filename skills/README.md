@@ -6,11 +6,11 @@ Each subfolder here is one skill with a single entrypoint:
 skills/<feature>/<skill-name>/SKILL.md
 ```
 
-Some groups use a parenthetical folder name (valid on disk), e.g. `skills/(demo-skills)/basic-app-build/SKILL.md`.
+Some groups use a parenthetical folder name (valid on disk), e.g. `skills/(demo-skills)/basic-custom-app-build/SKILL.md`.
 
 Current feature groups:
 
-- `(demo-skills)/` — end-to-end orchestration runbooks that pull in other skills in order (`basic-app-build`, `basic-app-build-w-video`, `app-studio-demo`)
+- `(demo-skills)/` — end-to-end orchestration runbooks that pull in other skills in order (`basic-custom-app-build`, `basic-custom-app-build-w-video`, `app-studio-dataset-etl-gen-demo`)
 - `administration/`
 - `app-studio/` — App Studio (CLI + REST concepts): apps/views/layouts/cards, theme, native cards, beast modes, variables, pro-code embedding, Playwright demo capture; includes **`basic-app-studio`** (lean CLI ops) and **`advanced-app-studio`** (full reference)
 - `custom-apps/` — Domo App Platform custom-app runtime: `domo.js`, `@domoinc/query`, toolkit, AppDB, AI, Code Engine, workflows, manifest, publish, migrations, filesets API, performance
@@ -20,7 +20,7 @@ Current feature groups:
 - `documents/`
 - `domo-everywhere/`
 - `themes/`
-- `transformation/`
+- `transformation/` — `magic-etl` (API-first), `magic-etl-cli` (community-domo-cli dataflows)
 
 CLI skills currently available:
 

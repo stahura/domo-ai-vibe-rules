@@ -41,8 +41,8 @@ alwaysApply: true
 - Files / Filesets / Groups / User / Task Center
 
 ## Skill routing
-- New app build playbook -> `skills/(demo-skills)/basic-app-build/SKILL.md`
-- App Studio micro-demo orchestration (pages, theme, heroes) -> `skills/(demo-skills)/app-studio-demo/SKILL.md`
+- New app build playbook -> `skills/(demo-skills)/basic-custom-app-build/SKILL.md`
+- App Studio + dataset/ETL vertical demo -> `skills/(demo-skills)/app-studio-dataset-etl-gen-demo/SKILL.md`
 - Dataset querying -> `skills/custom-apps/dataset-query/SKILL.md`
 - Data API overview -> `skills/custom-apps/data-api/SKILL.md`
 - domo.js usage -> `skills/custom-apps/domo-js/SKILL.md`
@@ -77,3 +77,5 @@ alwaysApply: true
 - Embed portal (full external-user portal) -> `skills/domo-everywhere/embed-portal/SKILL.md`
 - HTML slide deck to PDF -> `skills/documents/html-deck/SKILL.md`
 - Default app theme -> `skills/themes/domo-app-theme/SKILL.md`
+- Magic ETL (API-first / mixed) -> `skills/transformation/magic-etl/SKILL.md`
+- Magic ETL (community-domo-cli dataflows) -> `skills/transformation/magic-etl-cli/SKILL.md`

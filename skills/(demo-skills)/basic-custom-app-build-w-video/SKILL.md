@@ -1,5 +1,5 @@
 ---
-name: basic-app-build-w-video
+name: basic-custom-app-build-w-video
 description: Orchestrates a new Domo custom app build with Remotion-compatible styling, sample data generation, and automatic demo video creation. Use when you want to build a Domo app AND produce a polished 10-15 second demo video of it in one workflow.
 ---
 
@@ -10,7 +10,7 @@ description: Orchestrates a new Domo custom app build with Remotion-compatible s
 - Building a new Domo custom app that needs a demo video for stakeholders, documentation, or marketing.
 - Taking over an existing app and producing a visual demo alongside normalization.
 
-## How this differs from `basic-app-build`
+## How this differs from `basic-custom-app-build`
 
 This playbook wraps the standard Domo app build with three additions:
 

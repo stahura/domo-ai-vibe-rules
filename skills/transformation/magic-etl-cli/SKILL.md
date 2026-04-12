@@ -1,6 +1,6 @@
 ---
-name: magic-etl
-description: Create, update, and execute Magic ETL dataflows programmatically via API and CLI. Covers DAG-based JSON dataflow definitions, input/transform/output node wiring, join operations, and execution lifecycle.
+name: magic-etl-cli
+description: Magic ETL dataflows via community-domo-cli — list, get-definition, create, update, run, execution status; JSON DAG actions, transforms, joins. Use when automating dataflows with the community Domo CLI end-to-end. For REST/Java-CLI–first flows or mixed API patterns, use magic-etl instead.
 ---
 
 # Creating Magic ETL Dataflows Programmatically in Domo

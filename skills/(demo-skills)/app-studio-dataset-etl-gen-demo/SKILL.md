@@ -1,11 +1,10 @@
 ---
-
-## name: app-studio-demo
-
-description: Orchestrate a micro-demo Domo App Studio app — multi-page canvas, domo-app-theme palette, hero rows, native charts, filter cards, and left navigation with Domo-native icon names only. Delegates to advanced-app-studio and domo-app-theme; optional demo-packs per vertical. Use when the user wants a new App Studio demo, extra pages on an existing app, or asks for "app studio", "create app", "dashboard", or themed executive layouts.
+name: app-studio-dataset-etl-gen-demo
+description: Vertical App Studio micro-demo with optional dataset creation (domo-data-generator), ETL (magic-etl-cli or magic-etl), then multi-page layout using advanced-app-studio + domo-app-theme. Picks industry packs from references/*.md. Use when building an App Studio walkthrough that needs realistic data pipelines and themed pages per vertical.
 alwaysApply: false
+---
 
-# Micro-Demo: App Studio App
+# Micro-Demo: App Studio App (dataset + ETL + demo)
 
 ## Skills
 
@@ -36,7 +35,7 @@ Needs dataset id's to power cards. Sources:
 ## Procedure
 
 1. (If user does not provide) Create Datasets with the `domo-data-generator` skill
-2. (If user does not provide) Create ETL with the `magic-etl` skill
+2. (If user does not provide) Create ETL with the `magic-etl-cli` skill (or `magic-etl` for API-oriented dataflow work)
 3. **Create app**:
 4. **Create pages**:
 5. **Apply theme**: GET theme → from domo-app-theme/themes
