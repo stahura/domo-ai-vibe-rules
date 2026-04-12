@@ -355,7 +355,7 @@ schema:
 | `min` / `max` | `random_int`, `random_decimal` | Value range |
 | `precision` | `random_decimal` | Decimal places |
 | `template` | `compound` | String template with `{field}` placeholders |
-| `refs` | `compound` | Column references for template substitution |
+| `refs` | `compound` | Column references for template substitution — **must be a YAML list** of column name strings (e.g. `["sku", "line_id"]`), **not** a dict/object. A dict triggers `ValidationError: schema.N.refs — Input should be a valid list`. |
 | `start_days_ago` / `end_days_ahead` | `date_range` | Date range relative to today |
 | `rolling` | `date_range` | Enable date rolling for freshness |
 | `mapping` | `stage_derived` | Map source values to derived values |
@@ -363,6 +363,17 @@ schema:
 | `format` | `derived_from_date` | Date format string |
 | `faker_method` | `faker` | Faker library method name |
 | `faker_args` | `faker` | Arguments for the Faker method |
+
+> **`compound` `refs` vs formatted random strings:** For values like `PO-12345`, prefer **`faker`** with **`bothify`** instead of abusing `compound` / `refs`:
+>
+> ```yaml
+> - name: purchase_order_ref
+>   type: STRING
+>   generator: faker
+>   faker_method: bothify
+>   faker_args:
+>     text: "PO-#####"
+> ```
 
 ---
 

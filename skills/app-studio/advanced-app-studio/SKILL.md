@@ -265,15 +265,14 @@ LAYOUT_ID=$(python3 -c "import json; d=json.load(open('view_response.json')); pr
 
 ---
 
+> **Never search for user IDs.** Always get `owner_id` from `app['owners'][0]['id']` in the app's own GET response — never call `users list` or `users me` to find it.
+
 ## Navigation
 
 Navigation cannot be updated via `app-studio update` — changes to `navigations[]` in the PUT
 body are silently ignored. Use the `pages` CLI commands below.
 
-> **Endpoint note**: The CLI `pages` commands use global Domo page navigation endpoints, which
-> differ from the App Studio-specific navigation endpoints. For App Studio apps, these commands
-> work for reading nav state and reordering pages. Icon and label updates for App Studio nav
-> items are not supported by the current CLI commands.
+> **Endpoint note**: The CLI `pages` commands use global Domo page navigation endpoints. For App Studio apps they are useful for **reading** nav state and **reordering** page order only. They do **not** set nav icons or icon labels for App Studio (see **Navigation Icons**).
 
 ### Read Navigation
 
@@ -298,6 +297,8 @@ community-domo-cli --output json -y pages nav-reorder \
 
 The `pageOrderMap` key `"0"` is the root level. Value is a comma-separated string of page/view
 IDs in the desired order. Send only the IDs you want reordered.
+
+**Icons:** `nav-reorder` does **not** assign or change left-nav page icons — only sort order. Set icons in the App Studio UI (see **Navigation Icons**).
 
 ---
 
@@ -1032,6 +1033,8 @@ Create each hero card with `cards create --page-id`:
 3. `**time_period` subscription** with the same date column
 
 Without all three, the PoP comparison shows "0" instead of actual prior period values.
+
+> **Card subscription `aggregation` values:** Valid strings are **`SUM`**, **`COUNT`**, **`AVG`**, **`MIN`**, **`MAX`**. Do **not** use **`AVERAGE`** — it is not accepted by the card create API (non-200 response, null card id). Use **`AVG`** for averages.
 
 ```python
 DATE_RANGE_FILTER = {
@@ -1868,11 +1871,15 @@ This creates visual continuity between the sidebar and page banners. Always do t
 
 ### Navigation Icons
 
-Icons are set via the navigation reorder endpoint. The body must be the **full navigation array** as returned by GET — partial payloads cause `400 Bad Request`.
+> **Programmatic icon updates are not supported.** Navigation icon updates are **not** available through current `community-domo-cli` commands. There is no CLI subcommand and no REST path exposed via the CLI that reliably sets App Studio left-nav icons. Attempted routes (`PUT /content/v1/dataapps/{id}/navigations`, full app `PUT` with `navigations` embedded, `PUT /content/v1/pages/{id}` with an icon body) have been observed to **404**, **405**, or **silently ignore** icon fields.
+>
+> **Set icons in the UI:** open the app → left nav → hover a page → click the icon to change it.
+>
+> The name catalog below remains valid **as a picker reference** for icon values you choose in the UI.
 
-**HOME icon**: Always set `icon.value = "home"` for the HOME navigation item.
+**HOME icon (when editing in UI):** use `home` for the HOME item.
 
-**WARNING**: Google Material icon names (`monetization_on`, `trending_up`, `inventory_2`, `assignment_return`) do NOT render in Domo's left nav. Domo uses its own internal icon set. **ONLY use icons from the catalog below.** If an icon name is wrong, the nav item renders with no visible icon (blank space).
+**WARNING:** Google Material icon names (`monetization_on`, `trending_up`, `inventory_2`, `assignment_return`) do **not** render in Domo's left nav. Domo uses its own icon set. **Only** use names from the catalog below. Wrong names show as blank space.
 
 #### Recommended icons by page type
 
