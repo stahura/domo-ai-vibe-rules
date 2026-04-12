@@ -38,22 +38,31 @@ datagen init
 # Edit .env with your Domo credentials
 ```
 
+If `.env.example` is missing or you want a clean start, create `.env` in the working directory with:
+
+```bash
+cat > .env <<'EOF'
+DOMO_CLIENT_ID=your_client_id_here
+DOMO_CLIENT_SECRET=your_client_secret_here
+DOMO_API_HOST=api.domo.com
+DOMO_INSTANCE=your_instance_name
+DOMO_SET_CONNECTOR_TYPE=false
+EOF
+```
+
 ### Required Environment Variables
 
-Edit the `.env` file created by `datagen init`:
+| Variable | Purpose |
+|----------|---------|
+| `DOMO_CLIENT_ID` | OAuth client identifier |
+| `DOMO_CLIENT_SECRET` | OAuth client secret |
+| `DOMO_API_HOST` | API endpoint hostname |
+| `DOMO_INSTANCE` | Domo instance name |
+| `DOMO_SET_CONNECTOR_TYPE` | Enable connector icon customization (optional, default: false) |
 
-| Variable | Purpose | Required for |
-|----------|---------|-------------|
-| `DOMO_INSTANCE` | Domo instance name (e.g. `mycompany`) | All Domo operations |
-| `DOMO_DEVELOPER_TOKEN` | Access token from Domo Admin | Connector icons, provider discovery |
-| `DOMO_CLIENT_ID` | OAuth client ID | Dataset creation, data upload |
-| `DOMO_CLIENT_SECRET` | OAuth client secret | Dataset creation, data upload |
-
-To create OAuth client credentials: **Domo > Admin > Authentication > Client credentials** -- create a client with `data` and `dashboard` scopes.
-
-To create a developer token: **Domo > Admin > Authentication > Access tokens**.
-
-Offline commands (`generate`, `list`, `status`, `pool`, `roll-dates`, `init`) require no credentials.
+> **Auth boundary note:** `domo_data_generator` uses its own public-API/OAuth credential flow and does **not** run through `community-domo-cli` or ryuu session auth.
+>
+> **Current tooling boundary:** most Product API automation should use `community-domo-cli`, but datagen dataset create/upload in this skill currently depends on `python -m datagen` with `.env` OAuth credentials (`DOMO_CLIENT_ID` / `DOMO_CLIENT_SECRET`).
 
 ---
 
@@ -92,6 +101,8 @@ datagen generate salesforce_opportunities  # Generate one dataset
 datagen generate --all --seed 42          # Reproducible generation
 datagen generate --all --dry-run          # Preview without writing
 ```
+
+Requires entity pool initialization first. Run `python -m datagen pool regenerate` before `generate` even if your schema has no explicit `entity_ref` columns.
 
 | Option | Description |
 |--------|-------------|
@@ -363,6 +374,16 @@ schema:
 | `format` | `derived_from_date` | Date format string |
 | `faker_method` | `faker` | Faker library method name |
 | `faker_args` | `faker` | Arguments for the Faker method |
+
+**`weighted_choice` YAML format:**
+
+```yaml
+generator: weighted_choice
+choices:
+  "Tier 1": 0.40
+  "Tier 2": 0.35
+  "Tier 3": 0.25
+```
 
 > **`compound` `refs` vs formatted random strings:** For values like `PO-12345`, prefer **`faker`** with **`bothify`** instead of abusing `compound` / `refs`:
 >

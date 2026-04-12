@@ -44,6 +44,8 @@ export DOMO_AUTH_MODE=ryuu-session
 community-domo-cli datasets list
 ```
 
+> **Token auth is deprecated.** `auth_mode=token` is no longer supported by `community-domo-cli`. If you see "Token auth mode is no longer supported", run `domo login -i <instance>` again and keep `DOMO_AUTH_MODE=ryuu-session`.
+
 - CLI reads the login file from `~/.config/configstore/ryuu/<instance>.json`
 - It reuses refresh/session behavior from `domo login`
 

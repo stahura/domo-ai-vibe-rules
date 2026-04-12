@@ -21,15 +21,18 @@ alwaysApply: true
 - Use relative asset base for Domo hosting (`base: './'`).
 - Prefer `HashRouter` unless rewrite behavior is known and intentional.
 
-## CLI skills are optional
-- All skills under `skills/cli/` use the **community-domo-cli** (not the official Domo CLI `@domoinc/ryuu`). They automate tasks like creating AppDB collections, Code Engine packages, or fetching dataset/resource IDs.
-- **Before using any `cli/` skill**, read `skills/cli/community-cli-howto/SKILL.md` first for install, auth setup, supported commands, and troubleshooting.
-- These skills are **strictly optional helpers**. If the community CLI is not installed or the user does not want to use it, **skip those skills gracefully** and fall back to asking the user to provide the needed IDs/resources manually or perform the step in the Domo UI.
-- Other skills (e.g. `code-engine`, `appdb`) may suggest using a `cli/` skill first. That suggestion is a convenience, not a requirement — it must **never block the build**.
+## Two CLIs — know which to use
+- **`domo` (official Domo CLI, `@domoinc/ryuu`)**: only for `domo login`, `domo dev`, and `domo publish`.
+- **`community-domo-cli`**: required for Domo Product API operations (datasets, app-studio, cards, dataflows, appdb, code-engine, filesets, workflows, pages, beast-modes, variables, domoapps, files, users, pdp).
+- **`python -m datagen` (`domo_data_generator`)**: separate tool for sample-data generation and dataset create/upload flows that call Domo public APIs directly. This is the current path for datagen dataset provisioning until equivalent coverage lands in `community-domo-cli`.
+- If you need schema fetches, card create/update, dataflow commands, or Product API CLI calls, the command must start with `community-domo-cli` (never `domo`).
+- Auth flow: run `domo login` once, then run `community-domo-cli` using `DOMO_INSTANCE` plus `DOMO_AUTH_MODE=ryuu-session`.
+- Datagen auth is different from ryuu session: create a local `.env` with `DOMO_CLIENT_ID` and `DOMO_CLIENT_SECRET` (and other datagen vars) before running `python -m datagen ...`.
+- **Before using any CLI skill**, read `~/.agents/skills/community-cli-howto/SKILL.md` first for install, auth setup, supported commands, and troubleshooting.
 
 ## App Studio vs custom apps
-- **`skills/custom-apps/`** — code that runs *inside* a Domo custom app card (data, AppDB, toolkit, manifest, publish).
-- **`skills/app-studio/`** — building and operating *App Studio* apps (pages, layouts, native KPI cards, variables, beast modes, pro-code iframes). Start with `basic-app-studio` for copy-paste CLI operations; use `advanced-app-studio` for the full layout/theme/reference material.
+- **Custom app skills** (`dataset-query`, `appdb`, `toolkit`, `manifest`, `publish`, etc.) — code that runs *inside* a Domo custom app card.
+- **App Studio skills** (`basic-app-studio`, `advanced-app-studio`, `card-creation`, `beast-mode-creation`, `variable-creation`, `app-studio-pro-code`) — building and operating *App Studio* apps. Start with `basic-app-studio` for copy-paste CLI operations; use `advanced-app-studio` for full layout/theme/reference material.
 
 ## API index
 - Data API
@@ -41,41 +44,45 @@ alwaysApply: true
 - Files / Filesets / Groups / User / Task Center
 
 ## Skill routing
-- New app build playbook -> `skills/(demo-skills)/basic-custom-app-build/SKILL.md`
-- App Studio + dataset/ETL vertical demo -> `skills/(demo-skills)/app-studio-dataset-etl-gen-demo/SKILL.md`
-- Dataset querying -> `skills/custom-apps/dataset-query/SKILL.md`
-- Data API overview -> `skills/custom-apps/data-api/SKILL.md`
-- domo.js usage -> `skills/custom-apps/domo-js/SKILL.md`
-- Toolkit usage -> `skills/custom-apps/toolkit/SKILL.md`
-- AppDB -> `skills/custom-apps/appdb/SKILL.md`
-- Community CLI howto (start here for any CLI skill) -> `skills/cli/community-cli-howto/SKILL.md`
-- AppDB collection create (datastore + collection lifecycle) -> `skills/cli/appdb-collection-create/SKILL.md`
-- AI services -> `skills/custom-apps/ai-service-layer/SKILL.md`
-- Code Engine -> `skills/custom-apps/code-engine/SKILL.md`
-- Code Engine package create -> `skills/cli/code-engine-create/SKILL.md`
-- Code Engine package update -> `skills/cli/code-engine-update/SKILL.md`
-- Workflows -> `skills/custom-apps/workflow/SKILL.md`
-- SQL queries -> `skills/custom-apps/sql-query/SKILL.md`
-- Manifest wiring -> `skills/custom-apps/manifest/SKILL.md`
-- Build/publish -> `skills/custom-apps/publish/SKILL.md`
-- DA CLI -> `skills/custom-apps/da-cli/SKILL.md`
-- Performance -> `skills/custom-apps/performance/SKILL.md`
-- Filesets API -> `skills/custom-apps/fileset-api/SKILL.md`
-- Migration from Lovable/v0 -> `skills/custom-apps/migrate-lovable/SKILL.md`
-- Migration from Google AI Studio -> `skills/custom-apps/migrate-googleai/SKILL.md`
-- App Studio (CLI operations only) -> `skills/app-studio/basic-app-studio/SKILL.md`
-- App Studio (full CLI + reference) -> `skills/app-studio/advanced-app-studio/SKILL.md`
-- App Studio pro-code embedded custom apps -> `skills/app-studio/app-studio-pro-code/SKILL.md`
-- App Studio walkthrough video capture (Playwright) -> `skills/app-studio/app-studio-demo-capture/SKILL.md`
-- Native KPI/card CRUD (Product API) -> `skills/app-studio/card-creation/SKILL.md`
-- Beast modes -> `skills/app-studio/beast-mode-creation/SKILL.md`
-- Card variables / controls -> `skills/app-studio/variable-creation/SKILL.md`
-- Connector IDE -> `skills/connectors/connector-dev/SKILL.md`
-- Programmatic embed filters / dataset switching -> `skills/domo-everywhere/programmatic-filters/SKILL.md`
-- JS API filters -> `skills/domo-everywhere/jsapi-filters/SKILL.md`
-- Edit embed / Identity Broker -> `skills/domo-everywhere/edit-embed/SKILL.md`
-- Embed portal (full external-user portal) -> `skills/domo-everywhere/embed-portal/SKILL.md`
-- HTML slide deck to PDF -> `skills/documents/html-deck/SKILL.md`
-- Default app theme -> `skills/themes/domo-app-theme/SKILL.md`
-- Magic ETL (API-first / mixed) -> `skills/transformation/magic-etl/SKILL.md`
-- Magic ETL (community-domo-cli dataflows) -> `skills/transformation/magic-etl-cli/SKILL.md`
+- New app build playbook -> `~/.agents/skills/basic-custom-app-build/SKILL.md`
+- App Studio + dataset/ETL vertical demo -> `~/.agents/skills/app-studio-dataset-etl-gen-demo/SKILL.md`
+- Dataset querying -> `~/.agents/skills/dataset-query/SKILL.md`
+- Data API overview -> `~/.agents/skills/data-api/SKILL.md`
+- domo.js usage -> `~/.agents/skills/domo-js/SKILL.md`
+- Toolkit usage -> `~/.agents/skills/toolkit/SKILL.md`
+- AppDB -> `~/.agents/skills/appdb/SKILL.md`
+- Community CLI howto (start here for any CLI skill) -> `~/.agents/skills/community-cli-howto/SKILL.md`
+- AppDB collection create (datastore + collection lifecycle) -> `~/.agents/skills/appdb-collection-create/SKILL.md`
+- AI services -> `~/.agents/skills/ai-service-layer/SKILL.md`
+- Code Engine -> `~/.agents/skills/code-engine/SKILL.md`
+- Code Engine package create -> `~/.agents/skills/code-engine-create/SKILL.md`
+- Code Engine package update -> `~/.agents/skills/code-engine-update/SKILL.md`
+- Workflows -> `~/.agents/skills/workflow/SKILL.md`
+- SQL queries -> `~/.agents/skills/sql-query/SKILL.md`
+- Manifest wiring -> `~/.agents/skills/manifest/SKILL.md`
+- Build/publish -> `~/.agents/skills/publish/SKILL.md`
+- DA CLI -> `~/.agents/skills/da-cli/SKILL.md`
+- Performance -> `~/.agents/skills/performance/SKILL.md`
+- Filesets API -> `~/.agents/skills/fileset-api/SKILL.md`
+- Filesets CLI -> `~/.agents/skills/fileset-cli/SKILL.md`
+- Migration from Lovable/v0 -> `~/.agents/skills/migrate-lovable/SKILL.md`
+- Migration from Google AI Studio -> `~/.agents/skills/migrate-googleai/SKILL.md`
+- App Studio (CLI operations only) -> `~/.agents/skills/basic-app-studio/SKILL.md`
+- App Studio (full CLI + reference) -> `~/.agents/skills/advanced-app-studio/SKILL.md`
+- App Studio pro-code embedded custom apps -> `~/.agents/skills/app-studio-pro-code/SKILL.md`
+- App Studio walkthrough video capture (Playwright) -> `~/.agents/skills/app-studio-demo-capture/SKILL.md`
+- Native KPI/card CRUD (Product API) -> `~/.agents/skills/card-creation/SKILL.md`
+- Beast modes -> `~/.agents/skills/beast-mode-creation/SKILL.md`
+- Card variables / controls -> `~/.agents/skills/variable-creation/SKILL.md`
+- Connector IDE -> `~/.agents/skills/connector-dev/SKILL.md`
+- Programmatic embed filters / dataset switching -> `~/.agents/skills/programmatic-filters/SKILL.md`
+- JS API filters -> `~/.agents/skills/jsapi-filters/SKILL.md`
+- Edit embed / Identity Broker -> `~/.agents/skills/edit-embed/SKILL.md`
+- Embed portal (full external-user portal) -> `~/.agents/skills/embed-portal/SKILL.md`
+- HTML slide deck to PDF -> `~/.agents/skills/html-deck/SKILL.md`
+- Default app theme -> `~/.agents/skills/domo-app-theme/SKILL.md`
+- Magic ETL (API-first / mixed) -> `~/.agents/skills/magic-etl/SKILL.md`
+- Magic ETL (community-domo-cli dataflows) -> `~/.agents/skills/magic-etl-cli/SKILL.md`
+- Sample data generation + upload -> `~/.agents/skills/domo-data-generator/SKILL.md`
+- Full end-to-end demo stack -> `~/.agents/skills/full-domo-stack/SKILL.md`
+- Workspaces admin -> `~/.agents/skills/workspaces/SKILL.md`
