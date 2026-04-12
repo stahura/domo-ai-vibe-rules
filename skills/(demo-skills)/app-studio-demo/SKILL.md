@@ -1,7 +1,8 @@
 ---
-
-## description: Create an App Studio app with pages, theme, heroes, native cards, and layout. Triggers on "app studio", "create app", "dashboard", "add pages".
+name: app-studio-demo
+description: Orchestrate a micro-demo Domo App Studio app — multi-page canvas, domo-app-theme palette, hero rows, native charts, filter cards, and left navigation with Domo-native icon names only. Delegates to advanced-app-studio and domo-app-theme; optional demo-packs per vertical. Use when the user wants a new App Studio demo, extra pages on an existing app, or asks for "app studio", "create app", "dashboard", or themed executive layouts.
 alwaysApply: false
+---
 
 # Micro-Demo: App Studio App
 

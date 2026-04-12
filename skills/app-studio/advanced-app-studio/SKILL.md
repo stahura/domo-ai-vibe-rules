@@ -1,3 +1,8 @@
+---
+name: advanced-app-studio
+description: Complete Domo App Studio reference using community-domo-cli (not raw curl) — apps, views, layouts, cards, variables, themes, custom OKLCH palettes, layout patterns, and UX gotchas. Use for full automation, complex canvases, card styling, and theme work; pair with domo-app-theme. For a shorter CLI-only command list, use basic-app-studio.
+---
+
 # Domo App Studio — Advanced (CLI Edition)
 
 This is the full App Studio reference converted to use `community-domo-cli` commands instead of

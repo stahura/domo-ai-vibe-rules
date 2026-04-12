@@ -1,3 +1,8 @@
+---
+name: basic-app-studio
+description: Lean App Studio automation via community-domo-cli — auth, conventions, and operational commands for apps, views, layouts, and cards without raw HTTP. Omits DELETE and deep reference tables (those live in advanced-app-studio). Use when you need copy-paste CLI steps and minimal prose for App Studio CRUD.
+---
+
 # App Studio Skill — CLI Edition
 
 This is the `community-domo-cli` variant of the App Studio skill. Use this file instead of
