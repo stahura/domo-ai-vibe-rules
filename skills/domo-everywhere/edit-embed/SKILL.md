@@ -3,6 +3,8 @@ name: edit-embed
 description: Set up Domo's embedded edit experience — external users create, edit, save, and share Domo content via an embedded iframe. Covers Identity Broker, JWT auth, role-based access (Admin/Privileged/Editor/Participant), instance mapping, and edit URL generation. Use for any Domo edit-mode embedding. Not for read-only embeds (use programmatic-filters) or client-side filtering (use jsapi-filters).
 ---
 
+> **Child instance observability:** To inspect lineage, usage, stale content, or provision API credentials for a Domo Everywhere child instance, see `administration/lineage-observability/SKILL.md`.
+
 # Domo Embedded Edit Experience
 
 Let external users create, edit, save, and share Domo content (dashboards, cards, alerts, reports, data sources) through an embedded iframe. Uses the **Domo Identity Broker** with JWT auth — fundamentally different from read-only embeds.
