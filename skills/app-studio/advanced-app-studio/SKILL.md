@@ -694,14 +694,14 @@ Cards should use **zero border-radius, zero border weight, zero padding, no drop
 card['backgroundColor'] = {'value': 'c56', 'type': 'COLOR_REFERENCE'}  # white
 card['borderWidth'] = 0
 card['borderRadius'] = 0
-card['dropShadow'] = 'NONE'
+card['dropShadow'] = None
 card['padding'] = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
 
 # ca8 — fully transparent (banners, images)
 card['backgroundColor'] = {'value': 'c56', 'opacity': '00', 'type': 'COLOR_REFERENCE'}
 card['borderWidth'] = 0
 card['borderRadius'] = 0
-card['dropShadow'] = 'NONE'
+card['dropShadow'] = None
 ```
 
 ### Page Background: Ultra-Light Gray
@@ -1809,12 +1809,30 @@ for pill in theme.get('pills', []):
 
 All card styles MUST follow this reference configuration. Zero border-radius, zero border weight, zero padding, no drop shadow, no content spacing:
 
+### API Theme Object Formats
+
+Use API-compatible object shapes when patching theme values programmatically:
+
+```json
+{"id": "c1", "value": {"value": "#141008", "type": "RGB_HEX"}, "tags": ["THEME", "PRIMARY", "TINTED_GRAY"]}
+```
+
+```json
+{"id": "f1", "family": "Sans", "weight": 600, "size": 22, "style": "Regular"}
+```
+
+```json
+{"id": "ca1", "borderRadius": 0, "borderWidth": 0, "dropShadow": null, "padding": {"left": 0, "right": 0, "top": 0, "bottom": 0}}
+```
+
+Valid `dropShadow` values in App Studio API payloads: `null`, `"FLOATING"`, `"STANDARD"`.
+
 ```python
 # ca1-ca7 — clean surface, zero chrome (default for all content cards)
 for card in theme.get('cards', []):
     card['borderRadius'] = 0
     card['borderWidth'] = 0
-    card['dropShadow'] = 'NONE'
+    card['dropShadow'] = None
     card['dropShadowColor'] = None
     card['padding'] = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
     card['contentSpacing'] = None       # "Card content spacing: Nil"
@@ -1828,7 +1846,7 @@ Keep ca8 as fully transparent/borderless for banners and pro-code frames:
 card['backgroundColor'] = {'value': 'c56', 'opacity': '00', 'type': 'COLOR_REFERENCE'}
 card['borderWidth'] = 0
 card['borderRadius'] = 0
-card['dropShadow'] = 'NONE'
+card['dropShadow'] = None
 card['padding'] = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
 ```
 
@@ -1839,7 +1857,7 @@ card['padding'] = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
 | -------------------------- | ---------------- | --------------------------------------------- |
 | Rounded corners            | **0 px**         | `borderRadius: 0`                             |
 | Border weight              | **0 px**         | `borderWidth: 0`                              |
-| Drop shadow                | **None**         | `dropShadow: 'NONE'`                          |
+| Drop shadow                | **None**         | `dropShadow: null`                            |
 | Controls color             | **#2563BE**      | Theme color `c8` -> `#2563BE`                 |
 | Card inner padding         | **Custom, 0 px** | `padding: {left:0, right:0, top:0, bottom:0}` |
 | Card content spacing       | **Nil**          | `contentSpacing: None` (null)                 |

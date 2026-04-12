@@ -279,6 +279,10 @@ For an **existing** output dataset:
 
 Actions are the nodes in the DAG. Each action has a unique `id`, a `type`, and references its upstream dependencies via `dependsOn`.
 
+Valid types: `LoadFromVault`, `PublishToVault`, `MergeJoin`, `GroupBy`, `WindowAction`, `Filter`, `ExpressionEvaluator`, `SQL`
+
+NOT valid (will fail with `DP-0069`): `SaveToVault`, `SelectValues`, `RenameColumns`
+
 ### Common Action Fields
 
 Every action has these fields:
@@ -844,7 +848,7 @@ Removes duplicate rows based on specified key columns. This is the programmatic 
 
 **Tip:** Add a Unique tile after joins that might fan out rows (e.g., many-to-many joins).
 
-### SelectValues (Column Selection / Rename)
+### SelectValues (Legacy / Not Valid for New Flows)
 
 Selects specific columns and optionally renames them.
 
@@ -892,40 +896,37 @@ Writes the final data to a Domo dataset.
 ```json
 {
   "type": "PublishToVault",
-  "id": "PublishToVault-output",
-  "name": "SFDC | Account Summary",
-  "dependsOn": ["MergeJoin-final"],
-  "disabled": false,
-  "removeByDefault": false,
-  "notes": [],
-  "settings": {"preferredDatabaseEntityType": "TEMP_VIEW"},
-  "gui": {"x": 1248, "y": 320, "color": null, "colorSource": null, "sampleJson": null},
-  "previewRowLimit": null,
+  "id": "PublishToVault-my-output",
+  "name": "Output Dataset Name",
+  "dependsOn": ["last-action-id"],
+  "settings": {"preferredDatabaseEntityType": "DYNAMIC_TABLE"},
+  "inputs": ["last-action-id"],
   "dataSource": {
+    "guid": null,
     "type": "DataFlow",
-    "name": "SFDC | Account Summary",
-    "cloudId": "domo"
+    "name": "Output Dataset Name",
+    "description": "",
+    "cloudId": null
   },
   "versionChainType": "REPLACE",
-  "partitionIdColumns": [],
-  "upsertColumns": [],
-  "retainPartitionExpression": ""
+  "schemaSource": "DATAFLOW",
+  "partitioned": false,
+  "tables": [{}]
 }
 ```
 
 | Field | Description |
 |---|---|
-| `dependsOn` | Array with a single action ID — the final transform step |
+| `dependsOn` | Array with the final transform action ID |
+| `inputs` | Must include the same final transform action ID |
 | `dataSource.type` | `"DataFlow"` |
 | `dataSource.name` | Name for the output dataset |
-| `dataSource.guid` | UUID of existing output dataset — **omit entirely for new datasets** |
-| `dataSource.cloudId` | `"domo"` |
+| `dataSource.guid` | `null` for new outputs, existing UUID for existing output dataset |
+| `dataSource.cloudId` | `null` for standard dataflow-managed output |
 | `versionChainType` | `"REPLACE"` (full replace) or `"APPEND"` |
-| `partitionIdColumns` | `[]` — always empty unless using partitioning |
-| `upsertColumns` | `[]` — always empty unless doing upserts |
-| `retainPartitionExpression` | `""` — always empty string |
-
-**CRITICAL:** Do NOT include `inputs`, `schemaSource`, `partitioned`, or `tables` in PublishToVault. These fields cause `DP-DSCF` commit failures where the ETL processes all rows successfully but then fails to write to the output dataset. This was confirmed through extensive testing (April 2026).
+| `schemaSource` | `"DATAFLOW"` |
+| `partitioned` | `false` |
+| `tables` | `[{}]` |
 
 For new dataflows, omit `guid` entirely. Domo assigns a real output dataset UUID on the first successful run.
 
@@ -1156,32 +1157,37 @@ for e in errors:
 
 ## Common Pitfalls
 
-### 1. `DP-DSCF` Commit Failure — Wrong PublishToVault Structure
+### 1. `DP-DSCF`/`DP-0069` Failures — Wrong Action Type or PublishToVault Structure
 
-The error `"Failed to commit data to data source <UUID>"` (code `DP-DSCF`) is caused by incorrect `PublishToVault` fields. The ETL will process all rows successfully but then fail at the commit step.
+`DP-0069` means an illegal action type was used (for example `SaveToVault`, `SelectValues`, `RenameColumns`). `DP-DSCF` indicates output commit failure and is commonly tied to malformed `PublishToVault` payloads.
 
-**Root cause (confirmed April 2026):** Using `inputs`, `schemaSource`, `partitioned`, or `tables` in the `PublishToVault` action.
+**Root causes:** unsupported action type or incomplete/incorrect `PublishToVault` shape.
 
-**Fix:** Use this exact structure — `partitionIdColumns`, `upsertColumns`, `retainPartitionExpression` — and omit `inputs`, `schemaSource`, `partitioned`, `tables`:
+**Fix:** use supported action types and use this `PublishToVault` shape:
 
 ```json
 {
   "type": "PublishToVault",
-  "dataSource": {"type": "DataFlow", "name": "Output Name", "cloudId": "domo"},
+  "id": "PublishToVault-my-output",
+  "name": "Output Dataset Name",
+  "dependsOn": ["last-action-id"],
+  "settings": {"preferredDatabaseEntityType": "DYNAMIC_TABLE"},
+  "inputs": ["last-action-id"],
+  "dataSource": {"guid": null, "type": "DataFlow", "name": "Output Dataset Name", "description": "", "cloudId": null},
   "versionChainType": "REPLACE",
-  "partitionIdColumns": [],
-  "upsertColumns": [],
-  "retainPartitionExpression": ""
+  "schemaSource": "DATAFLOW",
+  "partitioned": false,
+  "tables": [{}]
 }
 ```
 
-### 2. SelectValues — Domo Strips `select` on Save (Zero Columns Downstream)
+### 2. SelectValues — Legacy Failure Mode (Do Not Use)
 
-On save, Domo can **strip the `select` array** from `SelectValues` actions. The tile then passes **no columns** to downstream nodes, breaking the DAG in ways that are easy to miss until execution.
+`SelectValues` is a recurring source of failures and should be treated as unsupported for new automation in this skill.
 
-**Recommendation:** **Omit `SelectValues` entirely** when you only need to narrow columns before output. Set **`PublishToVault.dependsOn`** directly to the final **`MergeJoin`** (or whatever the last real transform is). Let the join output define the schema for the vault.
+**Recommendation:** omit `SelectValues` entirely. Set `PublishToVault.dependsOn` directly to the final transform node (usually `MergeJoin`) and let that output schema flow through.
 
-If you must use `SelectValues`, prefer the `fields` format and only list columns to **keep** (no `"remove": true`, no extra `type` / `dateFormat` / `settings` — those cause `DP-0003 Action is improperly configured`):
+Legacy reference (for diagnosis only): older payloads used `fields` with keep-only columns (no `"remove": true`, no extra `type` / `dateFormat` / `settings`).
 
 ```json
 "fields": [
@@ -1320,7 +1326,7 @@ All action types discovered across existing dataflows in the instance:
 | `MergeJoin` | Join two upstream actions on keys | Yes |
 | `GroupBy` | Aggregate with SUM, AVERAGE, MIN, COUNT_ALL, etc. | Yes |
 | `WindowAction` | Rank & Window — ROW_NUMBER, RANK, LAG, LEAD | Yes |
-| `SelectValues` | Select and rename columns | Risky — Domo may strip `select` on save (see Gotcha #2); prefer wiring `PublishToVault` to the last join |
+| `SelectValues` | Legacy select/rename node | Not valid for new flow authoring in this skill; use supported transform chain + `PublishToVault` |
 | `Filter` | Filter rows based on conditions (NE, EQ, NN, etc.) | Yes |
 | `ExpressionEvaluator` | Add calculated columns / formulas (concat, year, MONTHNAME, DATE) | Yes |
 | `Unique` | Deduplicate rows by key columns | Documented (from patterns guide) |

@@ -41,16 +41,31 @@ cp .env.example .env
 # Edit .env with your Domo credentials
 ```
 
+If `.env.example` is missing or you want a clean start, create `.env` in the working directory with:
+
+```bash
+cat > .env <<'EOF'
+DOMO_CLIENT_ID=your_client_id_here
+DOMO_CLIENT_SECRET=your_client_secret_here
+DOMO_API_HOST=api.domo.com
+DOMO_INSTANCE=your_instance_name
+DOMO_SET_CONNECTOR_TYPE=false
+EOF
+```
+
 ### Required Environment Variables
 
 | Variable | Purpose |
 |----------|---------|
 | `DOMO_CLIENT_ID` | OAuth client identifier |
 | `DOMO_CLIENT_SECRET` | OAuth client secret |
-| `DOMO_DEVELOPER_TOKEN` | Internal API auth token |
 | `DOMO_API_HOST` | API endpoint hostname |
 | `DOMO_INSTANCE` | Domo instance name |
 | `DOMO_SET_CONNECTOR_TYPE` | Enable connector icon customization (optional, default: false) |
+
+> **Auth boundary note:** `domo_data_generator` uses its own public-API/OAuth credential flow and does **not** run through `community-domo-cli` or ryuu session auth.
+>
+> **Current tooling boundary:** most Product API automation should use `community-domo-cli`, but datagen dataset create/upload in this skill currently depends on `python -m datagen` with `.env` OAuth credentials (`DOMO_CLIENT_ID` / `DOMO_CLIENT_SECRET`).
 
 ---
 
@@ -70,6 +85,8 @@ python -m datagen generate salesforce_opportunities  # Generate one dataset
 python -m datagen generate --all --seed 42          # Reproducible generation
 python -m datagen generate --all --dry-run          # Preview without writing
 ```
+
+Requires entity pool initialization first. Run `python -m datagen pool regenerate` before `generate` even if your schema has no explicit `entity_ref` columns.
 
 | Option | Description |
 |--------|-------------|
@@ -315,6 +332,16 @@ columns:
 | `format` | `derived_from_date` | Date format string |
 | `faker_method` | `faker` | Faker library method name |
 | `faker_args` | `faker` | Arguments for the Faker method |
+
+**`weighted_choice` YAML format:**
+
+```yaml
+generator: weighted_choice
+choices:
+  "Tier 1": 0.40
+  "Tier 2": 0.35
+  "Tier 3": 0.25
+```
 
 > **`compound` `refs` vs formatted random strings:** For values like `PO-12345`, prefer **`faker`** with **`bothify`** instead of abusing `compound` / `refs`:
 >

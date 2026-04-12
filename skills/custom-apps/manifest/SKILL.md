@@ -11,8 +11,8 @@ The `manifest.json` file is critical - it declares all external resources your a
 
 For package create/update lifecycle details that feed `packagesMapping`, use:
 
-- `skills/cli/code-engine-create/SKILL.md`
-- `skills/cli/code-engine-update/SKILL.md`
+- `~/.agents/skills/code-engine-create/SKILL.md`
+- `~/.agents/skills/code-engine-update/SKILL.md`
 
 ## Basic structure
 ```json

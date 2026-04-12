@@ -10,8 +10,8 @@ In practice, prefer direct `domo.post('/domo/codeengine/v2/packages/{alias}', pa
 
 Package lifecycle operations are handled by CLI skills:
 
-- `skills/cli/code-engine-create/SKILL.md`
-- `skills/cli/code-engine-update/SKILL.md`
+- `~/.agents/skills/code-engine-create/SKILL.md`
+- `~/.agents/skills/code-engine-update/SKILL.md`
 
 Use this skill for runtime invocation patterns inside app code, not package create/update orchestration.
 

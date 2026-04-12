@@ -394,6 +394,13 @@ Mirror semantic names in `:root` for custom apps (`--surface` → `c2`, `--text-
 
 ---
 
+> **UI Import vs API format:** The JSON below is for the App Studio UI import dialog
+> (Theme Editor -> Import). For programmatic updates via `community-domo-cli app-studio update`:
+> - Colors: use `id` (e.g., `"c1"`) not `index`; value is `{"value": "#HEX", "type": "RGB_HEX"}` not a flat string; preserve the `tags` array
+> - Fonts: use `id` (e.g., `"f1"`) not `index`; `weight` must be numeric (300/400/600/700) not string; `size` must be numeric (no `"px"`); `style` must be `"Regular"` not `"normal"`
+> - Card styles: use `id` (e.g., `"ca1"`) not `index`; `dropShadow` valid values are `null`, `"FLOATING"`, `"STANDARD"`; `padding` is `{left:N, right:N, top:N, bottom:N}` not a single integer
+> - **Do not replace** the entire colors/fonts/cards array — iterate existing entries and update `value` fields to preserve tags/metadata the UI import format omits.
+
 ## 8. App Studio Theme JSON (Importable)
 
 ```json

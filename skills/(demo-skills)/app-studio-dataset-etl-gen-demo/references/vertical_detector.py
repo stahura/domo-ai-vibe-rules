@@ -35,11 +35,11 @@ VERTICAL_SIGNATURES = {
 
 
 REFERENCE_PACKS = {
-    "manufacturing": "~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/manufacturing.md",
-    "retail-ecommerce": "~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/retail-ecommerce.md",
-    "healthcare": "~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/healthcare.md",
-    "logistics": "~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/logistics.md",
-    "financial-services": "~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/financial-services.md",
+    "manufacturing": "~/.agents/skills/app-studio-dataset-etl-gen-demo/references/manufacturing.md",
+    "retail-ecommerce": "~/.agents/skills/app-studio-dataset-etl-gen-demo/references/retail-ecommerce.md",
+    "healthcare": "~/.agents/skills/app-studio-dataset-etl-gen-demo/references/healthcare.md",
+    "logistics": "~/.agents/skills/app-studio-dataset-etl-gen-demo/references/logistics.md",
+    "financial-services": "~/.agents/skills/app-studio-dataset-etl-gen-demo/references/financial-services.md",
 }
 
 
