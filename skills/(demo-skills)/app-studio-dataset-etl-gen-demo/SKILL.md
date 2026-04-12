@@ -1,8 +1,8 @@
 ---
-name: app-studio-dataset-etl-gen-demo
+
+## name: app-studio-dataset-etl-gen-demo
 description: Vertical App Studio micro-demo with optional dataset creation (domo-data-generator), ETL (magic-etl-cli or magic-etl), then multi-page layout using advanced-app-studio + domo-app-theme. Picks industry packs from references/*.md. Use when building an App Studio walkthrough that needs realistic data pipelines and themed pages per vertical.
 alwaysApply: false
----
 
 # Micro-Demo: App Studio App (dataset + ETL + demo)
 
@@ -30,14 +30,14 @@ Available packs: `healthcare.md`, `manufacturing.md`, `retail-ecommerce.md`, `lo
 Needs dataset id's to power cards. Sources:
 
 1. Ask user if they already have datasets with the required schema
-2. Otherwise 
+2. Otherwise
 
 ## Procedure
 
-1. (If user does not provide) Create Datasets with the `domo-data-generator` skill
-2. (If user does not provide) Create ETL with the `magic-etl-cli` skill (or `magic-etl` for API-oriented dataflow work)
-3. **Create app**:
-4. **Create pages**:
+1. (ONLY if user does not provide) Create Datasets with the `domo-data-generator` skill
+2. (ONLY If user does not provide) Create ETL with the `magic-etl-cli` skill (or `magic-etl` for API-oriented dataflow work)
+3. **Create app** `advanced-app-studio`:
+4. **Create pages** `advanced-app-studio`:
 5. **Apply theme**: GET theme → from domo-app-theme/themes
 6. **Hero metrics**: 3–4 `badge_pop_multi_value` cards per page in ONE ROW at y=20, height 14, YEAR interval
 7. **Native charts**: 1 full-width (width 60) per page + 2–6 detail cards, different chart types per page

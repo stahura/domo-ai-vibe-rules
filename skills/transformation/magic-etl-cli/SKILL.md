@@ -15,13 +15,17 @@ Magic ETL dataflows in Domo can be created, updated, and executed entirely throu
 |-----------|-------------|
 | List dataflows | `community-domo-cli dataflows list` |
 | Get full dataflow definition | `community-domo-cli dataflows get-definition <ID>` |
-| Run a dataflow | `community-domo-cli dataflows run <ID>` |
+| Run a dataflow | `community-domo-cli -y dataflows run <ID>` |
 | Check execution status | `community-domo-cli dataflows executions <ID> --limit 1` |
-| **Create** a dataflow | `community-domo-cli dataflows create --body-file <FILE>` |
-| **Update** a dataflow | `community-domo-cli dataflows update <ID> --body-file <FILE>` |
-| **Rename/enable** | `community-domo-cli dataflows update <ID> --body-file <FILE>` |
+| **Create** a dataflow | `community-domo-cli -y dataflows create --body-file <FILE>` |
+| **Update** a dataflow | `community-domo-cli -y dataflows update <ID> --body-file <FILE>` |
+| **Rename/enable** | `community-domo-cli -y dataflows update <ID> --body-file <FILE>` |
 
 **Important:** All operations use `community-domo-cli`, which handles auth automatically. The created dataflow is not in DRAFT state and can be executed immediately — no UI save required.
+
+> **Mutating commands need `-y` (or `--yes`).** Create, update, and run prompt `Execute mutating action? [y/N]`. Without `-y`, the CLI aborts when stdin is not a TTY (scripts, Python `subprocess`, CI). Always pass `-y` for automation.
+
+> **Never search for user IDs.** `responsibleUserId` is optional — omit it entirely. Never call `community-domo-cli users list` or any users endpoint to find a user ID for dataflow creation.
 
 ## CLI Commands for Dataflows
 
@@ -42,7 +46,7 @@ Returns the full JSON definition including all actions, inputs, outputs, and GUI
 ### Run a Dataflow
 
 ```bash
-community-domo-cli dataflows run <DATAFLOW_ID>
+community-domo-cli -y dataflows run <DATAFLOW_ID>
 ```
 
 ### List Dataflow Executions
@@ -64,7 +68,7 @@ Returns execution state (`SUCCESS`, `FAILED_DATA_FLOW`, `CREATED`, `RUNNING`), r
 ### Create
 
 ```bash
-community-domo-cli dataflows create --body-file <FILE>
+community-domo-cli -y dataflows create --body-file <FILE>
 ```
 
 The body **must** include `"databaseType": "MAGIC"`. The created dataflow can be executed immediately — see Gotcha #7 and #11 for details.
@@ -72,7 +76,7 @@ The body **must** include `"databaseType": "MAGIC"`. The created dataflow can be
 ### Updating an Existing Dataflow
 
 ```bash
-community-domo-cli dataflows update <DATAFLOW_ID> --body-file <FILE>
+community-domo-cli -y dataflows update <DATAFLOW_ID> --body-file <FILE>
 ```
 
 Always fetch the full definition with `get-definition` first, modify it, then pass it via `--body-file`. Include the complete definition — PUT replaces the entire dataflow.
@@ -110,6 +114,8 @@ Always fetch the full definition with `get-definition` first, modify it, then pa
 | `inputs` | Array of input dataset references |
 | `outputs` | Array of output dataset references |
 | `actions` | Array of action nodes (the DAG) |
+
+> **Never search for user IDs.** `responsibleUserId` is optional — omit it entirely. Never call `community-domo-cli users list` or any users endpoint to find a user ID for dataflow creation.
 
 ### Top-Level `gui` Field (Canvas Layout & Sections)
 
@@ -953,13 +959,13 @@ LoadFromVault(Contacts)                                            │
 ### Creation Command
 
 ```bash
-community-domo-cli dataflows create --body-file sfdc_account_summary_etl.json
+community-domo-cli -y dataflows create --body-file sfdc_account_summary_etl.json
 ```
 
 ### Execution
 
 ```bash
-community-domo-cli dataflows run <DATAFLOW_ID>
+community-domo-cli -y dataflows run <DATAFLOW_ID>
 ```
 
 ## Complete Example: Customer Summary with Rank & Window
@@ -1169,9 +1175,13 @@ The error `"Failed to commit data to data source <UUID>"` (code `DP-DSCF`) is ca
 }
 ```
 
-### 2. SelectValues `fields` Format — Only List Columns to Keep
+### 2. SelectValues — Domo Strips `select` on Save (Zero Columns Downstream)
 
-The `fields` format of `SelectValues` causes `DP-0003 Action is improperly configured` if you include entries with `"remove": true` or extra fields like `type`, `dateFormat`, `settings`. Only list columns you want to **keep**:
+On save, Domo can **strip the `select` array** from `SelectValues` actions. The tile then passes **no columns** to downstream nodes, breaking the DAG in ways that are easy to miss until execution.
+
+**Recommendation:** **Omit `SelectValues` entirely** when you only need to narrow columns before output. Set **`PublishToVault.dependsOn`** directly to the final **`MergeJoin`** (or whatever the last real transform is). Let the join output define the schema for the vault.
+
+If you must use `SelectValues`, prefer the `fields` format and only list columns to **keep** (no `"remove": true`, no extra `type` / `dateFormat` / `settings` — those cause `DP-0003 Action is improperly configured`):
 
 ```json
 "fields": [
@@ -1180,7 +1190,7 @@ The `fields` format of `SelectValues` causes `DP-0003 Action is improperly confi
 ]
 ```
 
-Columns not listed are automatically dropped. Do NOT add remove entries.
+Columns not listed are dropped. Do NOT add remove entries.
 
 ### 3. Column Name Conflicts in Joins
 
@@ -1242,11 +1252,11 @@ Known working functions: `year()`, `MONTHNAME()`, `concat()`, `DATE()`.
 
 ### 11. Dataflows Created via CLI Can Be Executed Immediately (Updated April 2026)
 
-Dataflows created via `community-domo-cli dataflows create` are NOT in DRAFT state and **can be run immediately** with `community-domo-cli dataflows run <ID>`. The `outputs` array IS populated on creation when `dataSourceId: null` is passed. No UI save required. Executions return a valid execution ID and run to completion.
+Dataflows created via `community-domo-cli -y dataflows create` are NOT in DRAFT state and **can be run immediately** with `community-domo-cli -y dataflows run <ID>`. The `outputs` array IS populated on creation when `dataSourceId: null` is passed. No UI save required. Executions return a valid execution ID and run to completion.
 
 ### 12. Use `dataflows run` — Not the Java CLI
 
-The legacy Java CLI `dataflow-run-now` may return 500 errors for newly created dataflows. Always use `community-domo-cli dataflows run <ID>` — it posts directly to `/dataprocessing/v1/dataflows/{id}/executions` and is reliable.
+The legacy Java CLI `dataflow-run-now` may return 500 errors for newly created dataflows. Always use `community-domo-cli -y dataflows run <ID>` — it posts directly to `/dataprocessing/v1/dataflows/{id}/executions` and is reliable.
 
 ### 13. responsibleUserId Is Optional
 
@@ -1293,10 +1303,10 @@ Before building any dataset lineage ETL, ask: **"Is there a master 'My Datasets'
 
 ### 18. `dataflows update` Replaces the Entire Dataflow Definition
 
-When updating via `community-domo-cli dataflows update <ID> --body-file <FILE>`:
+When updating via `community-domo-cli -y dataflows update <ID> --body-file <FILE>`:
 
 - **Send the full dataflow object** — always start from a fresh `get-definition`, modify it, then pass via `--body-file`.
-- **Update only saves** — it does not run the dataflow. Trigger execution separately with `community-domo-cli dataflows run <ID>`.
+- **Update only saves** — it does not run the dataflow. Trigger execution separately with `community-domo-cli -y dataflows run <ID>`.
 - **Version tracking** — each successful update increments `onboardFlowVersion.versionNumber`. The execution response includes `dataFlowVersion` to confirm which version ran.
 
 ## Known Action Types
@@ -1310,7 +1320,7 @@ All action types discovered across existing dataflows in the instance:
 | `MergeJoin` | Join two upstream actions on keys | Yes |
 | `GroupBy` | Aggregate with SUM, AVERAGE, MIN, COUNT_ALL, etc. | Yes |
 | `WindowAction` | Rank & Window — ROW_NUMBER, RANK, LAG, LEAD | Yes |
-| `SelectValues` | Select and rename columns | Yes (but can cause commit errors before PublishToVault) |
+| `SelectValues` | Select and rename columns | Risky — Domo may strip `select` on save (see Gotcha #2); prefer wiring `PublishToVault` to the last join |
 | `Filter` | Filter rows based on conditions (NE, EQ, NN, etc.) | Yes |
 | `ExpressionEvaluator` | Add calculated columns / formulas (concat, year, MONTHNAME, DATE) | Yes |
 | `Unique` | Deduplicate rows by key columns | Documented (from patterns guide) |
@@ -1329,8 +1339,8 @@ All action types discovered across existing dataflows in the instance:
 1. **Get input dataset schemas** — `community-domo-cli datasets sql <UUID> --body '{"sql":"SELECT * FROM table LIMIT 2"}'` on each input dataset
 2. **Build the JSON definition** — use the confirmed working action structures from this skill doc
 3. **Add colored Section zones** — group related tiles into Section elements in `gui.canvases.default.elements`. Assign each logical branch or processing stage a distinct color. Reparent Tile elements into their sections using `parentId` and relative coordinates. This step is **required** for all dataflows with 2+ branches or stages.
-4. **Create** — `community-domo-cli dataflows create --body-file <FILE>` — works immediately, no UI save needed
-5. **Execute** — `community-domo-cli dataflows run <DATAFLOW_ID>`
+4. **Create** — `community-domo-cli -y dataflows create --body-file <FILE>` — works immediately, no UI save needed
+5. **Execute** — `community-domo-cli -y dataflows run <DATAFLOW_ID>`
 6. **Check status** — `community-domo-cli dataflows execution-get <DATAFLOW_ID> <EXEC_ID>` — poll until `state` is `SUCCESS` or `FAILED_DATA_FLOW`
-7. **On failure** — check `errors[]` array in execution response for `actionId` and `localizedMessage`, fix the specific action, run `community-domo-cli dataflows update <ID> --body-file <FILE>`, then re-run
+7. **On failure** — check `errors[]` array in execution response for `actionId` and `localizedMessage`, fix the specific action, run `community-domo-cli -y dataflows update <ID> --body-file <FILE>`, then re-run
 8. **Export for debugging** — `community-domo-cli dataflows get-definition <DATAFLOW_ID>` returns the full saved definition including any server-assigned GUIDs
