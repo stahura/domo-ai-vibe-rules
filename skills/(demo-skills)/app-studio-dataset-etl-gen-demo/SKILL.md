@@ -7,10 +7,17 @@ description: Vertical App Studio micro-demo with optional dataset creation (domo
 
 ## Skills
 
-Read and follow in order:
+Read these helper scripts (they encode the API patterns used by this demo flow):
 
-1. `~/.agents/skills/advanced-app-studio/SKILL.md` —
-2. `~/.agents/skills/domo-app-theme/SKILL.md`
+1. `~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/cli_helpers.py` — API wrappers
+2. `~/.agents/skills/app-studio/advanced-app-studio/references/card_templates.py` — card body builders
+3. `~/.agents/skills/app-studio/advanced-app-studio/references/layout_assembler.py` — layout composition
+4. `~/.agents/skills/themes/domo-app-theme/references/theme_transform.py` — theme format bridge
+5. `~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/theme_loader.py` — pick theme (reads compact index at runtime)
+6. `~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/vertical_detector.py` — auto-detect vertical
+7. `~/.agents/skills/(demo-skills)/app-studio-dataset-etl-gen-demo/references/errata.md` — API gotchas
+
+Do NOT read full `advanced-app-studio/SKILL.md` or theme DESIGN.md files unless a helper script path does not cover the operation you need.
 
 ## Demo Pack
 
