@@ -55,6 +55,22 @@ APP_ID=$(community-domo-cli --output json app-studio create --body '{"title":"My
   | python3 -c "import json,sys; print(json.load(sys.stdin)['dataAppId'])")
 ```
 
+## Reusable Helper Scripts
+
+Use these paired helpers to avoid rewriting card/layout boilerplate every run:
+
+- `references/card_templates.py` — native card body builders:
+  - hero cards (`badge_pop_multi_value` with `main` + `time_period` subscriptions)
+  - filter cards (`badge_dropdown_selector`, date filter selectors)
+  - chart cards (`badge_` chart family; uses `AVG` not `AVERAGE`)
+- `references/layout_assembler.py` — composable layout assembly:
+  - card/content key tracking
+  - standard + compact template generation
+  - template-only entry preservation
+  - finalize safety checks before `layout-set`
+
+Use these helpers in automation flows before issuing `cards create` and `app-studio layout-set`.
+
 ---
 
 ## Overview
@@ -364,6 +380,11 @@ The CLI executes three steps internally:
 
 The body **must contain `layoutId`** — the CLI extracts it to build the lock/PUT/unlock URLs.
 If `layoutId` is missing, the CLI raises: `Body must include layoutId. Run layout-get first.`
+
+> **CRITICAL:** Before calling `layout-set`, verify:
+> 1. Every `contentKey` in `content[]` has an entry in **BOTH** `standard.template[]` and `compact.template[]`
+> 2. Template-only entries (e.g., `SEPARATOR` key `0`, `PAGE_BREAK` key `10`, appendix `HEADER` key `1`) are preserved as `virtual: true, virtualAppendix: true`
+> 3. New `HEADER` content entries added to `content[]` also have matching template entries
 
 **Verify dry-run before executing**:
 
