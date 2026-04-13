@@ -1,0 +1,8 @@
+# Default reviewer for all changes
+*                               @stahura
+
+# QA scripts
+scripts/                        @stahura
+
+# Rules (high-impact -- changes affect all skill consumers)
+rules/                          @stahura

@@ -1,0 +1,49 @@
+name: Skill QA
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'rules/**'
+      - 'README.md'
+      - 'scripts/**'
+
+jobs:
+  tier1:
+    name: "Tier 1: Structure"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check frontmatter
+        run: bash scripts/check-frontmatter.sh
+
+      - name: Check structure
+        run: bash scripts/check-structure.sh
+
+      - name: Check code fences
+        run: bash scripts/check-code-fences.sh
+
+  tier2:
+    name: "Tier 2: Content integrity"
+    runs-on: ubuntu-latest
+    needs: tier1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check cross-references
+        run: bash scripts/check-cross-refs.sh
+
+      - name: Check CLI boundary
+        run: bash scripts/check-cli-usage.sh
+
+      - name: Check routing table
+        run: bash scripts/check-routing-table.sh
+
+      - name: Check README sync
+        run: bash scripts/check-readme-sync.sh
+        continue-on-error: true
+
+      - name: Validate JSON blocks
+        run: bash scripts/check-json-blocks.sh
+        continue-on-error: true
