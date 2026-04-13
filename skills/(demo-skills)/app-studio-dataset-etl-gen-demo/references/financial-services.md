@@ -145,4 +145,4 @@ Wealth management and banking operations — client portfolios, transaction flow
 
 ## Theme
 
-Use a sophisticated corporate palette from `~/.agents/skills/domo-app-theme/themes/`. Recommended: corporate or a navy/gold combination. Font: serif or refined sans-serif.
+Use a sophisticated corporate palette from `~/.agents/skills/domo-app-theme/references/themes/`. Recommended: corporate or a navy/gold combination. Font: serif or refined sans-serif.

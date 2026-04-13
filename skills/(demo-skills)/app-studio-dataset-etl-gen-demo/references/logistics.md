@@ -143,4 +143,4 @@ Freight and logistics operations — shipment tracking, fleet management, wareho
 
 ## Theme
 
-Use a bold dark palette from `~/.agents/skills/domo-app-theme/themes/`. Recommended: shades or charcoal family. Font: sans-serif.
+Use a bold dark palette from `~/.agents/skills/domo-app-theme/references/themes/`. Recommended: shades or charcoal family. Font: sans-serif.

@@ -139,4 +139,4 @@ Industrial manufacturing operations — production lines, quality control, suppl
 
 ## Theme
 
-Use a dark industrial palette from `~/.agents/skills/domo-app-theme/themes/`. Recommended: charcoal or shades family. Font: sans-serif (Open Sans or similar).
+Use a dark industrial palette from `~/.agents/skills/domo-app-theme/references/themes/`. Recommended: charcoal or shades family. Font: sans-serif (Open Sans or similar).

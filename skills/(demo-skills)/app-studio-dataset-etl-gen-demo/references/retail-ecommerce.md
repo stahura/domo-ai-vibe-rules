@@ -142,4 +142,4 @@ Omnichannel retail — in-store and online transactions, customer behavior, inve
 
 ## Theme
 
-Use a vibrant modern palette from `~/.agents/skills/domo-app-theme/themes/`. Recommended: punk or a bright accent family. Font: sans-serif.
+Use a vibrant modern palette from `~/.agents/skills/domo-app-theme/references/themes/`. Recommended: punk or a bright accent family. Font: sans-serif.

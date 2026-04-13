@@ -137,4 +137,4 @@ Hospital/health system operations — patient encounters, clinical outcomes, lab
 
 ## Theme
 
-Use a clean blue/teal palette from `~/.agents/skills/domo-app-theme/themes/`. Recommended: corporate or green family. Font: sans-serif.
+Use a clean blue/teal palette from `~/.agents/skills/domo-app-theme/references/themes/`. Recommended: corporate or green family. Font: sans-serif.

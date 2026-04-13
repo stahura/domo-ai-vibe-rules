@@ -84,5 +84,4 @@ alwaysApply: true
 - Magic ETL (API-first / mixed) -> `~/.agents/skills/magic-etl/SKILL.md`
 - Magic ETL (community-domo-cli dataflows) -> `~/.agents/skills/magic-etl-cli/SKILL.md`
 - Sample data generation + upload -> `~/.agents/skills/domo-data-generator/SKILL.md`
-- Full end-to-end demo stack -> `~/.agents/skills/full-domo-stack/SKILL.md`
 - Workspaces admin -> `~/.agents/skills/workspaces/SKILL.md`
