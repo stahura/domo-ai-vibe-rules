@@ -38,31 +38,26 @@ datagen init
 # Edit .env with your Domo credentials
 ```
 
-If `.env.example` is missing or you want a clean start, create `.env` in the working directory with:
-
-```bash
-cat > .env <<'EOF'
-DOMO_CLIENT_ID=your_client_id_here
-DOMO_CLIENT_SECRET=your_client_secret_here
-DOMO_API_HOST=api.domo.com
-DOMO_INSTANCE=your_instance_name
-DOMO_SET_CONNECTOR_TYPE=false
-EOF
-```
-
 ### Required Environment Variables
 
-| Variable | Purpose |
-|----------|---------|
-| `DOMO_CLIENT_ID` | OAuth client identifier |
-| `DOMO_CLIENT_SECRET` | OAuth client secret |
-| `DOMO_API_HOST` | API endpoint hostname |
-| `DOMO_INSTANCE` | Domo instance name |
-| `DOMO_SET_CONNECTOR_TYPE` | Enable connector icon customization (optional, default: false) |
+Edit the `.env` file created by `datagen init`:
 
-> **Auth boundary note:** `domo_data_generator` uses its own public-API/OAuth credential flow and does **not** run through `community-domo-cli` or ryuu session auth.
->
-> **Current tooling boundary:** most Product API automation should use `community-domo-cli`, but datagen dataset create/upload in this skill currently depends on `python -m datagen` with `.env` OAuth credentials (`DOMO_CLIENT_ID` / `DOMO_CLIENT_SECRET`).
+| Variable | Purpose | Required for |
+|----------|---------|-------------|
+| `DOMO_INSTANCE` | Domo instance name (e.g. `mycompany`) | All Domo operations |
+| `DOMO_DEVELOPER_TOKEN` | Access token from Domo Admin | Connector icons, provider discovery |
+| `DOMO_CLIENT_ID` | OAuth client ID | Dataset creation, data upload |
+| `DOMO_CLIENT_SECRET` | OAuth client secret | Dataset creation, data upload |
+
+To create OAuth client credentials: **Domo > Admin > Authentication > Client credentials** -- create a client with `data` and `dashboard` scopes.
+
+To create a developer token: **Domo > Admin > Authentication > Access tokens**.
+
+Offline commands (`generate`, `list`, `status`, `pool`, `roll-dates`, `init`) require no credentials.
+
+> **Auth boundary:** This tool authenticates directly with the Domo API using OAuth client credentials (`DOMO_CLIENT_ID` / `DOMO_CLIENT_SECRET`) or a developer token. It does **not** use `community-domo-cli` or ryuu-session auth. If `domo login` has been run, datagen can fall back to the ryuu session, but OAuth credentials are the primary and recommended auth method.
+
+> **Multi-instance usage:** Credentials in `.env` are tied to a single Domo instance. If targeting a different instance, you must update `DOMO_INSTANCE`, `DOMO_CLIENT_ID`, and `DOMO_CLIENT_SECRET` in `.env` for the target instance before running any Domo commands. Verify credentials are correct before starting a long workflow.
 
 ---
 
@@ -101,8 +96,6 @@ datagen generate salesforce_opportunities  # Generate one dataset
 datagen generate --all --seed 42          # Reproducible generation
 datagen generate --all --dry-run          # Preview without writing
 ```
-
-Requires entity pool initialization first. Run `python -m datagen pool regenerate` before `generate` even if your schema has no explicit `entity_ref` columns.
 
 | Option | Description |
 |--------|-------------|
@@ -330,6 +323,14 @@ schema:
     max: 10000.0
     precision: 2
 
+  - name: tier
+    type: STRING
+    generator: weighted_choice
+    choices:
+      "Tier 1": 0.40
+      "Tier 2": 0.35
+      "Tier 3": 0.25
+
   - name: created_date
     type: DATE
     generator: date_range
@@ -366,7 +367,7 @@ schema:
 | `min` / `max` | `random_int`, `random_decimal` | Value range |
 | `precision` | `random_decimal` | Decimal places |
 | `template` | `compound` | String template with `{field}` placeholders |
-| `refs` | `compound` | Column references for template substitution — **must be a YAML list** of column name strings (e.g. `["sku", "line_id"]`), **not** a dict/object. A dict triggers `ValidationError: schema.N.refs — Input should be a valid list`. |
+| `refs` | `compound` | Column references for template substitution |
 | `start_days_ago` / `end_days_ahead` | `date_range` | Date range relative to today |
 | `rolling` | `date_range` | Enable date rolling for freshness |
 | `mapping` | `stage_derived` | Map source values to derived values |
@@ -375,33 +376,12 @@ schema:
 | `faker_method` | `faker` | Faker library method name |
 | `faker_args` | `faker` | Arguments for the Faker method |
 
-**`weighted_choice` YAML format:**
-
-```yaml
-generator: weighted_choice
-choices:
-  "Tier 1": 0.40
-  "Tier 2": 0.35
-  "Tier 3": 0.25
-```
-
-> **`compound` `refs` vs formatted random strings:** For values like `PO-12345`, prefer **`faker`** with **`bothify`** instead of abusing `compound` / `refs`:
->
-> ```yaml
-> - name: purchase_order_ref
->   type: STRING
->   generator: faker
->   faker_method: bothify
->   faker_args:
->     text: "PO-#####"
-> ```
-
 ---
 
 ## Rules
 
 1. **Run `datagen init` first** -- Initialize a working directory before using any other commands. This copies the catalog and creates `.env`.
-2. **Always generate before uploading** -- Run `generate` (or `generate --all`) before `upload` to ensure CSV data files exist.
+2. **Always run `pool regenerate` then `generate` before uploading** -- Run `pool regenerate` (if no pool exists yet) then `generate` before `upload`. Some generators depend on the entity pool even if your schema has no explicit `entity_ref` columns.
 3. **Create datasets before first upload** -- Run `create-dataset` before `upload` for new datasets. The `domo_id` is persisted locally.
 4. **Use `--skip-existing`** -- When running `create-dataset --all`, use `--skip-existing` to avoid duplicating datasets that already have a `domo_id`.
 5. **Entity pool consistency** -- Regenerating the pool (`pool regenerate`) invalidates all previously generated data. Re-generate all datasets afterward.
@@ -409,6 +389,7 @@ choices:
 7. **Credentials** -- `DOMO_CLIENT_ID` and `DOMO_CLIENT_SECRET` are required for `upload` and `create-dataset`. `DOMO_DEVELOPER_TOKEN` is required for `set-type` and `discover-types`. Offline commands need no credentials.
 8. **Reproducibility** -- Use `--seed` for reproducible data generation across runs.
 9. **Output format** -- Default output is JSON. Use `--output table` for human-readable Rich tables.
+10. **Dataset provisioning boundary** -- Use `datagen create-dataset` and `datagen upload` for dataset creation and CSV upload. The `community-domo-cli` does **not** support dataset creation or CSV upload. Do not attempt `community-domo-cli datasets upload-csv` or similar -- it does not exist.
 
 ---
 
