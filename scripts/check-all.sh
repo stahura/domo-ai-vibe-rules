@@ -24,14 +24,14 @@ run_check() {
 
   if bash "$SCRIPTS_DIR/$script" 2>&1; then
     echo -e "${GREEN}  => PASS${NC}"
-    ((PASS++))
+    ((PASS++)) || true
   else
     if [[ "$blocking" == "blocking" ]]; then
       echo -e "${RED}  => FAIL (blocking)${NC}"
-      ((FAIL++))
+      ((FAIL++)) || true
     else
       echo -e "${YELLOW}  => ISSUES FOUND (advisory)${NC}"
-      ((WARN++))
+      ((WARN++)) || true
     fi
   fi
 }
