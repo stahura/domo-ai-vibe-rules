@@ -57,7 +57,8 @@ alwaysApply: true
 - Code Engine -> `~/.agents/skills/code-engine/SKILL.md`
 - Code Engine package create -> `~/.agents/skills/code-engine-create/SKILL.md`
 - Code Engine package update -> `~/.agents/skills/code-engine-update/SKILL.md`
-- Workflows -> `~/.agents/skills/workflow/SKILL.md`
+- Workflows (app-side runtime, WorkflowClient) -> `~/.agents/skills/workflow/SKILL.md`
+- Workflow authoring (MCP + CLI, build/define/trigger) -> `~/.agents/skills/workflow-builder/SKILL.md`
 - SQL queries -> `~/.agents/skills/sql-query/SKILL.md`
 - Manifest wiring -> `~/.agents/skills/manifest/SKILL.md`
 - Build/publish -> `~/.agents/skills/publish/SKILL.md`

@@ -72,13 +72,30 @@ community-domo-cli datasets list
 
 ### code-engine
 
+- `code-engine list-packages`
 - `code-engine get-package <package_id>`
+- `code-engine get-function-signature <package_id> <function_name>`
 - `code-engine create-package --body/--body-file`
 - `code-engine update-version <package_id> <version> --body/--body-file`
 
 ### workflows
 
+- `workflows list`
 - `workflows get <workflow_id>`
+- `workflows create --name "..." --description "..."`
+- `workflows update-definition <workflow_id> <version> --body/--body-file`
+- `workflows validate --body/--body-file`
+- `workflows validate-dataset-query <workflow_id> <version> --dataset <id> --query "..."`
+- `workflows create-form <workflow_id> <version> --body/--body-file`
+- `workflows list-instances <workflow_id>`
+- `workflows instance-get <workflow_id> <instance_id>`
+- `workflows list-triggers --workflow-id <workflow_id>`
+- `workflows create-trigger --body/--body-file`
+
+### queues
+
+- `queues list`
+- `queues create --body/--body-file`
 
 ### filesets
 
